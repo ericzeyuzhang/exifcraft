@@ -1,0 +1,3 @@
+- 是否需要编码成base64
+- tag name mapper是否必须？
+- 更换llava模型

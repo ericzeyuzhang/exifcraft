@@ -1,0 +1,25 @@
+{
+  "prompts": [
+    {
+      "name": "description",
+      "prompt": "Please describe this image in detail, including the main objects, scene, colors, composition and other visual elements.",
+      "exifTags": ["ImageDescription", "UserComment"]
+    },
+    {
+      "name": "keywords",
+      "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc.",
+      "exifTags": ["Keywords", "Subject"]
+    }
+  ],
+  "aiModel": {
+    "type": "ollama",
+    "endpoint": "http://erics-mac-mini.local:11434/api/generate",
+    "model": "gemma3:4b",
+    "options": {
+      "temperature": 0.7,
+      "max_tokens": 200
+    }
+  },
+  "imageFormats": [".jpg", ".jpeg", ".jpe", ".png", ".tiff", ".tif", ".webp", ".heic", ".heif", ".raw", ".cr2", ".nef", ".arw", ".bmp", ".gif"],
+  "overwriteOriginal": true
+}

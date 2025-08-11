@@ -1,0 +1,33 @@
+{
+  "name": "exifcraft",
+  "version": "1.0.0",
+  "description": "AI-powered EXIF metadata crafting tool for images",
+  "main": "index.js",
+  "bin": {
+    "exifcraft": "./bin/cli.js"
+  },
+  "scripts": {
+    "start": "node bin/cli.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "exif",
+    "metadata",
+    "ai",
+    "image",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.5.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0",
+    "exiftool-vendored": "^30.3.0",
+    "glob": "^10.3.0",
+    "ora": "^5.4.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
