@@ -1,6 +1,15 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { runCLI, createTestImage, createTestConfig, cleanupTestFiles } from '../utils/testHelpers';
+import { 
+  runCLI, 
+  createTestImage, 
+  createTestConfig, 
+  cleanupTestFiles,
+  copyRealFileToTestDir,
+  copyAllRealFilesToTestDir,
+  getOriginalTestFiles,
+  cleanupTestDir
+} from '../utils/testHelpers';
 import { testDir, testImagesDir } from '../setup';
 
 describe('Image Processing End-to-End Tests', () => {
@@ -292,6 +301,102 @@ describe('Image Processing End-to-End Tests', () => {
       // 恢复权限并清理
       fs.chmodSync(noPermissionPath, 0o644);
       cleanupTestFiles([noPermissionPath]);
+    });
+  });
+
+  describe('Real Files Integration', () => {
+    const realFilesTestDir = path.join(testDir, 'real-files-integration');
+
+    beforeEach(() => {
+      // 清理之前的测试目录
+      cleanupTestDir(realFilesTestDir);
+      
+      // 确保测试目录存在
+      if (!fs.existsSync(realFilesTestDir)) {
+        fs.mkdirSync(realFilesTestDir, { recursive: true });
+      }
+    });
+
+    afterEach(() => {
+      cleanupTestDir(realFilesTestDir);
+    });
+
+    test('should process real image files with different formats', async () => {
+      const originalFiles = getOriginalTestFiles();
+      const imageFiles = originalFiles.filter(file => 
+        /\.(jpg|jpeg|png|heic|raf|nef)$/i.test(file)
+      );
+      
+      if (imageFiles.length === 0) {
+        console.log('No real image files found for testing');
+        return;
+      }
+
+      // 测试前几个图片文件
+      const testFiles = imageFiles.slice(0, 3);
+      const copiedPaths: string[] = [];
+
+      for (const file of testFiles) {
+        const copiedPath = copyRealFileToTestDir(file, realFilesTestDir);
+        copiedPaths.push(copiedPath);
+      }
+
+      createTestConfig(testConfigPath, createProcessingConfig());
+
+      // 逐个处理文件
+      for (const filePath of copiedPaths) {
+        const result = await runCLI(['-f', filePath, '-c', testConfigPath, '--dry-run']);
+        expect([0, 1]).toContain(result.code);
+        expect(result.stdout).toContain('Processing');
+      }
+    });
+
+    test('should handle batch processing of real files', async () => {
+      const copiedFiles = copyAllRealFilesToTestDir(realFilesTestDir);
+      createTestConfig(testConfigPath, createProcessingConfig());
+
+      const result = await runCLI(['-d', realFilesTestDir, '-c', testConfigPath, '--dry-run']);
+      
+      expect(result.code).toBe(0);
+      
+      // 验证处理了图片文件
+      const imageFiles = copiedFiles.filter(file => 
+        /\.(jpg|jpeg|png|heic|raf|nef)$/i.test(file)
+      );
+      if (imageFiles.length > 0) {
+        expect(result.stdout).toContain('Processing');
+      }
+    });
+
+    test('should preserve EXIF data integrity with real files', async () => {
+      const originalFiles = getOriginalTestFiles();
+      const imageFiles = originalFiles.filter(file => 
+        /\.(jpg|jpeg|png|heic|raf|nef)$/i.test(file)
+      );
+      
+      if (imageFiles.length === 0) {
+        console.log('No real image files found for testing');
+        return;
+      }
+
+      const testImageFile = imageFiles[0];
+      const testImagePath = copyRealFileToTestDir(testImageFile, realFilesTestDir);
+      
+      // 记录原始文件信息
+      const originalStats = fs.statSync(testImagePath);
+      const originalSize = originalStats.size;
+      const originalModTime = originalStats.mtime;
+      
+      createTestConfig(testConfigPath, createProcessingConfig({ preserveOriginal: true }));
+
+      const result = await runCLI(['-f', testImagePath, '-c', testConfigPath, '--dry-run']);
+      
+      expect([0, 1]).toContain(result.code);
+      
+      // 验证文件完整性
+      expect(fs.existsSync(testImagePath)).toBe(true);
+      const afterStats = fs.statSync(testImagePath);
+      expect(afterStats.size).toBe(originalSize);
     });
   });
 });

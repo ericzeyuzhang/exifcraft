@@ -56,6 +56,57 @@ export function createTestImage(filePath: string, format: 'jpg' | 'png' = 'jpg')
 }
 
 /**
+ * 复制真实文件到测试目录
+ */
+export function copyRealFileToTestDir(originalFileName: string, testDir: string): string {
+  const originalPath = path.join(__dirname, '../images/original', originalFileName);
+  const testPath = path.join(testDir, originalFileName);
+  
+  if (!fs.existsSync(originalPath)) {
+    throw new Error(`Original file not found: ${originalPath}`);
+  }
+  
+  // 确保测试目录存在
+  if (!fs.existsSync(testDir)) {
+    fs.mkdirSync(testDir, { recursive: true });
+  }
+  
+  // 复制文件
+  fs.copyFileSync(originalPath, testPath);
+  
+  return testPath;
+}
+
+/**
+ * 获取所有原始测试文件
+ */
+export function getOriginalTestFiles(): string[] {
+  const originalDir = path.join(__dirname, '../images/original');
+  if (!fs.existsSync(originalDir)) {
+    return [];
+  }
+  
+  return fs.readdirSync(originalDir)
+    .filter(file => !file.startsWith('.') && file !== '.DS_Store')
+    .map(file => file);
+}
+
+/**
+ * 复制所有真实文件到测试目录
+ */
+export function copyAllRealFilesToTestDir(testDir: string): string[] {
+  const originalFiles = getOriginalTestFiles();
+  const copiedPaths: string[] = [];
+  
+  originalFiles.forEach(file => {
+    const copiedPath = copyRealFileToTestDir(file, testDir);
+    copiedPaths.push(copiedPath);
+  });
+  
+  return copiedPaths;
+}
+
+/**
  * 创建测试配置文件
  */
 export function createTestConfig(configPath: string, config: any): void {
@@ -89,4 +140,13 @@ export function cleanupTestFiles(files: string[]): void {
       fs.unlinkSync(file);
     }
   });
+}
+
+/**
+ * 清理测试目录
+ */
+export function cleanupTestDir(testDir: string): void {
+  if (fs.existsSync(testDir)) {
+    fs.rmSync(testDir, { recursive: true, force: true });
+  }
 }
