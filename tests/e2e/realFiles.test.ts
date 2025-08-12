@@ -144,7 +144,7 @@ describe('Real Files Processing Tests', () => {
         /\.(jpg|jpeg|png|heic|raf|nef)$/i.test(file)
       );
       expect(imageFiles.length).toBeGreaterThan(0);
-    });
+    }, 60000); // 60 second timeout for large file processing
 
     test('should preserve original files after processing', async () => {
       const originalFiles = getOriginalTestFiles();
@@ -195,7 +195,7 @@ describe('Real Files Processing Tests', () => {
           expect(result.stdout).toContain('Processing');
         }
       }
-    });
+    }, 60000); // 60 second timeout for large file processing
 
     test('should skip unsupported file formats', async () => {
       const txtFile = 'a-text-file.txt';

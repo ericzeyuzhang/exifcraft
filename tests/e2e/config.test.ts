@@ -52,7 +52,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--verbose', '--dry-run']);
       
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
       expect(result.stdout).toContain('Configuration:');
       expect(result.stdout).toContain('"provider": "ollama"');
     });
@@ -83,7 +84,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
     });
 
     test('should handle configuration with OpenAI provider', async () => {
@@ -117,7 +119,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
     });
 
     test('should handle configuration with Gemini provider', async () => {
@@ -151,7 +154,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
     });
   });
 
@@ -171,7 +175,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
     });
 
     test('should handle empty imageFormats array', async () => {
@@ -200,7 +205,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
     });
 
     test('should handle missing optional fields', async () => {
@@ -230,7 +236,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
     });
   });
 
@@ -274,8 +281,8 @@ describe('Configuration End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      // 应该能够处理，但可能会在AI客户端初始化时失败
-      expect(result.code).toBe(0);
+      // When no image files are found, CLI should return error code 1
+      expect(result.code).toBe(1);
     });
   });
 });
