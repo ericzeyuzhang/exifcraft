@@ -4,9 +4,14 @@
 
 import { TagName } from 'exiftool-vendored/dist/Tags';
 
+export interface TagConfig {
+  name: TagName;
+  allowOverwrite: boolean;
+}
+
 export interface TaskConfig {
   name: string;
-  tags: TagName[];
+  tags: TagConfig[];
   prompt: string;
 }
 
@@ -30,7 +35,7 @@ export interface ExifCraftConfig {
   basePrompt?: string;
 }
 
-export interface ProcessingJob {
+export interface JobSetting {
   directory?: string;
   files?: string[];
   config: ExifCraftConfig;

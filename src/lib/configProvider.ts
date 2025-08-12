@@ -50,6 +50,17 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
     if (!taskConfig.tags || !Array.isArray(taskConfig.tags) || taskConfig.tags.length === 0) {
       throw new Error(`taskConfig[${i}] must contain at least one tags`);
     }
+    
+    // Validate each tag configuration
+    for (let j = 0; j < taskConfig.tags.length; j++) {
+      const tagConfig = taskConfig.tags[j];
+      if (!tagConfig.name) {
+        throw new Error(`taskConfig[${i}].tags[${j}] must contain a valid name field`);
+      }
+      if (typeof tagConfig.allowOverwrite !== 'boolean') {
+        throw new Error(`taskConfig[${i}].tags[${j}] must contain a valid allowOverwrite field`);
+      }
+    }
   }
   
   if (!config.aiModel || typeof config.aiModel !== 'object') {

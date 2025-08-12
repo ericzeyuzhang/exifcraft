@@ -117,4 +117,4 @@ ehthumbs.db
 Thumbs.db
 
 # Test data
-/test
+/tests/images

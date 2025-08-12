@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import { processImages } from '../lib/processor';
 import { loadConfig } from '../lib/configProvider';
 import { cleanup } from '../lib/exifWriter';
-import { CLIOptions, ProcessingJob } from '../types';
+import { CLIOptions, JobSetting } from '../types';
 import { Logger } from '../lib/logger';
 
 const program = new Command();
@@ -61,7 +61,7 @@ async function main(): Promise<void> {
     console.log(chalk.blue('Processing images...'));
     
     try {
-      const processingJob: ProcessingJob = {
+      const processingJob: JobSetting = {
         directory: options.directory,
         files: options.files,
         config: config,

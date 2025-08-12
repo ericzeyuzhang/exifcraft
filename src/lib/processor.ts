@@ -4,14 +4,14 @@ import chalk from 'chalk';
 import { getImageFiles, filterSupportedFiles } from './imageUtils';
 import { generateAIResponse, convertImageForAI } from './aiClient';
 import { writeExifData } from './exifWriter';
-import { ProcessingJob, ExifCraftConfig, ExifData } from '../types';
+import { JobSetting, ExifCraftConfig, ExifData } from '../types';
 import { Logger } from './logger';
 
 /**
  * Process image files
  */
-export async function processImages(job: ProcessingJob, logger: Logger): Promise<void> {
-  const { directory, files, config, verbose, dryRun } = job;
+export async function processImages(jobSetting: JobSetting, logger: Logger): Promise<void> {
+  const { directory, files, config, verbose, dryRun } = jobSetting;
   
   // Get list of image files to process
   let imageFiles: string[] = [];
@@ -105,8 +105,8 @@ async function processImage(
       }
       
       // Write response to corresponding EXIF tags
-      for (const tagName of taskConfig.tags) {
-        exifData[tagName] = aiResponse;
+      for (const tagConfig of taskConfig.tags) {
+        exifData[tagConfig.name] = aiResponse;
       }
       
     } catch (error) {

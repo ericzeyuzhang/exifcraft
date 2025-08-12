@@ -3,17 +3,32 @@
     {
       "name": "title", 
       "prompt": "Please generate a title with at most 10 words for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
-      "tags": ["ImageTitle"]
+      "tags": [
+        {
+          "name": "ImageTitle",
+          "allowOverwrite": true
+        }
+      ]
     },
     {
       "name": "description",
       "prompt": "Please describe this image in a single paragraph with 100-150 words. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
-      "tags": ["ImageDescription"]
+      "tags": [
+        {
+          "name": "ImageDescription",
+          "allowOverwrite": true
+        }
+      ]
     },
     {
       "name": "keywords",
       "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
-      "tags": ["Keywords"]
+      "tags": [
+        {
+          "name": "Keywords",
+          "allowOverwrite": true
+        }
+      ]
     }
   ],
   "aiModel": {
