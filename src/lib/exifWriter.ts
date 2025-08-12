@@ -1,6 +1,5 @@
 import { exiftool } from 'exiftool-vendored';
 import chalk from 'chalk';
-import { isSupportedFormat } from './imageUtils';
 import { ExifData, WriteOptions } from '../types';
 
 /**

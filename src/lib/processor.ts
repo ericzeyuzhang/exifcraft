@@ -10,7 +10,7 @@ import { ProcessingOptions, ExifCraftConfig, ExifData } from '../types';
  * Process image files
  */
 export async function processImages(options: ProcessingOptions): Promise<void> {
-  const { directory, files, config, model, verbose } = options;
+  const { directory, files, config, verbose } = options;
   
   // Get list of image files to process
   let imageFiles: string[] = [];
@@ -38,7 +38,7 @@ export async function processImages(options: ProcessingOptions): Promise<void> {
     console.log(chalk.yellow(`\n[${i + 1}/${imageFiles.length}] Processing: ${fileName}`));
     
     try {
-      await processImage(imagePath, config, model, verbose);
+      await processImage(imagePath, config, verbose);
       console.log(chalk.green(`✓ Completed: ${fileName}`));
     } catch (error) {
       console.error(chalk.red(`✗ Processing failed ${fileName}: ${(error as Error).message}`));
@@ -55,7 +55,6 @@ export async function processImages(options: ProcessingOptions): Promise<void> {
 export async function processImage(
   imagePath: string, 
   config: ExifCraftConfig, 
-  model: string, 
   verbose: boolean
 ): Promise<void> {
   // Check if file exists

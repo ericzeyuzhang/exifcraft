@@ -58,7 +58,6 @@ async function main(): Promise<void> {
         directory: options.directory,
         files: options.files,
         config: config,
-        model: options.model,
         verbose: options.verbose
       };
       

@@ -1,7 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import chalk from 'chalk';
 import { AIModelConfig, AIModelOptions } from '../types';
 
 interface OllamaResponse {

@@ -33,7 +33,6 @@ export interface ProcessingOptions {
   directory?: string;
   files?: string[];
   config: ExifCraftConfig;
-  model: string;
   verbose: boolean;
 }
 
@@ -56,10 +55,6 @@ export interface CLIOptions {
   config: string;
   model: string;
   verbose: boolean;
-}
-
-export interface AIResponse {
-  response: string;
 }
 
 // ExifTool write options
