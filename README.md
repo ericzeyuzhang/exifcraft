@@ -104,7 +104,6 @@ exifcraft -d /path/to/images -v
 | `-d, --directory <path>` | Path to image directory | - |
 | `-f, --files <paths...>` | Specify image file paths | - |
 | `-c, --config <path>` | Configuration file path | `./config.json` |
-| `-m, --model <model>` | Local AI model name or API endpoint | `ollama` |
 | `-v, --verbose` | Show verbose output | `false` |
 
 ### Usage Examples

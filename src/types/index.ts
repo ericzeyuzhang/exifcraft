@@ -10,19 +10,16 @@ export interface PromptConfig {
   exifTags: TagName[];
 }
 
-export interface AIModelOptions {
-  temperature?: number;
-  max_tokens?: number;
-  // Placeholder for OpenAI/Gemini specific options
-  apiKey?: string;
-  headers?: Record<string, string>;
-}
-
 export interface AIModelConfig {
   provider: AIModelProvider;
+  /** Placeholder for online model (e.g. OpenAI, Gemini) api key */
+  key?: string;
   endpoint: string;
   model: string;
-  options?: AIModelOptions;
+  options?: {
+    temperature?: number;
+    max_tokens?: number;
+  };
 }
 
 export interface ExifCraftConfig {
@@ -52,30 +49,14 @@ export interface ImageInfo {
   directory: string;
 }
 
+// CLI options from commander.js
 export interface CLIOptions {
   directory?: string;
   files?: string[];
   config: string;
-  model: string;
   verbose: boolean;
 }
 
-// ExifTool write options
-export interface WriteOptions {
-  writeArgs?: string[];
-}
 
-// Utility types
-export type SupportedImageFormat = 
-  | '.jpg' | '.jpeg' | '.jpe'
-  | '.png' 
-  | '.tiff' | '.tif'
-  | '.webp'
-  | '.heic' | '.heif'
-  | '.raw' | '.cr2' | '.nef' | '.arw' | '.dng' | '.orf' | '.rw2' | '.pef' | '.srw'
-  | '.bmp'
-  | '.gif';
 
 export type AIModelProvider = 'ollama' | 'openai' | 'gemini';
-
-export type LogLevel = 'info' | 'warn' | 'error' | 'success';

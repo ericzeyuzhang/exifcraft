@@ -1,6 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import { promises as fs } from 'fs';
-import { AIModelConfig, AIModelOptions } from '../types';
+import { AIModelConfig } from '../types';
 
 interface OllamaResponse {
   response: string;
@@ -35,7 +35,7 @@ async function callOllamaAPI(
   prompt: string, 
   endpoint: string, 
   model: string, 
-  options: AIModelOptions, 
+  options: AIModelConfig['options'], 
   verbose: boolean
 ): Promise<string> {
   try {
@@ -49,8 +49,8 @@ async function callOllamaAPI(
       images: [imageBase64],
       stream: false,
       options: {
-        temperature: options.temperature || 0.7,
-        num_predict: options.max_tokens || 200
+        temperature: options?.temperature || 0.7,
+        num_predict: options?.max_tokens || 200
       }
     };
     

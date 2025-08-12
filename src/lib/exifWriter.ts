@@ -1,6 +1,6 @@
-import { exiftool } from 'exiftool-vendored';
+import { exiftool, WriteTaskOptions } from 'exiftool-vendored';
 import chalk from 'chalk';
-import { ExifData, WriteOptions } from '../types';
+import { ExifData } from '../types';
 
 /**
  * Write EXIF data to image file
@@ -37,7 +37,7 @@ export async function writeExifData(
     // Write metadata to the image file
     // Use -overwrite_original_in_place if overwriteOriginal is true, otherwise exiftool will create backup
     const writeArgs = overwriteOriginal ? ["-overwrite_original_in_place"] : [];
-    const options: WriteOptions | undefined = writeArgs.length > 0 ? { writeArgs } : undefined;
+    const options: WriteTaskOptions | undefined = writeArgs.length > 0 ? { writeArgs } : undefined;
     
     await exiftool.write(imagePath, metadata, options);
     

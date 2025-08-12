@@ -12,7 +12,7 @@
     }
   ],
   "aiModel": {
-    "type": "ollama",
+    "provider": "ollama",
     "endpoint": "http://erics-mac-mini.local:11434/api/generate",
     "model": "gemma3:4b",
     "options": {

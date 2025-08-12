@@ -21,7 +21,6 @@ program
   .option('-d, --directory <path>', 'Path to image directory')
   .option('-f, --files <paths...>', 'Specify image file paths')
   .option('-c, --config <path>', 'Configuration file path', './config.json')
-  .option('-m, --model <model>', 'Local AI model name or API endpoint', 'ollama')
   .option('-v, --verbose', 'Show verbose output')
   .parse();
 
