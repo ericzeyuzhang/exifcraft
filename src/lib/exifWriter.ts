@@ -50,17 +50,7 @@ export async function writeExifData(
   }
 }
 
-/**
- * Read EXIF data from image file
- */
-export async function readExifData(imagePath: string): Promise<Record<string, any>> {
-  try {
-    const metadata = await exiftool.read(imagePath);
-    return metadata;
-  } catch (error) {
-    throw new Error(`Failed to read EXIF data: ${(error as Error).message}`);
-  }
-}
+
 
 /**
  * Map internal tag names to exiftool tag names

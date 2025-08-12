@@ -76,24 +76,4 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
   }
 }
 
-/**
- * Get default configuration
- */
-export function getDefaultConfig(): ExifCraftConfig {
-  return {
-    prompts: [
-      {
-        name: "description",
-        prompt: "Please describe this image in detail.",
-        exifTags: ["ImageDescription"]
-      }
-    ],
-    aiModel: {
-      provider: "ollama",
-      endpoint: "http://localhost:11434/api/generate",
-      model: "llava"
-    },
-    imageFormats: [".jpg", ".jpeg", ".png"],
-    overwriteOriginal: true
-  };
-}
+

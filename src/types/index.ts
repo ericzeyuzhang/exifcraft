@@ -40,14 +40,7 @@ export type ExifData = {
   [K in TagName]?: string;
 };
 
-export interface ImageInfo {
-  path: string;
-  name: string;
-  extension: string;
-  size: number;
-  modified: Date;
-  directory: string;
-}
+
 
 // CLI options from commander.js
 export interface CLIOptions {

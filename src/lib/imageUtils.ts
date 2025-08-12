@@ -1,7 +1,6 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { glob } from 'glob';
-import { ImageInfo } from '../types';
 
 /**
  * Extract file extension in lowercase
@@ -53,49 +52,5 @@ export async function getImageFiles(directory: string, supportedFormats: string[
       throw new Error(`Directory does not exist: ${directory}`);
     }
     throw error;
-  }
-}
-
-/**
- * Get image file information
- */
-export async function getImageInfo(imagePath: string): Promise<ImageInfo> {
-  try {
-    const stat = await fs.stat(imagePath);
-    const ext = path.extname(imagePath).toLowerCase();
-    const basename = path.basename(imagePath, ext);
-    
-    return {
-      path: imagePath,
-      name: basename,
-      extension: ext,
-      size: stat.size,
-      modified: stat.mtime,
-      directory: path.dirname(imagePath)
-    };
-  } catch (error) {
-    throw new Error(`Unable to get image information: ${(error as Error).message}`);
-  }
-}
-
-/**
- * Validate if image file is readable
- */
-export async function validateImageFile(imagePath: string): Promise<boolean> {
-  try {
-    await fs.access(imagePath, fs.constants.R_OK);
-    const stat = await fs.stat(imagePath);
-    
-    if (!stat.isFile()) {
-      throw new Error('Not a file');
-    }
-    
-    if (stat.size === 0) {
-      throw new Error('File is empty');
-    }
-    
-    return true;
-  } catch (error) {
-    throw new Error(`Image file validation failed: ${(error as Error).message}`);
   }
 }
