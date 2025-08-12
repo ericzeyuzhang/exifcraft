@@ -6,7 +6,7 @@ describe('CLI End-to-End Tests', () => {
   const testConfigPath = path.join(testDir, 'test-config.json');
   const testImagePath = path.join(testImagesDir, 'test-image.jpg');
 
-  // 测试配置
+  // Test configuration
   const testConfig = {
     tasks: [
       {
@@ -35,13 +35,13 @@ describe('CLI End-to-End Tests', () => {
   };
 
   beforeEach(() => {
-    // 创建测试文件
+    // Create test files
     createTestConfig(testConfigPath, testConfig);
     createTestImage(testImagePath);
   });
 
   afterEach(() => {
-    // 清理测试文件
+    // Clean up test files
     cleanupTestFiles([testConfigPath, testImagePath]);
   });
 
@@ -80,7 +80,7 @@ describe('CLI End-to-End Tests', () => {
     test('should accept directory parameter with valid images', async () => {
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      // 由于有有效的图片文件，应该成功处理，但也可能因为其他原因失败
+      // Should process successfully with valid image files, but may fail for other reasons
       expect([0, 1]).toContain(result.code);
     });
 
@@ -107,7 +107,7 @@ describe('CLI End-to-End Tests', () => {
       
       const result = await runCLI(['-f', testImagePath, testImage2Path, '-c', testConfigPath, '--dry-run']);
       
-      // 多文件处理可能成功或失败，两种情况都可以接受
+      // Multiple file processing may succeed or fail, both cases are acceptable
       expect([0, 1]).toContain(result.code);
       
       cleanupTestFiles([testImage2Path]);
@@ -117,7 +117,7 @@ describe('CLI End-to-End Tests', () => {
   describe('Configuration Validation', () => {
     test('should validate configuration structure', async () => {
       const invalidConfig = {
-        // 缺少必要的字段
+        // Missing required fields
         tasks: []
       };
       
@@ -126,7 +126,7 @@ describe('CLI End-to-End Tests', () => {
       
       const result = await runCLI(['-d', testImagesDir, '-c', invalidConfigPath, '--dry-run']);
       
-      // 配置验证失败应该返回错误代码
+      // Configuration validation failure should return error code
       expect(result.code).toBe(1);
       
       cleanupTestFiles([invalidConfigPath]);
@@ -138,7 +138,7 @@ describe('CLI End-to-End Tests', () => {
       const nonExistentDir = path.join(testDir, 'non-existent');
       const result = await runCLI(['-d', nonExistentDir, '-c', testConfigPath, '--dry-run']);
       
-      // 不存在的目录应该返回错误代码
+      // Non-existent directory should return error code
       expect(result.code).toBe(1);
     });
 
@@ -146,7 +146,7 @@ describe('CLI End-to-End Tests', () => {
       const nonExistentFile = path.join(testImagesDir, 'non-existent.jpg');
       const result = await runCLI(['-f', nonExistentFile, '-c', testConfigPath, '--dry-run']);
       
-      // 不存在的文件会成功处理但显示错误信息
+      // Non-existent files will be processed successfully but show error messages
       expect(result.code).toBe(0);
       expect(result.stdout).toContain('✗ non-existent.jpg');
     });
@@ -159,10 +159,10 @@ describe('CLI End-to-End Tests', () => {
       
       const result = await runCLI(['-d', emptyDir, '-c', testConfigPath, '--dry-run']);
       
-      // 空目录应该返回错误代码（没有支持的图片文件）
+      // Empty directory should return error code (no supported image files)
       expect(result.code).toBe(1);
       
-      // 清理空目录
+      // Clean up empty directory
       if (require('fs').existsSync(emptyDir)) {
         require('fs').rmdirSync(emptyDir);
       }

@@ -15,7 +15,7 @@ describe('Real Files Processing Tests', () => {
   const testConfigPath = path.join(testDir, 'test-config.json');
   const realFilesTestDir = path.join(testDir, 'real-files-test');
 
-  // 创建测试配置
+  // Create test configuration
   const createProcessingConfig = (options: any = {}) => ({
     tasks: [
       {
@@ -55,10 +55,10 @@ describe('Real Files Processing Tests', () => {
   });
 
   beforeEach(() => {
-    // 清理之前的测试目录
+    // Clean up previous test directory
     cleanupTestDir(realFilesTestDir);
     
-    // 确保测试目录存在
+    // Ensure test directory exists
     if (!fs.existsSync(realFilesTestDir)) {
       fs.mkdirSync(realFilesTestDir, { recursive: true });
     }
@@ -121,9 +121,9 @@ describe('Real Files Processing Tests', () => {
 
       const result = await runCLI(['-f', testTxtPath, '-c', testConfigPath, '--dry-run']);
       
-      // 非图片文件可能返回错误代码，这是可以接受的
+      // Non-image files may return error code, which is acceptable
       expect([0, 1]).toContain(result.code);
-      // 检查是否有错误信息或跳过信息
+      // Check for error messages or skip messages
       expect(result.stdout + result.stderr).toMatch(/Skipping|Unsupported|Error|not supported/);
     });
   });
@@ -133,13 +133,13 @@ describe('Real Files Processing Tests', () => {
       const copiedFiles = copyAllRealFilesToTestDir(realFilesTestDir);
       createTestConfig(testConfigPath, createProcessingConfig());
 
-      // 处理所有复制的文件
+      // Process all copied files
       const result = await runCLI(['-d', realFilesTestDir, '-c', testConfigPath, '--dry-run']);
       
       expect(result.code).toBe(0);
       expect(result.stdout).toContain('Processing');
       
-      // 验证至少处理了一些图片文件
+      // Verify that at least some image files were processed
       const imageFiles = copiedFiles.filter(file => 
         /\.(jpg|jpeg|png|heic|raf|nef)$/i.test(file)
       );
@@ -160,7 +160,7 @@ describe('Real Files Processing Tests', () => {
       const testImageFile = imageFiles[0];
       const testImagePath = copyRealFileToTestDir(testImageFile, realFilesTestDir);
       
-      // 记录原始文件的大小
+      // Record original file size
       const originalStats = fs.statSync(testImagePath);
       const originalSize = originalStats.size;
       
@@ -170,7 +170,7 @@ describe('Real Files Processing Tests', () => {
       
       expect(result.code).toBe(0);
       
-      // 验证文件仍然存在且大小没有变化
+      // Verify file still exists and size hasn't changed
       expect(fs.existsSync(testImagePath)).toBe(true);
       const afterStats = fs.statSync(testImagePath);
       expect(afterStats.size).toBe(originalSize);
@@ -190,7 +190,7 @@ describe('Real Files Processing Tests', () => {
 
           const result = await runCLI(['-f', testFilePath, '-c', testConfigPath, '--dry-run']);
           
-          // 支持的格式应该被处理
+          // Supported formats should be processed
           expect(result.code).toBe(0);
           expect(result.stdout).toContain('Processing');
         }
@@ -216,19 +216,19 @@ describe('Real Files Processing Tests', () => {
 
       const result = await runCLI(['-f', nonExistentPath, '-c', testConfigPath, '--dry-run']);
       
-      // 应该返回错误代码或跳过不存在的文件
+      // Should return error code or skip non-existent files
       expect([0, 1]).toContain(result.code);
     });
 
     test('should handle corrupted or invalid image files', async () => {
-      // 创建一个损坏的图片文件
+      // Create a corrupted image file
       const corruptedPath = path.join(realFilesTestDir, 'corrupted.jpg');
       fs.writeFileSync(corruptedPath, 'This is not a valid image file');
       createTestConfig(testConfigPath, createProcessingConfig());
 
       const result = await runCLI(['-f', corruptedPath, '-c', testConfigPath, '--dry-run']);
       
-      // 应该能够处理损坏的文件（要么跳过，要么报错）
+      // Should be able to handle corrupted files (either skip or report error)
       expect([0, 1]).toContain(result.code);
     });
   });

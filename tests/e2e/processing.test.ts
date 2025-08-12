@@ -15,7 +15,7 @@ import { testDir, testImagesDir } from '../setup';
 describe('Image Processing End-to-End Tests', () => {
   const testConfigPath = path.join(testDir, 'test-config.json');
 
-  // 创建测试配置
+  // Create test configuration
   const createProcessingConfig = (options: any = {}) => ({
     tasks: [
       {
@@ -55,7 +55,7 @@ describe('Image Processing End-to-End Tests', () => {
   });
 
   beforeEach(() => {
-    // 确保测试目录存在
+    // Ensure test directory exists
     if (!fs.existsSync(testImagesDir)) {
       fs.mkdirSync(testImagesDir, { recursive: true });
     }
@@ -95,7 +95,7 @@ describe('Image Processing End-to-End Tests', () => {
 
       const result = await runCLI(['-f', heicPath, '-c', testConfigPath, '--dry-run']);
       
-      // HEIC文件可能需要特殊的处理，如果失败也是可以接受的
+      // HEIC files may require special handling, failure is acceptable
       expect([0, 1]).toContain(result.code);
       cleanupTestFiles([heicPath]);
     });
@@ -107,7 +107,7 @@ describe('Image Processing End-to-End Tests', () => {
 
       const result = await runCLI(['-f', txtPath, '-c', testConfigPath, '--dry-run']);
       
-      // 不支持的文件格式会导致失败（没有支持的图片文件）
+      // Unsupported file formats will cause failure (no supported image files)
       expect(result.code).toBe(1);
       cleanupTestFiles([txtPath]);
     });
@@ -115,12 +115,12 @@ describe('Image Processing End-to-End Tests', () => {
 
   describe('Directory Processing', () => {
     test('should process all supported files in directory', async () => {
-      // 创建多个测试文件
+      // Create multiple test files
       const files = [
         path.join(testImagesDir, 'image1.jpg'),
         path.join(testImagesDir, 'image2.png'),
         path.join(testImagesDir, 'image3.heic'),
-        path.join(testImagesDir, 'document.txt') // 不支持的文件
+        path.join(testImagesDir, 'document.txt') // Unsupported file
       ];
 
       files.forEach(file => {
@@ -135,7 +135,7 @@ describe('Image Processing End-to-End Tests', () => {
 
       const result = await runCLI(['-d', testImagesDir, '-c', testConfigPath, '--dry-run']);
       
-      // 目录处理可能成功或失败，两种情况都可以接受
+      // Directory processing may succeed or fail, both cases are acceptable
       expect([0, 1]).toContain(result.code);
       cleanupTestFiles(files);
     });
@@ -150,10 +150,10 @@ describe('Image Processing End-to-End Tests', () => {
 
       const result = await runCLI(['-d', emptyDir, '-c', testConfigPath, '--dry-run']);
       
-      // 空目录应该返回错误代码（没有支持的图片文件）
+      // Empty directory should return error code (no supported image files)
       expect(result.code).toBe(1);
       
-      // 清理空目录
+      // Clean up empty directory
       if (fs.existsSync(emptyDir)) {
         fs.rmdirSync(emptyDir);
       }
