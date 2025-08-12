@@ -22,6 +22,7 @@ program
   .option('-f, --files <paths...>', 'Specify image file paths')
   .option('-c, --config <path>', 'Configuration file path', './config.json')
   .option('-v, --verbose', 'Show verbose output')
+  .option('--dry-run', 'Dry run mode - Simulate behaviors without modifying files')
   .parse();
 
 const options = program.opts() as CLIOptions;
@@ -57,7 +58,8 @@ async function main(): Promise<void> {
         directory: options.directory,
         files: options.files,
         config: config,
-        verbose: options.verbose
+        verbose: options.verbose,
+        dryRun: options.dryRun || false
       };
       
       await processImages(processingJob);

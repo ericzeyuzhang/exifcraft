@@ -1,7 +1,5 @@
-- 更换llava模型
 - 可配置是否覆盖已经存在的tag
-- summarize运行的结果
-- 提供base prompt
+- summarize/整理运行的结果
 - 是否需要ai模型参数？
 - dry run模式
 - 防止意外使用到exif里面的信息来生成desc

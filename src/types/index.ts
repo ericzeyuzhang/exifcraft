@@ -35,6 +35,7 @@ export interface ProcessingJob {
   files?: string[];
   config: ExifCraftConfig;
   verbose: boolean;
+  dryRun: boolean;
 }
 
 export type ExifData = {
@@ -47,4 +48,5 @@ export interface CLIOptions {
   files?: string[];
   config: string;
   verbose: boolean;
+  dryRun: boolean;
 }

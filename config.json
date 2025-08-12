@@ -19,7 +19,7 @@
   "aiModel": {
     "provider": "ollama",
     "endpoint": "http://erics-mac-mini.local:11434/api/generate",
-    "model": "gemma3:4b",
+    "model": "llava",
     "options": {
       "temperature": 0,
       "max_tokens": 500

@@ -10,7 +10,7 @@ import { ProcessingJob, ExifCraftConfig, ExifData } from '../types';
  * Process image files
  */
 export async function processImages(job: ProcessingJob): Promise<void> {
-  const { directory, files, config, verbose } = job;
+  const { directory, files, config, verbose, dryRun } = job;
   
   // Get list of image files to process
   let imageFiles: string[] = [];
@@ -40,7 +40,7 @@ export async function processImages(job: ProcessingJob): Promise<void> {
     }
     
     try {
-      await processImage(imagePath, config, verbose);
+      await processImage(imagePath, config, verbose, dryRun);
       if (verbose) {
         console.log(chalk.green(`✓ Completed: ${fileName}`));
       }
@@ -59,7 +59,8 @@ export async function processImages(job: ProcessingJob): Promise<void> {
 export async function processImage(
   imagePath: string, 
   config: ExifCraftConfig, 
-  verbose: boolean
+  verbose: boolean,
+  dryRun: boolean
 ): Promise<void> {
   // Check if file exists
   try {
@@ -104,7 +105,16 @@ export async function processImage(
   
   // Write EXIF data to image file
   if (Object.keys(exifData).length > 0) {
-    await writeExifData(imagePath, exifData, config.preserveOriginal, verbose);
+    if (dryRun) {
+      if (verbose) {
+        console.log(chalk.blue(`  [DRY RUN] Would write EXIF tags: ${Object.keys(exifData).join(', ')}`));
+        for (const [tagName, value] of Object.entries(exifData)) {
+          console.log(chalk.blue(`    ${tagName}: ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}`));
+        }
+      }
+    } else {
+      await writeExifData(imagePath, exifData, config.preserveOriginal, verbose);
+    }
   } else {
     console.warn(chalk.yellow(`  Warning: No EXIF data generated`));
   }
