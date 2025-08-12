@@ -88,7 +88,7 @@ export async function processImage(
       
       // Write response to corresponding EXIF tags
       for (const tagName of promptConfig.exifTags) {
-        exifData[tagName] = aiResponse;
+        (exifData as any)[tagName] = aiResponse;
       }
       
     } catch (error) {

@@ -56,8 +56,8 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
     throw new Error('Configuration file must contain aiModel configuration');
   }
   
-  if (!config.aiModel.type || !config.aiModel.endpoint) {
-    throw new Error('aiModel must contain type and endpoint fields');
+  if (!config.aiModel.provider || !config.aiModel.endpoint) {
+    throw new Error('aiModel must contain provider and endpoint fields');
   }
   
   // Validate imageFormats if present
@@ -89,7 +89,7 @@ export function getDefaultConfig(): ExifCraftConfig {
       }
     ],
     aiModel: {
-      type: "ollama",
+      provider: "ollama",
       endpoint: "http://localhost:11434/api/generate",
       model: "llava"
     },

@@ -15,15 +15,15 @@ export async function generateAIResponse(
   aiConfig: AIModelConfig, 
   verbose: boolean = false
 ): Promise<string> {
-  const { type, endpoint, model, options = {} } = aiConfig;
+  const { provider, endpoint, model, options = {} } = aiConfig;
   
-  switch (type.toLowerCase()) {
+  switch (provider.toLowerCase()) {
     case 'ollama':
       return await callOllamaAPI(imagePath, prompt, endpoint, model, options, verbose);
     case 'openai':
     case 'gemini':
     default:
-      throw new Error(`Unsupported AI model type: ${type}. Currently only 'ollama' is implemented.`);
+      throw new Error(`Unsupported AI model provider: ${provider}. Currently only 'ollama' is implemented.`);
   }
 }
 

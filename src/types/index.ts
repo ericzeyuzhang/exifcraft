@@ -2,22 +2,24 @@
  * Type definitions for ExifCraft
  */
 
+import { TagName } from 'exiftool-vendored/dist/Tags';
+
 export interface PromptConfig {
   name: string;
   prompt: string;
-  exifTags: string[];
+  exifTags: TagName[];
 }
 
 export interface AIModelOptions {
   temperature?: number;
   max_tokens?: number;
-  // OpenAI/Gemini specific options (placeholders)
+  // Placeholder for OpenAI/Gemini specific options
   apiKey?: string;
   headers?: Record<string, string>;
 }
 
 export interface AIModelConfig {
-  type: 'ollama' | 'openai' | 'gemini';
+  provider: AIModelProvider;
   endpoint: string;
   model: string;
   options?: AIModelOptions;
@@ -37,9 +39,9 @@ export interface ProcessingOptions {
   verbose: boolean;
 }
 
-export interface ExifData {
-  [tagName: string]: string;
-}
+export type ExifData = {
+  [K in TagName]?: string;
+};
 
 export interface ImageInfo {
   path: string;
@@ -74,6 +76,6 @@ export type SupportedImageFormat =
   | '.bmp'
   | '.gif';
 
-export type AIModelType = 'ollama' | 'openai' | 'custom';
+export type AIModelProvider = 'ollama' | 'openai' | 'gemini';
 
 export type LogLevel = 'info' | 'warn' | 'error' | 'success';
