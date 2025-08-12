@@ -2,25 +2,33 @@
   "name": "exifcraft",
   "version": "1.0.0",
   "description": "AI-powered EXIF metadata crafting tool for images",
-  "main": "dist/index.js",
+  "main": "dist/electron/main.js",
   "bin": {
     "exifcraft": "./dist/bin/cli.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/copy-renderer.js",
     "start": "node dist/bin/cli.js",
     "dev": "ts-node src/bin/cli.ts",
     "clean": "rm -rf dist",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "electron:dev": "concurrently \"npm run build:watch\" \"wait-on dist && electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "build:watch": "tsc --watch",
+    "copy-renderer": "node scripts/copy-renderer.js",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
   },
   "keywords": [
     "exif",
     "metadata",
     "ai",
     "image",
-    "cli"
+    "cli",
+    "gui",
+    "electron"
   ],
   "author": "",
   "license": "MIT",
@@ -33,17 +41,46 @@
     "heic-convert": "^2.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/fs-extra": "^11.0.4",
     "@types/jest": "^29.5.0",
+    "@types/node": "^20.10.0",
+    "concurrently": "^8.2.0",
+    "electron": "^37.2.6",
+    "electron-builder": "^24.6.0",
+    "fs-extra": "^11.3.1",
     "jest": "^29.7.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "wait-on": "^7.0.1"
   },
   "engines": {
     "node": ">=14.0.0"
   },
   "overrides": {
-    "glob": "^10.3.0"
+    "glob": "^10.3.0",
+    "boolean": "^4.0.0"
+  },
+  "build": {
+    "appId": "com.exifcraft.app",
+    "productName": "ExifCraft",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "linux": {
+      "target": "AppImage"
+    }
   }
 }

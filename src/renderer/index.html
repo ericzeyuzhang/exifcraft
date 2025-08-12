@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExifCraft - AI图像元数据工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1><i class="fas fa-camera"></i> ExifCraft</h1>
+                <p>AI图像元数据工具</p>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-tab="files">
+                    <i class="fas fa-images"></i>
+                    文件管理
+                </button>
+                <button class="nav-btn" data-tab="config">
+                    <i class="fas fa-cog"></i>
+                    配置设置
+                </button>
+                <button class="nav-btn" data-tab="processing">
+                    <i class="fas fa-play"></i>
+                    处理控制
+                </button>
+                <button class="nav-btn" data-tab="results">
+                    <i class="fas fa-chart-bar"></i>
+                    处理结果
+                </button>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 文件管理标签页 -->
+            <div class="tab-content active" id="files-tab">
+                <div class="tab-header">
+                    <h2>文件管理</h2>
+                    <div class="tab-actions">
+                        <button class="btn btn-primary" id="select-files-btn">
+                            <i class="fas fa-folder-open"></i>
+                            选择文件
+                        </button>
+                        <button class="btn btn-secondary" id="select-folder-btn">
+                            <i class="fas fa-folder"></i>
+                            选择文件夹
+                        </button>
+                        <button class="btn btn-danger" id="clear-files-btn">
+                            <i class="fas fa-trash"></i>
+                            清空列表
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="file-drop-zone" id="file-drop-zone">
+                    <div class="drop-zone-content">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <h3>拖拽图片文件到这里</h3>
+                        <p>支持 JPG, PNG, HEIC 等格式</p>
+                    </div>
+                </div>
+                
+                <div class="file-list" id="file-list">
+                    <!-- 文件列表将在这里动态生成 -->
+                </div>
+            </div>
+
+            <!-- 配置设置标签页 -->
+            <div class="tab-content" id="config-tab">
+                <div class="tab-header">
+                    <h2>配置设置</h2>
+                    <div class="tab-actions">
+                        <button class="btn btn-primary" id="load-config-btn">
+                            <i class="fas fa-folder-open"></i>
+                            加载配置
+                        </button>
+                        <button class="btn btn-secondary" id="save-config-btn">
+                            <i class="fas fa-save"></i>
+                            保存配置
+                        </button>
+                        <button class="btn btn-info" id="reset-config-btn">
+                            <i class="fas fa-undo"></i>
+                            重置配置
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="config-form">
+                    <div class="form-section">
+                        <h3>AI模型配置</h3>
+                        <div class="form-group">
+                            <label for="ai-provider">AI提供商</label>
+                            <select id="ai-provider" class="form-control">
+                                <option value="ollama">Ollama</option>
+                                <option value="openai">OpenAI</option>
+                                <option value="gemini">Google Gemini</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ai-endpoint">API端点</label>
+                            <input type="text" id="ai-endpoint" class="form-control" 
+                                   placeholder="http://localhost:11434/api/generate">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ai-model">模型名称</label>
+                            <input type="text" id="ai-model" class="form-control" 
+                                   placeholder="llava">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="ai-temperature">温度</label>
+                            <input type="range" id="ai-temperature" class="form-control" 
+                                   min="0" max="2" step="0.1" value="0">
+                            <span class="range-value">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>任务配置</h3>
+                        <div id="tasks-container">
+                            <!-- 任务配置将在这里动态生成 -->
+                        </div>
+                        <button class="btn btn-outline" id="add-task-btn">
+                            <i class="fas fa-plus"></i>
+                            添加任务
+                        </button>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>其他设置</h3>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="preserve-original">
+                                <span class="checkmark"></span>
+                                保留原始文件
+                            </label>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="base-prompt">基础提示词</label>
+                            <textarea id="base-prompt" class="form-control" rows="3"
+                                      placeholder="You are a helpful assistant."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 处理控制标签页 -->
+            <div class="tab-content" id="processing-tab">
+                <div class="tab-header">
+                    <h2>处理控制</h2>
+                    <div class="tab-actions">
+                        <button class="btn btn-success" id="start-processing-btn">
+                            <i class="fas fa-play"></i>
+                            开始处理
+                        </button>
+                        <button class="btn btn-warning" id="stop-processing-btn" disabled>
+                            <i class="fas fa-stop"></i>
+                            停止处理
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="processing-status">
+                    <div class="status-card">
+                        <div class="status-header">
+                            <h3>处理状态</h3>
+                            <span class="status-badge" id="status-badge">就绪</span>
+                        </div>
+                        
+                        <div class="progress-container">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progress-fill"></div>
+                            </div>
+                            <div class="progress-text">
+                                <span id="progress-text">0 / 0 文件已处理</span>
+                                <span id="progress-percentage">0%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="processing-log" id="processing-log">
+                            <!-- 处理日志将在这里显示 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 处理结果标签页 -->
+            <div class="tab-content" id="results-tab">
+                <div class="tab-header">
+                    <h2>处理结果</h2>
+                    <div class="tab-actions">
+                        <button class="btn btn-primary" id="export-results-btn">
+                            <i class="fas fa-download"></i>
+                            导出结果
+                        </button>
+                        <button class="btn btn-secondary" id="clear-results-btn">
+                            <i class="fas fa-trash"></i>
+                            清空结果
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="results-container" id="results-container">
+                    <!-- 处理结果将在这里显示 -->
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 模态框 -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">标题</h3>
+                <button class="modal-close" id="modal-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- 模态框内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification">
+        <div class="notification-content">
+            <i class="notification-icon"></i>
+            <span class="notification-message"></span>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
