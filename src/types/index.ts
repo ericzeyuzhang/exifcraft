@@ -36,6 +36,8 @@ export interface ProcessingJob {
   config: ExifCraftConfig;
   verbose: boolean;
   dryRun: boolean;
+  onProgress?: (current: number, total: number, fileName: string) => void;
+  onResult?: (fileName: string, success: boolean, error?: string) => void;
 }
 
 export type ExifData = {

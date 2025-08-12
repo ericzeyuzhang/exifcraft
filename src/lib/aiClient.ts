@@ -4,11 +4,12 @@ import * as path from 'path';
 // @ts-ignore
 import heicConvert from 'heic-convert';
 import { AIModelConfig } from '../types';
+import { Logger } from './logger';
 
 /**
  * Convert image to compatible format for AI processing
  */
-export async function convertImageForAI(imagePath: string, verbose: boolean = false): Promise<Buffer> {
+export async function convertImageForAI(imagePath: string, verbose: boolean = false, logger: Logger): Promise<Buffer> {
   const imageBuffer = await fs.readFile(imagePath);
   
   // Convert HEIC/HEIF to JPEG for Ollama compatibility
@@ -41,13 +42,14 @@ export async function generateAIResponse(
   imageBuffer: Buffer, 
   prompt: string, 
   aiConfig: AIModelConfig, 
-  verbose: boolean = false
+  verbose: boolean = false,
+  logger: Logger
 ): Promise<string> {
   const { provider, endpoint, model, options = {} } = aiConfig;
   
   switch (provider.toLowerCase()) {
     case 'ollama':
-      return await callOllamaAPI(imageBuffer, prompt, endpoint, model, options, verbose);
+      return await callOllamaAPI(imageBuffer, prompt, endpoint, model, options, verbose, logger);
     case 'openai':
     case 'gemini':
     default:
@@ -64,7 +66,8 @@ async function callOllamaAPI(
   endpoint: string, 
   model: string, 
   options: AIModelConfig['options'], 
-  verbose: boolean
+  verbose: boolean,
+  logger: Logger
 ): Promise<string> {
   try {
     const imageBase64 = imageBuffer.toString('base64');
@@ -80,10 +83,7 @@ async function callOllamaAPI(
       }
     };
     
-    if (verbose) {
-      console.log(`    Calling Ollama API: ${endpoint}`);
-      console.log(`    Model: ${requestData.model}`);
-    }
+    logger.showAICall(endpoint, requestData.model);
     
     const response: AxiosResponse<OllamaResponse> = await axios.post(endpoint, requestData, {
       headers: {

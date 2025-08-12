@@ -5,12 +5,13 @@ import { getImageFiles, filterSupportedFiles } from './imageUtils';
 import { generateAIResponse, convertImageForAI } from './aiClient';
 import { writeExifData } from './exifWriter';
 import { ProcessingJob, ExifCraftConfig, ExifData } from '../types';
+import { Logger } from './logger';
 
 /**
  * Process image files
  */
-export async function processImages(job: ProcessingJob): Promise<void> {
-  const { directory, files, config, verbose, dryRun } = job;
+export async function processImages(job: ProcessingJob, logger: Logger): Promise<void> {
+  const { directory, files, config, verbose, dryRun, onProgress, onResult } = job;
   
   // Get list of image files to process
   let imageFiles: string[] = [];
@@ -35,19 +36,32 @@ export async function processImages(job: ProcessingJob): Promise<void> {
     const imagePath = imageFiles[i];
     const fileName = path.basename(imagePath);
     
+    // Update progress if callback is provided
+    if (onProgress) {
+      onProgress(i + 1, imageFiles.length, fileName);
+    }
+    
     if (verbose) {
       console.log(chalk.yellow(`\n[${i + 1}/${imageFiles.length}] Processing: ${fileName}`));
     }
     
     try {
-      await processImage(imagePath, config, verbose, dryRun);
+      await processImage(imagePath, config, verbose, dryRun, logger);
       if (verbose) {
         console.log(chalk.green(`✓ Completed: ${fileName}`));
+      }
+      // Report success
+      if (onResult) {
+        onResult(fileName, true);
       }
     } catch (error) {
       console.error(chalk.red(`✗ Processing failed ${fileName}: ${(error as Error).message}`));
       if (verbose) {
         console.error((error as Error).stack);
+      }
+      // Report failure
+      if (onResult) {
+        onResult(fileName, false, (error as Error).message);
       }
     }
   }
@@ -60,7 +74,8 @@ export async function processImage(
   imagePath: string, 
   config: ExifCraftConfig, 
   verbose: boolean,
-  dryRun: boolean
+  dryRun: boolean,
+  logger: Logger
 ): Promise<void> {
   // Check if file exists
   try {
@@ -70,7 +85,7 @@ export async function processImage(
   }
 
   // Convert image once for all AI calls
-  const imageBuffer = await convertImageForAI(imagePath, verbose);
+  const imageBuffer = await convertImageForAI(imagePath, verbose, logger);
   
   // Generate AI response for each prompt and write to EXIF
   const exifData: ExifData = {};
@@ -86,12 +101,11 @@ export async function processImage(
         imageBuffer,
         (config.basePrompt || '') + tagGenerationConfig.prompt,
         config.aiModel,
-        verbose
+        verbose,
+        logger
       );
       
-      if (verbose) {
-        console.log(`  AI response: ${aiResponse.substring(0, 100)}${aiResponse.length > 100 ? '...' : ''}`);
-      }
+      logger.showAIResponse(aiResponse);
       
       // Write response to corresponding EXIF tags
       for (const tagName of tagGenerationConfig.tags) {

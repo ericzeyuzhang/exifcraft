@@ -4,11 +4,11 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import chalk from 'chalk';
-import ora from 'ora';
 import { processImages } from '../lib/processor';
 import { loadConfig } from '../lib/configProvider';
 import { cleanup } from '../lib/exifWriter';
 import { CLIOptions, ProcessingJob } from '../types';
+import { Logger } from '../lib/logger';
 
 const program = new Command();
 
@@ -28,6 +28,12 @@ program
 const options = program.opts() as CLIOptions;
 
 async function main(): Promise<void> {
+  // Initialize logger singleton
+  const logger = Logger.getInstance({
+    verbose: options.verbose,
+    dryRun: options.dryRun
+  });
+
   try {
     // Validate input parameters
     if (!options.directory && !options.files) {
@@ -45,13 +51,18 @@ async function main(): Promise<void> {
 
     const config = await loadConfig(configPath);
     
+    // Show configuration
     if (options.verbose) {
       console.log(chalk.blue('Configuration:'));
       console.log(JSON.stringify(config, null, 2));
     }
 
     // Process images
-    const spinner = ora('Processing images...').start();
+    console.log(chalk.blue('Processing images...'));
+    
+    // Track processing results
+    const successfulFiles: string[] = [];
+    const failedFiles: Array<{fileName: string, error: string}> = [];
     
     try {
       const processingJob: ProcessingJob = {
@@ -59,35 +70,41 @@ async function main(): Promise<void> {
         files: options.files,
         config: config,
         verbose: options.verbose,
-        dryRun: options.dryRun || false
+        dryRun: options.dryRun,
+        onProgress: (current: number, total: number, fileName: string) => {
+          logger.showProgress(current, total, fileName);
+        },
+        onResult: (fileName: string, success: boolean, error?: string) => {
+          if (success) {
+            successfulFiles.push(fileName);
+          } else {
+            failedFiles.push({ fileName, error: error || 'Unknown error' });
+          }
+        }
       };
       
-      await processImages(processingJob);
+      await processImages(processingJob, logger);
       
-      spinner.succeed(chalk.green('All images processed successfully!'));
+      // Display summary
+      logger.showSummary({ successfulFiles, failedFiles });
       
       // Clean up resources and exit successfully
       await cleanup();
       process.exit(0);
       
     } catch (error) {
-      spinner.fail(chalk.red('Error occurred while processing images'));
+      logger.showError('Error occurred while processing images');
       throw error;
     }
 
   } catch (error) {
-    console.error(chalk.red('Program execution failed:'), (error as Error).message);
-    if (options.verbose) {
-      console.error((error as Error).stack);
-    }
+    logger.showError('Program execution failed:', error as Error);
     
     // Clean up resources before exiting with error
     try {
       await cleanup();
     } catch (cleanupError) {
-      if (options.verbose) {
-        console.error('Cleanup error:', (cleanupError as Error).message);
-      }
+      logger.showError('Cleanup error:', cleanupError as Error);
     }
     process.exit(1);
   }
