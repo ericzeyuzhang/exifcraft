@@ -118,36 +118,3 @@ Thumbs.db
 
 # Test data
 /tests/images
-
-# Electron build outputs
-dist-electron/
-out/
-release/
-build/
-*.dmg
-*.exe
-*.deb
-*.rpm
-*.AppImage
-*.snap
-*.zip
-*.tar.gz
-*.tar.xz
-
-# Electron specific
-app-update.yml
-latest.yml
-latest-mac.yml
-latest-linux.yml
-latest-win.yml
-
-# Electron builder cache
-node_modules/.cache/
-.cache/
-
-# Electron app packaging
-*.asar
-*.asar.unpacked/
-
-# Electron development
-.electron-builder.env
