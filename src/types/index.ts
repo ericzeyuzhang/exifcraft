@@ -6,7 +6,7 @@ import { TagName } from 'exiftool-vendored/dist/Tags';
 
 export interface TagGenerationConfig {
   name: string;
-  exifTags: TagName[];
+  tags: TagName[];
   prompt: string;
 }
 

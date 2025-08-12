@@ -64,7 +64,6 @@ export async function processImage(
     throw new Error(`Image file does not exist: ${imagePath}`);
   }
 
-  
   // Generate AI response for each prompt and write to EXIF
   const exifData: ExifData = {};
   
@@ -87,8 +86,8 @@ export async function processImage(
       }
       
       // Write response to corresponding EXIF tags
-      for (const tagName of tagGenerationConfig.exifTags) {
-        (exifData as any)[tagName] = aiResponse;
+      for (const tagName of tagGenerationConfig.tags) {
+        exifData[tagName] = aiResponse;
       }
       
     } catch (error) {

@@ -60,5 +60,3 @@ export async function cleanup(): Promise<void> {
     console.warn(chalk.yellow(`Warning: Error during exiftool cleanup: ${(error as Error).message}`));
   }
 }
-
-

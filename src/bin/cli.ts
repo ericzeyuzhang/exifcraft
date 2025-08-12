@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import chalk from 'chalk';
 import ora from 'ora';
 import { processImages } from '../lib/processor';
-import { loadConfig } from '../lib/config';
+import { loadConfig } from '../lib/configProvider';
 import { cleanup } from '../lib/exifWriter';
 import { CLIOptions, ProcessingJob } from '../types';
 
