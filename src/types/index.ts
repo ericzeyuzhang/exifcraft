@@ -11,12 +11,13 @@ export interface PromptConfig {
 export interface AIModelOptions {
   temperature?: number;
   max_tokens?: number;
+  // OpenAI/Gemini specific options (placeholders)
   apiKey?: string;
   headers?: Record<string, string>;
 }
 
 export interface AIModelConfig {
-  type: 'ollama' | 'openai' | 'custom';
+  type: 'ollama' | 'openai' | 'gemini';
   endpoint: string;
   model: string;
   options?: AIModelOptions;
