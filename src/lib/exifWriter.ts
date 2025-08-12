@@ -15,11 +15,10 @@ export async function writeExifData(
     // Prepare the metadata object for exiftool-vendored
     const metadata: Record<string, string> = {};
     
-    // Map our internal EXIF data structure to exiftool format
+    // Copy EXIF data directly to metadata object
     for (const [tagName, value] of Object.entries(exifData)) {
-      const mappedTag = mapExifTag(tagName);
-      if (mappedTag && value) {
-        metadata[mappedTag] = value;
+      if (value) {
+        metadata[tagName] = value;
       }
     }
     
@@ -50,37 +49,6 @@ export async function writeExifData(
   }
 }
 
-
-
-/**
- * Map internal tag names to exiftool tag names
- */
-function mapExifTag(tagName: string): string | null {
-  const tagMapping: Record<string, string> = {
-    // Standard EXIF tags
-    'ImageDescription': 'ImageDescription',
-    'Artist': 'Artist',
-    'Copyright': 'Copyright',
-    'Software': 'Software',
-    
-    // User comment (exiftool handles encoding automatically)
-    'UserComment': 'UserComment',
-    
-    // Keywords and subject - map to appropriate fields
-    'Keywords': 'Keywords',
-    'Subject': 'Subject',
-    
-    // Additional common tags
-    'Make': 'Make',
-    'Model': 'Model',
-    'DateTime': 'DateTime',
-    'DateTimeOriginal': 'DateTimeOriginal',
-    'DateTimeDigitized': 'DateTimeDigitized'
-  };
-  
-  return tagMapping[tagName] || null;
-}
-
 /**
  * Clean up exiftool resources
  * Should be called when the application exits
@@ -93,17 +61,4 @@ export async function cleanup(): Promise<void> {
   }
 }
 
-// Handle process exit to clean up resources
-process.on('exit', () => {
-  exiftool.end(false); // Synchronous cleanup on exit
-});
 
-process.on('SIGINT', async () => {
-  await cleanup();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  await cleanup();
-  process.exit(0);
-});

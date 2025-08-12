@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { ExifCraftConfig, TagGenerationConfig, AIModelConfig } from '../types';
+import { ExifCraftConfig } from '../types';
 
 /**
  * Load configuration file
