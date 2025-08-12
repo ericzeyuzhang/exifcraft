@@ -1,18 +1,20 @@
-const { exiftool } = require('exiftool-vendored');
-const chalk = require('chalk');
-const { isSupportedFormat } = require('./imageUtils');
+import { exiftool } from 'exiftool-vendored';
+import chalk from 'chalk';
+import { isSupportedFormat } from './imageUtils';
+import { ExifData, WriteOptions } from '../types';
 
 /**
  * Write EXIF data to image file
- * @param {string} imagePath - Image file path
- * @param {Object} exifData - EXIF data to write
- * @param {boolean} overwriteOriginal - Whether to overwrite original file without backup
- * @param {boolean} verbose - Whether to show verbose output
  */
-async function writeExifData(imagePath, exifData, overwriteOriginal = true, verbose = false) {
+export async function writeExifData(
+  imagePath: string, 
+  exifData: ExifData, 
+  overwriteOriginal: boolean = true, 
+  verbose: boolean = false
+): Promise<void> {
   try {
     // Prepare the metadata object for exiftool-vendored
-    const metadata = {};
+    const metadata: Record<string, string> = {};
     
     // Map our internal EXIF data structure to exiftool format
     for (const [tagName, value] of Object.entries(exifData)) {
@@ -36,39 +38,36 @@ async function writeExifData(imagePath, exifData, overwriteOriginal = true, verb
     // Write metadata to the image file
     // Use -overwrite_original_in_place if overwriteOriginal is true, otherwise exiftool will create backup
     const writeArgs = overwriteOriginal ? ["-overwrite_original_in_place"] : [];
+    const options: WriteOptions | undefined = writeArgs.length > 0 ? { writeArgs } : undefined;
     
-    await exiftool.write(imagePath, metadata, writeArgs.length > 0 ? { writeArgs } : undefined);
+    await exiftool.write(imagePath, metadata, options);
     
     if (verbose) {
       console.log(chalk.green(`  ✓ EXIF data written successfully`));
     }
     
   } catch (error) {
-    throw new Error(`Failed to write EXIF data: ${error.message}`);
+    throw new Error(`Failed to write EXIF data: ${(error as Error).message}`);
   }
 }
 
 /**
  * Read EXIF data from image file
- * @param {string} imagePath - Image file path
- * @returns {Promise<Object>} EXIF data object
  */
-async function readExifData(imagePath) {
+export async function readExifData(imagePath: string): Promise<Record<string, any>> {
   try {
     const metadata = await exiftool.read(imagePath);
     return metadata;
   } catch (error) {
-    throw new Error(`Failed to read EXIF data: ${error.message}`);
+    throw new Error(`Failed to read EXIF data: ${(error as Error).message}`);
   }
 }
 
 /**
  * Map internal tag names to exiftool tag names
- * @param {string} tagName - Internal tag name
- * @returns {string|null} Exiftool tag name or null if not supported
  */
-function mapExifTag(tagName) {
-  const tagMapping = {
+function mapExifTag(tagName: string): string | null {
+  const tagMapping: Record<string, string> = {
     // Standard EXIF tags
     'ImageDescription': 'ImageDescription',
     'Artist': 'Artist',
@@ -93,17 +92,15 @@ function mapExifTag(tagName) {
   return tagMapping[tagName] || null;
 }
 
-// isSupportedFormat is now imported from fileUtils
-
 /**
  * Clean up exiftool resources
  * Should be called when the application exits
  */
-async function cleanup() {
+export async function cleanup(): Promise<void> {
   try {
     await exiftool.end();
   } catch (error) {
-    console.warn(chalk.yellow(`Warning: Error during exiftool cleanup: ${error.message}`));
+    console.warn(chalk.yellow(`Warning: Error during exiftool cleanup: ${(error as Error).message}`));
   }
 }
 
@@ -121,10 +118,3 @@ process.on('SIGTERM', async () => {
   await cleanup();
   process.exit(0);
 });
-
-module.exports = {
-  writeExifData,
-  readExifData,
-  isSupportedFormat,
-  cleanup
-};

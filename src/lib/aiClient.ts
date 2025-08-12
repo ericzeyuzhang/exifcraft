@@ -1,17 +1,45 @@
-const axios = require('axios');
-const fs = require('fs').promises;
-const path = require('path');
-const chalk = require('chalk');
+import axios, { AxiosResponse } from 'axios';
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import chalk from 'chalk';
+import { AIModelConfig, AIModelOptions } from '../types';
+
+interface OllamaResponse {
+  response: string;
+}
+
+interface OpenAIMessage {
+  role: 'user';
+  content: Array<{
+    type: 'text' | 'image_url';
+    text?: string;
+    image_url?: {
+      url: string;
+    };
+  }>;
+}
+
+interface OpenAIResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+  }>;
+}
+
+interface CustomAPIResponse {
+  response?: string;
+}
 
 /**
  * Generate AI response
- * @param {string} imagePath - Image file path
- * @param {string} prompt - Prompt text
- * @param {Object} aiConfig - AI model configuration
- * @param {boolean} verbose - Whether to show verbose output
- * @returns {Promise<string>} AI generated response text
  */
-async function generateAIResponse(imagePath, prompt, aiConfig, verbose = false) {
+export async function generateAIResponse(
+  imagePath: string, 
+  prompt: string, 
+  aiConfig: AIModelConfig, 
+  verbose: boolean = false
+): Promise<string> {
   const { type, endpoint, model, options = {} } = aiConfig;
   
   switch (type.toLowerCase()) {
@@ -28,15 +56,15 @@ async function generateAIResponse(imagePath, prompt, aiConfig, verbose = false) 
 
 /**
  * Call Ollama API
- * @param {string} imagePath - Image file path
- * @param {string} prompt - Prompt text
- * @param {string} endpoint - API endpoint
- * @param {string} model - Model name
- * @param {Object} options - Options
- * @param {boolean} verbose - Whether to show verbose output
- * @returns {Promise<string>} AI response
  */
-async function callOllamaAPI(imagePath, prompt, endpoint, model, options, verbose) {
+async function callOllamaAPI(
+  imagePath: string, 
+  prompt: string, 
+  endpoint: string, 
+  model: string, 
+  options: AIModelOptions, 
+  verbose: boolean
+): Promise<string> {
   try {
     // Read and encode image
     const imageBase64 = await encodeImageToBase64(imagePath);
@@ -57,7 +85,7 @@ async function callOllamaAPI(imagePath, prompt, endpoint, model, options, verbos
       console.log(`    Model: ${requestData.model}`);
     }
     
-    const response = await axios.post(endpoint, requestData, {
+    const response: AxiosResponse<OllamaResponse> = await axios.post(endpoint, requestData, {
       headers: {
         'Content-Type': 'application/json'
       },
@@ -70,7 +98,7 @@ async function callOllamaAPI(imagePath, prompt, endpoint, model, options, verbos
       throw new Error('AI API returned abnormal format');
     }
     
-  } catch (error) {
+  } catch (error: any) {
     if (error.code === 'ECONNREFUSED') {
       throw new Error(`Unable to connect to Ollama service, please ensure Ollama is running (${endpoint})`);
     } else if (error.response) {
@@ -83,15 +111,15 @@ async function callOllamaAPI(imagePath, prompt, endpoint, model, options, verbos
 
 /**
  * Call OpenAI compatible API
- * @param {string} imagePath - Image file path
- * @param {string} prompt - Prompt text
- * @param {string} endpoint - API endpoint
- * @param {string} model - Model name
- * @param {Object} options - Options
- * @param {boolean} verbose - Whether to show verbose output
- * @returns {Promise<string>} AI response
  */
-async function callOpenAIAPI(imagePath, prompt, endpoint, model, options, verbose) {
+async function callOpenAIAPI(
+  imagePath: string, 
+  prompt: string, 
+  endpoint: string, 
+  model: string, 
+  options: AIModelOptions, 
+  verbose: boolean
+): Promise<string> {
   try {
     const imageBase64 = await encodeImageToBase64(imagePath);
     const mimeType = getMimeType(imagePath);
@@ -114,7 +142,7 @@ async function callOpenAIAPI(imagePath, prompt, endpoint, model, options, verbos
             }
           ]
         }
-      ],
+      ] as OpenAIMessage[],
       max_tokens: options.max_tokens || 200,
       temperature: options.temperature || 0.7
     };
@@ -124,7 +152,7 @@ async function callOpenAIAPI(imagePath, prompt, endpoint, model, options, verbos
       console.log(`    Model: ${requestData.model}`);
     }
     
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json'
     };
     
@@ -133,7 +161,7 @@ async function callOpenAIAPI(imagePath, prompt, endpoint, model, options, verbos
       headers['Authorization'] = `Bearer ${options.apiKey}`;
     }
     
-    const response = await axios.post(endpoint, requestData, {
+    const response: AxiosResponse<OpenAIResponse> = await axios.post(endpoint, requestData, {
       headers,
       timeout: 60000
     });
@@ -144,7 +172,7 @@ async function callOpenAIAPI(imagePath, prompt, endpoint, model, options, verbos
       throw new Error('AI API returned abnormal format');
     }
     
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       throw new Error(`OpenAI API error: ${error.response.status} - ${error.response.data?.error?.message || error.response.statusText}`);
     } else {
@@ -155,15 +183,15 @@ async function callOpenAIAPI(imagePath, prompt, endpoint, model, options, verbos
 
 /**
  * Call custom API
- * @param {string} imagePath - Image file path
- * @param {string} prompt - Prompt text
- * @param {string} endpoint - API endpoint
- * @param {string} model - Model name
- * @param {Object} options - Options
- * @param {boolean} verbose - Whether to show verbose output
- * @returns {Promise<string>} AI response
  */
-async function callCustomAPI(imagePath, prompt, endpoint, model, options, verbose) {
+async function callCustomAPI(
+  imagePath: string, 
+  prompt: string, 
+  endpoint: string, 
+  model: string, 
+  options: AIModelOptions, 
+  verbose: boolean
+): Promise<string> {
   try {
     const imageBase64 = await encodeImageToBase64(imagePath);
     
@@ -179,7 +207,7 @@ async function callCustomAPI(imagePath, prompt, endpoint, model, options, verbos
       console.log(`    Calling custom API: ${endpoint}`);
     }
     
-    const response = await axios.post(endpoint, requestData, {
+    const response: AxiosResponse<CustomAPIResponse | string> = await axios.post(endpoint, requestData, {
       headers: {
         'Content-Type': 'application/json',
         ...(options.headers || {})
@@ -188,7 +216,7 @@ async function callCustomAPI(imagePath, prompt, endpoint, model, options, verbos
     });
     
     // Assume custom API returns { response: "..." } format
-    if (response.data?.response) {
+    if (typeof response.data === 'object' && response.data.response) {
       return response.data.response.trim();
     } else if (typeof response.data === 'string') {
       return response.data.trim();
@@ -196,7 +224,7 @@ async function callCustomAPI(imagePath, prompt, endpoint, model, options, verbos
       throw new Error('Custom API returned abnormal format');
     }
     
-  } catch (error) {
+  } catch (error: any) {
     if (error.response) {
       throw new Error(`Custom API error: ${error.response.status} - ${error.response.statusText}`);
     } else {
@@ -207,26 +235,22 @@ async function callCustomAPI(imagePath, prompt, endpoint, model, options, verbos
 
 /**
  * Encode image to Base64
- * @param {string} imagePath - Image file path
- * @returns {Promise<string>} Base64 encoded image data
  */
-async function encodeImageToBase64(imagePath) {
+export async function encodeImageToBase64(imagePath: string): Promise<string> {
   try {
     const imageBuffer = await fs.readFile(imagePath);
     return imageBuffer.toString('base64');
   } catch (error) {
-    throw new Error(`Failed to read image file: ${error.message}`);
+    throw new Error(`Failed to read image file: ${(error as Error).message}`);
   }
 }
 
 /**
  * Get MIME type of image file
- * @param {string} imagePath - Image file path
- * @returns {string} MIME type
  */
-function getMimeType(imagePath) {
+export function getMimeType(imagePath: string): string {
   const ext = path.extname(imagePath).toLowerCase();
-  const mimeTypes = {
+  const mimeTypes: Record<string, string> = {
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
     '.png': 'image/png',
@@ -234,14 +258,10 @@ function getMimeType(imagePath) {
     '.webp': 'image/webp',
     '.bmp': 'image/bmp',
     '.tiff': 'image/tiff',
-    '.tif': 'image/tiff'
+    '.tif': 'image/tiff',
+    '.heic': 'image/heic',
+    '.heif': 'image/heif'
   };
   
   return mimeTypes[ext] || 'image/jpeg';
 }
-
-module.exports = {
-  generateAIResponse,
-  encodeImageToBase64,
-  getMimeType
-};

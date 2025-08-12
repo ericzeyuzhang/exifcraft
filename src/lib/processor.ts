@@ -1,20 +1,19 @@
-const fs = require('fs').promises;
-const path = require('path');
-const glob = require('glob');
-const chalk = require('chalk');
-const { getImageFiles, filterSupportedFiles } = require('./imageUtils');
-const { generateAIResponse } = require('./aiClient');
-const { writeExifData } = require('./exifWriter');
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import chalk from 'chalk';
+import { getImageFiles, filterSupportedFiles } from './imageUtils';
+import { generateAIResponse } from './aiClient';
+import { writeExifData } from './exifWriter';
+import { ProcessingOptions, ExifCraftConfig, ExifData } from '../types';
 
 /**
  * Process image files
- * @param {Object} options - Processing options
  */
-async function processImages(options) {
+export async function processImages(options: ProcessingOptions): Promise<void> {
   const { directory, files, config, model, verbose } = options;
   
   // Get list of image files to process
-  let imageFiles = [];
+  let imageFiles: string[] = [];
   
   if (directory) {
     imageFiles = await getImageFiles(directory, config.imageFormats);
@@ -42,9 +41,9 @@ async function processImages(options) {
       await processImage(imagePath, config, model, verbose);
       console.log(chalk.green(`✓ Completed: ${fileName}`));
     } catch (error) {
-      console.error(chalk.red(`✗ Processing failed ${fileName}: ${error.message}`));
+      console.error(chalk.red(`✗ Processing failed ${fileName}: ${(error as Error).message}`));
       if (verbose) {
-        console.error(error.stack);
+        console.error((error as Error).stack);
       }
     }
   }
@@ -52,12 +51,13 @@ async function processImages(options) {
 
 /**
  * Process a single image file
- * @param {string} imagePath - Image file path
- * @param {Object} config - Configuration object
- * @param {string} model - AI model name
- * @param {boolean} verbose - Whether to show verbose output
  */
-async function processImage(imagePath, config, model, verbose) {
+export async function processImage(
+  imagePath: string, 
+  config: ExifCraftConfig, 
+  model: string, 
+  verbose: boolean
+): Promise<void> {
   // Check if file exists
   try {
     await fs.access(imagePath);
@@ -65,10 +65,9 @@ async function processImage(imagePath, config, model, verbose) {
     throw new Error(`Image file does not exist: ${imagePath}`);
   }
 
-
   
   // Generate AI response for each prompt and write to EXIF
-  const exifData = {};
+  const exifData: ExifData = {};
   
   for (const promptConfig of config.prompts) {
     if (verbose) {
@@ -94,7 +93,7 @@ async function processImage(imagePath, config, model, verbose) {
       }
       
     } catch (error) {
-      console.warn(chalk.yellow(`  Warning: prompt "${promptConfig.name}" processing failed: ${error.message}`));
+      console.warn(chalk.yellow(`  Warning: prompt "${promptConfig.name}" processing failed: ${(error as Error).message}`));
     }
   }
   
@@ -105,8 +104,3 @@ async function processImage(imagePath, config, model, verbose) {
     console.warn(chalk.yellow(`  Warning: No EXIF data generated`));
   }
 }
-
-module.exports = {
-  processImages,
-  processImage
-};

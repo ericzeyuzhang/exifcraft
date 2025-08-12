@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
-const { Command } = require('commander');
-const path = require('path');
-const fs = require('fs');
-const chalk = require('chalk');
-const ora = require('ora');
-const { processImages } = require('../lib/processor');
-const { loadConfig } = require('../lib/config');
-const { cleanup } = require('../lib/exifWriter');
+import { Command } from 'commander';
+import * as path from 'path';
+import * as fs from 'fs';
+import chalk from 'chalk';
+import ora from 'ora';
+import { processImages } from '../lib/processor';
+import { loadConfig } from '../lib/config';
+import { cleanup } from '../lib/exifWriter';
+import { CLIOptions, ProcessingOptions } from '../types';
 
 const program = new Command();
 
@@ -24,9 +25,9 @@ program
   .option('-v, --verbose', 'Show verbose output')
   .parse();
 
-const options = program.opts();
+const options = program.opts() as CLIOptions;
 
-async function main() {
+async function main(): Promise<void> {
   try {
     // Validate input parameters
     if (!options.directory && !options.files) {
@@ -53,13 +54,15 @@ async function main() {
     const spinner = ora('Processing images...').start();
     
     try {
-      await processImages({
+      const processingOptions: ProcessingOptions = {
         directory: options.directory,
         files: options.files,
         config: config,
         model: options.model,
         verbose: options.verbose
-      });
+      };
+      
+      await processImages(processingOptions);
       
       spinner.succeed(chalk.green('All images processed successfully!'));
       
@@ -73,9 +76,9 @@ async function main() {
     }
 
   } catch (error) {
-    console.error(chalk.red('Program execution failed:'), error.message);
+    console.error(chalk.red('Program execution failed:'), (error as Error).message);
     if (options.verbose) {
-      console.error(error.stack);
+      console.error((error as Error).stack);
     }
     
     // Clean up resources before exiting with error
@@ -83,7 +86,7 @@ async function main() {
       await cleanup();
     } catch (cleanupError) {
       if (options.verbose) {
-        console.error('Cleanup error:', cleanupError.message);
+        console.error('Cleanup error:', (cleanupError as Error).message);
       }
     }
     process.exit(1);

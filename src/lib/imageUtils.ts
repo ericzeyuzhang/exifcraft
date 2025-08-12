@@ -1,44 +1,34 @@
-const fs = require('fs').promises;
-const path = require('path');
-const { glob } = require('glob');
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import { glob } from 'glob';
+import { ImageInfo } from '../types';
 
 /**
  * Extract file extension in lowercase
- * @param {string} filePath - File path
- * @returns {string} File extension in lowercase (e.g., '.jpg')
  */
-function getFileExtension(filePath) {
+export function getFileExtension(filePath: string): string {
   return path.extname(filePath).toLowerCase();
 }
 
 /**
  * Check if file format is supported
- * @param {string} filePath - File path
- * @param {string[]} supportedFormats - Array of supported formats from config
- * @returns {boolean} Whether the file format is supported
  */
-function isSupportedFormat(filePath, supportedFormats) {
+export function isSupportedFormat(filePath: string, supportedFormats: string[]): boolean {
   const ext = getFileExtension(filePath);
   return supportedFormats.includes(ext);
 }
 
 /**
  * Filter array of file paths to only include supported formats
- * @param {string[]} filePaths - Array of file paths
- * @param {string[]} supportedFormats - Array of supported formats
- * @returns {string[]} Filtered array of supported files
  */
-function filterSupportedFiles(filePaths, supportedFormats) {
+export function filterSupportedFiles(filePaths: string[], supportedFormats: string[]): string[] {
   return filePaths.filter(filePath => isSupportedFormat(filePath, supportedFormats));
 }
 
 /**
  * Get all image files in directory
- * @param {string} directory - Directory path
- * @param {string[]} supportedFormats - Supported image formats
- * @returns {Promise<string[]>} Array of image file paths
  */
-async function getImageFiles(directory, supportedFormats) {
+export async function getImageFiles(directory: string, supportedFormats: string[]): Promise<string[]> {
   try {
     // Check if directory exists
     const stat = await fs.stat(directory);
@@ -59,21 +49,17 @@ async function getImageFiles(directory, supportedFormats) {
     return files.sort(); // Sort alphabetically
     
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(`Directory does not exist: ${directory}`);
     }
     throw error;
   }
 }
 
-
-
 /**
  * Get image file information
- * @param {string} imagePath - Image file path
- * @returns {Promise<Object>} Image file information
  */
-async function getImageInfo(imagePath) {
+export async function getImageInfo(imagePath: string): Promise<ImageInfo> {
   try {
     const stat = await fs.stat(imagePath);
     const ext = path.extname(imagePath).toLowerCase();
@@ -88,16 +74,14 @@ async function getImageInfo(imagePath) {
       directory: path.dirname(imagePath)
     };
   } catch (error) {
-    throw new Error(`Unable to get image information: ${error.message}`);
+    throw new Error(`Unable to get image information: ${(error as Error).message}`);
   }
 }
 
 /**
  * Validate if image file is readable
- * @param {string} imagePath - Image file path
- * @returns {Promise<boolean>} Whether it's readable
  */
-async function validateImageFile(imagePath) {
+export async function validateImageFile(imagePath: string): Promise<boolean> {
   try {
     await fs.access(imagePath, fs.constants.R_OK);
     const stat = await fs.stat(imagePath);
@@ -112,18 +96,6 @@ async function validateImageFile(imagePath) {
     
     return true;
   } catch (error) {
-    throw new Error(`Image file validation failed: ${error.message}`);
+    throw new Error(`Image file validation failed: ${(error as Error).message}`);
   }
 }
-
-module.exports = {
-  // Core utility functions
-  getFileExtension,
-  isSupportedFormat,
-  filterSupportedFiles,
-  
-  // Image-specific functions
-  getImageFiles,
-  getImageInfo,
-  validateImageFile
-};

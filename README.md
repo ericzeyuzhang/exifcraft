@@ -263,18 +263,46 @@ ExifCraft uses ExifTool's built-in backup mechanism:
 
 ```
 exifcraft/
-├── bin/
-│   └── cli.js          # CLI entry file
-├── lib/
-│   ├── aiClient.js     # AI model client
-│   ├── config.js       # Configuration file handling
-│   ├── exifWriter.js   # EXIF writing functionality
-│   ├── imageUtils.js   # Image utility functions
-│   └── processor.js    # Main processing logic
+├── src/                # TypeScript source files
+│   ├── bin/
+│   │   └── cli.ts      # CLI entry file
+│   ├── lib/
+│   │   ├── aiClient.ts     # AI model client
+│   │   ├── config.ts       # Configuration file handling
+│   │   ├── exifWriter.ts   # EXIF writing functionality
+│   │   ├── imageUtils.ts   # Image utility functions
+│   │   └── processor.ts    # Main processing logic
+│   └── types/
+│       └── index.ts    # Type definitions
+├── dist/               # Compiled JavaScript output
 ├── config.json         # Default configuration file
+├── tsconfig.json       # TypeScript configuration
 ├── package.json        # Project configuration
 └── README.md          # Documentation
 ```
+
+### Development Scripts
+
+```bash
+# Development mode (TypeScript with ts-node)
+npm run dev -- -f image.jpg -v
+
+# Build TypeScript to JavaScript
+npm run build
+
+# Run compiled version
+npm start -- -f image.jpg -v
+
+# Clean build output
+npm run clean
+```
+
+### TypeScript Features
+
+- **Type Safety**: Full TypeScript support with strict type checking
+- **IntelliSense**: Better IDE support and autocomplete
+- **Interface Definitions**: Clear contracts for configuration and data structures
+- **Source Maps**: Debug TypeScript directly in production builds
 
 ### Contributing
 

@@ -2,12 +2,15 @@
   "name": "exifcraft",
   "version": "1.0.0",
   "description": "AI-powered EXIF metadata crafting tool for images",
-  "main": "index.js",
+  "main": "dist/index.js",
   "bin": {
-    "exifcraft": "./bin/cli.js"
+    "exifcraft": "./dist/bin/cli.js"
   },
   "scripts": {
-    "start": "node bin/cli.js",
+    "build": "tsc",
+    "start": "node dist/bin/cli.js",
+    "dev": "ts-node src/bin/cli.ts",
+    "clean": "rm -rf dist",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -26,6 +29,11 @@
     "exiftool-vendored": "^30.3.0",
     "glob": "^10.3.0",
     "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.0"
   },
   "engines": {
     "node": ">=14.0.0"

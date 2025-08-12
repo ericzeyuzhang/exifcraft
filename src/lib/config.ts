@@ -1,22 +1,22 @@
-const fs = require('fs').promises;
-const path = require('path');
+import { promises as fs } from 'fs';
+import * as path from 'path';
+import { ExifCraftConfig, PromptConfig, AIModelConfig } from '../types';
 
 /**
  * Load configuration file
- * @param {string} configPath - Configuration file path
- * @returns {Promise<Object>} Configuration object
  */
-async function loadConfig(configPath) {
+export async function loadConfig(configPath: string): Promise<ExifCraftConfig> {
   try {
     const configData = await fs.readFile(configPath, 'utf8');
-    const config = JSON.parse(configData);
+    const config = JSON.parse(configData) as ExifCraftConfig;
     
     // Validate configuration format
     validateConfig(config);
     
     return config;
   } catch (error) {
-    if (error.code === 'ENOENT') {
+    const err = error as NodeJS.ErrnoException;
+    if (err.code === 'ENOENT') {
       throw new Error(`Configuration file does not exist: ${configPath}`);
     } else if (error instanceof SyntaxError) {
       throw new Error(`Configuration file format error: ${error.message}`);
@@ -27,9 +27,8 @@ async function loadConfig(configPath) {
 
 /**
  * Validate configuration file format
- * @param {Object} config - Configuration object
  */
-function validateConfig(config) {
+export function validateConfig(config: any): asserts config is ExifCraftConfig {
   if (!config.prompts || !Array.isArray(config.prompts)) {
     throw new Error('Configuration file must contain prompts array');
   }
@@ -64,20 +63,24 @@ function validateConfig(config) {
   
   // Validate imageFormats if present
   if (config.imageFormats && Array.isArray(config.imageFormats)) {
-    const invalidFormats = config.imageFormats.filter(format => 
+    const invalidFormats = config.imageFormats.filter((format: any) => 
       typeof format !== 'string' || !format.startsWith('.')
     );
     if (invalidFormats.length > 0) {
       throw new Error(`Invalid image formats found: ${invalidFormats.join(', ')}. Formats must be strings starting with a dot (e.g., '.jpg')`);
     }
   }
+  
+  // Validate overwriteOriginal
+  if (config.overwriteOriginal !== undefined && typeof config.overwriteOriginal !== 'boolean') {
+    throw new Error('overwriteOriginal must be a boolean value');
+  }
 }
 
 /**
  * Get default configuration
- * @returns {Object} Default configuration object
  */
-function getDefaultConfig() {
+export function getDefaultConfig(): ExifCraftConfig {
   return {
     prompts: [
       {
@@ -95,9 +98,3 @@ function getDefaultConfig() {
     overwriteOriginal: true
   };
 }
-
-module.exports = {
-  loadConfig,
-  validateConfig,
-  getDefaultConfig
-};
