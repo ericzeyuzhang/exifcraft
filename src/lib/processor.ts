@@ -4,13 +4,13 @@ import chalk from 'chalk';
 import { getImageFiles, filterSupportedFiles } from './imageUtils';
 import { generateAIResponse } from './aiClient';
 import { writeExifData } from './exifWriter';
-import { ProcessingOptions, ExifCraftConfig, ExifData } from '../types';
+import { ProcessingJob, ExifCraftConfig, ExifData } from '../types';
 
 /**
  * Process image files
  */
-export async function processImages(options: ProcessingOptions): Promise<void> {
-  const { directory, files, config, verbose } = options;
+export async function processImages(job: ProcessingJob): Promise<void> {
+  const { directory, files, config, verbose } = job;
   
   // Get list of image files to process
   let imageFiles: string[] = [];
@@ -68,16 +68,16 @@ export async function processImage(
   // Generate AI response for each prompt and write to EXIF
   const exifData: ExifData = {};
   
-  for (const promptConfig of config.prompts) {
+  for (const tagGenerationConfig of config.tagGeneration) {
     if (verbose) {
-      console.log(`  Processing prompt: ${promptConfig.name}`);
+      console.log(`  Processing prompt: ${tagGenerationConfig.name}`);
     }
     
     try {
       // Call AI model to generate response
       const aiResponse = await generateAIResponse(
         imagePath,
-        promptConfig.prompt,
+        tagGenerationConfig.prompt,
         config.aiModel,
         verbose
       );
@@ -87,18 +87,18 @@ export async function processImage(
       }
       
       // Write response to corresponding EXIF tags
-      for (const tagName of promptConfig.exifTags) {
+      for (const tagName of tagGenerationConfig.exifTags) {
         (exifData as any)[tagName] = aiResponse;
       }
       
     } catch (error) {
-      console.warn(chalk.yellow(`  Warning: prompt "${promptConfig.name}" processing failed: ${(error as Error).message}`));
+      console.warn(chalk.yellow(`  Warning: prompt "${tagGenerationConfig.name}" processing failed: ${(error as Error).message}`));
     }
   }
   
   // Write EXIF data to image file
   if (Object.keys(exifData).length > 0) {
-    await writeExifData(imagePath, exifData, config.overwriteOriginal, verbose);
+    await writeExifData(imagePath, exifData, config.preserveOriginal, verbose);
   } else {
     console.warn(chalk.yellow(`  Warning: No EXIF data generated`));
   }

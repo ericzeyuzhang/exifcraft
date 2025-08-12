@@ -6,9 +6,9 @@ import { ExifData } from '../types';
  * Write EXIF data to image file
  */
 export async function writeExifData(
-  imagePath: string, 
-  exifData: ExifData, 
-  overwriteOriginal: boolean = true, 
+  imagePath: string,
+  exifData: ExifData,
+  preserveOriginal: boolean = false,
   verbose: boolean = false
 ): Promise<void> {
   try {
@@ -35,8 +35,8 @@ export async function writeExifData(
     }
     
     // Write metadata to the image file
-    // Use -overwrite_original_in_place if overwriteOriginal is true, otherwise exiftool will create backup
-    const writeArgs = overwriteOriginal ? ["-overwrite_original_in_place"] : [];
+    // Use -overwrite_original_in_place if preserveOriginal is false, otherwise exiftool will create backup
+    const writeArgs = preserveOriginal ? [] : ["-overwrite_original_in_place"];
     const options: WriteTaskOptions | undefined = writeArgs.length > 0 ? { writeArgs } : undefined;
     
     await exiftool.write(imagePath, metadata, options);

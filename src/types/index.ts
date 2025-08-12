@@ -4,14 +4,14 @@
 
 import { TagName } from 'exiftool-vendored/dist/Tags';
 
-export interface PromptConfig {
+export interface TagGenerationConfig {
   name: string;
-  prompt: string;
   exifTags: TagName[];
+  prompt: string;
 }
 
 export interface AIModelConfig {
-  provider: AIModelProvider;
+  provider: 'ollama' | 'openai' | 'gemini';
   /** Placeholder for online model (e.g. OpenAI, Gemini) api key */
   key?: string;
   endpoint: string;
@@ -23,13 +23,13 @@ export interface AIModelConfig {
 }
 
 export interface ExifCraftConfig {
-  prompts: PromptConfig[];
+  tagGeneration: TagGenerationConfig[];
   aiModel: AIModelConfig;
   imageFormats: string[];
-  overwriteOriginal: boolean;
+  preserveOriginal: boolean;
 }
 
-export interface ProcessingOptions {
+export interface ProcessingJob {
   directory?: string;
   files?: string[];
   config: ExifCraftConfig;
@@ -40,8 +40,6 @@ export type ExifData = {
   [K in TagName]?: string;
 };
 
-
-
 // CLI options from commander.js
 export interface CLIOptions {
   directory?: string;
@@ -49,7 +47,3 @@ export interface CLIOptions {
   config: string;
   verbose: boolean;
 }
-
-
-
-export type AIModelProvider = 'ollama' | 'openai' | 'gemini';

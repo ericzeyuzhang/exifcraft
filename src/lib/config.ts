@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { ExifCraftConfig, PromptConfig, AIModelConfig } from '../types';
+import { ExifCraftConfig, TagGenerationConfig, AIModelConfig } from '../types';
 
 /**
  * Load configuration file
@@ -28,26 +28,26 @@ export async function loadConfig(configPath: string): Promise<ExifCraftConfig> {
  * Validate configuration file format
  */
 export function validateConfig(config: any): asserts config is ExifCraftConfig {
-  if (!config.prompts || !Array.isArray(config.prompts)) {
-    throw new Error('Configuration file must contain prompts array');
+  if (!config.tagGeneration || !Array.isArray(config.tagGeneration)) {
+    throw new Error('Configuration file must contain tagGeneration array');
   }
   
-  if (config.prompts.length === 0) {
-    throw new Error('At least one prompt must be configured');
+  if (config.tagGeneration.length === 0) {
+    throw new Error('At least one tag generation config must be configured');
   }
   
-  for (let i = 0; i < config.prompts.length; i++) {
-    const prompt = config.prompts[i];
+  for (let i = 0; i < config.tagGeneration.length; i++) {
+    const tagGenerationConfig = config.tagGeneration[i];
     
-    if (!prompt.name || typeof prompt.name !== 'string') {
+    if (!tagGenerationConfig.name || typeof tagGenerationConfig.name !== 'string') {
       throw new Error(`prompt[${i}] must contain a valid name field`);
     }
     
-    if (!prompt.prompt || typeof prompt.prompt !== 'string') {
+    if (!tagGenerationConfig.prompt || typeof tagGenerationConfig.prompt !== 'string') {
       throw new Error(`prompt[${i}] must contain a valid prompt field`);
     }
     
-    if (!prompt.exifTags || !Array.isArray(prompt.exifTags) || prompt.exifTags.length === 0) {
+    if (!tagGenerationConfig.exifTags || !Array.isArray(tagGenerationConfig.exifTags) || tagGenerationConfig.exifTags.length === 0) {
       throw new Error(`prompt[${i}] must contain at least one exifTags`);
     }
   }
@@ -70,9 +70,9 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
     }
   }
   
-  // Validate overwriteOriginal
-  if (config.overwriteOriginal !== undefined && typeof config.overwriteOriginal !== 'boolean') {
-    throw new Error('overwriteOriginal must be a boolean value');
+  // Validate preserveOriginal
+  if (config.preserveOriginal !== undefined && typeof config.preserveOriginal !== 'boolean') {
+    throw new Error('preserveOriginal must be a boolean value');
   }
 }
 

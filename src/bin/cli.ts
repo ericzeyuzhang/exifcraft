@@ -8,7 +8,7 @@ import ora from 'ora';
 import { processImages } from '../lib/processor';
 import { loadConfig } from '../lib/config';
 import { cleanup } from '../lib/exifWriter';
-import { CLIOptions, ProcessingOptions } from '../types';
+import { CLIOptions, ProcessingJob } from '../types';
 
 const program = new Command();
 
@@ -53,14 +53,14 @@ async function main(): Promise<void> {
     const spinner = ora('Processing images...').start();
     
     try {
-      const processingOptions: ProcessingOptions = {
+      const processingJob: ProcessingJob = {
         directory: options.directory,
         files: options.files,
         config: config,
         verbose: options.verbose
       };
       
-      await processImages(processingOptions);
+      await processImages(processingJob);
       
       spinner.succeed(chalk.green('All images processed successfully!'));
       
