@@ -28,27 +28,27 @@ export async function loadConfig(configPath: string): Promise<ExifCraftConfig> {
  * Validate configuration file format
  */
 export function validateConfig(config: any): asserts config is ExifCraftConfig {
-  if (!config.tagGeneration || !Array.isArray(config.tagGeneration)) {
-    throw new Error('Configuration file must contain tagGeneration array');
+  if (!config.tasks || !Array.isArray(config.tasks)) {
+    throw new Error('Configuration file must contain tasks array');
   }
   
-  if (config.tagGeneration.length === 0) {
-    throw new Error('At least one tag generation config must be configured');
+  if (config.tasks.length === 0) {
+    throw new Error('At least one task config must be configured');
   }
   
-  for (let i = 0; i < config.tagGeneration.length; i++) {
-    const tagGenerationConfig = config.tagGeneration[i];
+  for (let i = 0; i < config.tasks.length; i++) {
+    const taskConfig = config.tasks[i];
     
-    if (!tagGenerationConfig.name || typeof tagGenerationConfig.name !== 'string') {
-      throw new Error(`tagGenerationConfig[${i}] must contain a valid name field`);
+    if (!taskConfig.name || typeof taskConfig.name !== 'string') {
+      throw new Error(`taskConfig[${i}] must contain a valid name field`);
     }
     
-    if (!tagGenerationConfig.prompt || typeof tagGenerationConfig.prompt !== 'string') {
-      throw new Error(`tagGenerationConfig[${i}] must contain a valid prompt field`);
+    if (!taskConfig.prompt || typeof taskConfig.prompt !== 'string') {
+      throw new Error(`taskConfig[${i}] must contain a valid prompt field`);
     }
     
-    if (!tagGenerationConfig.tags || !Array.isArray(tagGenerationConfig.tags) || tagGenerationConfig.tags.length === 0) {
-      throw new Error(`tagGenerationConfig[${i}] must contain at least one tags`);
+    if (!taskConfig.tags || !Array.isArray(taskConfig.tags) || taskConfig.tags.length === 0) {
+      throw new Error(`taskConfig[${i}] must contain at least one tags`);
     }
   }
   

@@ -30,7 +30,7 @@ export async function writeExifData(
     }
     
     if (verbose) {
-      console.log(`  Writing EXIF tags: ${Object.keys(metadata).join(', ')}`);
+      console.log(`Writing EXIF tags: ${Object.keys(metadata).join(', ')}`);
     }
     
     // Write metadata to the image file
@@ -41,7 +41,7 @@ export async function writeExifData(
     await exiftool.write(imagePath, metadata, options);
     
     if (verbose) {
-      console.log(chalk.green(`  ✓ EXIF data written successfully`));
+      console.log(chalk.green(`✓ EXIF data written successfully`));
     }
     
   } catch (error) {

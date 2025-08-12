@@ -24,34 +24,27 @@ export class Logger {
     }
     return Logger.instance;
   }
-
-  // Show AI response (used multiple times)
-  showAIResponse(response: string): void {
-    if (this.options.verbose) {
-      console.log(`  AI response: ${response.substring(0, 100)}${response.length > 100 ? '...' : ''}`);
-    }
-  }
-
-  // Show processing summary (complex logic)
+  
+  // Show processing summary
   showSummary(summary: ProcessingSummary): void {
     console.log(chalk.green('\n✔ Processing completed!'));
     
     if (summary.successfulFiles.length > 0) {
-      console.log(chalk.green(`\nSuccessfully processed (${summary.successfulFiles.length}):`));
+      console.log(chalk.green(`\nSuccess(${summary.successfulFiles.length}):`));
       summary.successfulFiles.forEach(file => {
         console.log(chalk.green(`  ✓ ${file}`));
       });
     }
     
     if (summary.failedFiles.length > 0) {
-      console.log(chalk.red(`\nFailed to process (${summary.failedFiles.length}):`));
+      console.log(chalk.red(`\nFailed (${summary.failedFiles.length}):`));
       summary.failedFiles.forEach(({ fileName, error }) => {
         console.log(chalk.red(`  ✗ ${fileName}: ${error}`));
       });
     }
   }
 
-  // Show error (used multiple times)
+  // Show error
   showError(message: string, error?: Error): void {
     console.error(chalk.red(message));
     if (error) {

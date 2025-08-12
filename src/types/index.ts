@@ -4,7 +4,7 @@
 
 import { TagName } from 'exiftool-vendored/dist/Tags';
 
-export interface TagGenerationConfig {
+export interface TaskConfig {
   name: string;
   tags: TagName[];
   prompt: string;
@@ -23,7 +23,7 @@ export interface AIModelConfig {
 }
 
 export interface ExifCraftConfig {
-  tagGeneration: TagGenerationConfig[];
+  tasks: TaskConfig[];
   aiModel: AIModelConfig;
   imageFormats: string[];
   preserveOriginal: boolean;

@@ -43,10 +43,6 @@ export async function processImages(job: ProcessingJob, logger: Logger): Promise
     // Show progress
     console.log(chalk.yellow(`Processing ${fileName} [${i + 1}/${imageFiles.length}]`));
     
-    if (verbose) {
-      console.log(chalk.yellow(`\n[${i + 1}/${imageFiles.length}] Processing: ${fileName}`));
-    }
-    
     try {
       await processImage(imagePath, config, verbose, dryRun, logger);
       if (verbose) {
@@ -91,28 +87,30 @@ async function processImage(
   // Generate AI response for each prompt and write to EXIF
   const exifData: ExifData = {};
   
-  for (const tagGenerationConfig of config.tagGeneration) {
+  for (const taskConfig of config.tasks) {
     if (verbose) {
-      console.log(`  Processing prompt: ${tagGenerationConfig.name}`);
+      console.log(`-- Processing [${taskConfig.name}] task...`);
     }
     
     try {
       // Call AI model to generate response
       const aiResponse = await generateAIResponse(
         imageBuffer,
-        (config.basePrompt || '') + tagGenerationConfig.prompt,
+        (config.basePrompt || '') + taskConfig.prompt,
         config.aiModel
       );
       
-      logger.showAIResponse(aiResponse);
+      if (verbose) {
+        console.log(`   AI response: ${aiResponse.substring(0, 100)}${aiResponse.length > 100 ? '...' : ''}`);
+      }
       
       // Write response to corresponding EXIF tags
-      for (const tagName of tagGenerationConfig.tags) {
+      for (const tagName of taskConfig.tags) {
         exifData[tagName] = aiResponse;
       }
       
     } catch (error) {
-      console.warn(chalk.yellow(`  Warning: prompt "${tagGenerationConfig.name}" processing failed: ${(error as Error).message}`));
+      console.warn(chalk.yellow(`  Warning: prompt "${taskConfig.name}" processing failed: ${(error as Error).message}`));
     }
   }
   
