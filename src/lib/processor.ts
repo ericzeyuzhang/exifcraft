@@ -11,7 +11,7 @@ import { Logger } from './logger';
  * Process image files
  */
 export async function processImages(job: ProcessingJob, logger: Logger): Promise<void> {
-  const { directory, files, config, verbose, dryRun, onProgress, onResult } = job;
+  const { directory, files, config, verbose, dryRun } = job;
   
   // Get list of image files to process
   let imageFiles: string[] = [];
@@ -31,15 +31,17 @@ export async function processImages(job: ProcessingJob, logger: Logger): Promise
     imageFiles.forEach(file => console.log(`  - ${file}`));
   }
   
+  // Track processing results
+  const successfulFiles: string[] = [];
+  const failedFiles: Array<{fileName: string, error: string}> = [];
+  
   // Process each image file
   for (let i = 0; i < imageFiles.length; i++) {
     const imagePath = imageFiles[i];
     const fileName = path.basename(imagePath);
     
-    // Update progress if callback is provided
-    if (onProgress) {
-      onProgress(i + 1, imageFiles.length, fileName);
-    }
+    // Show progress
+    console.log(chalk.yellow(`Processing ${fileName} [${i + 1}/${imageFiles.length}]`));
     
     if (verbose) {
       console.log(chalk.yellow(`\n[${i + 1}/${imageFiles.length}] Processing: ${fileName}`));
@@ -50,27 +52,26 @@ export async function processImages(job: ProcessingJob, logger: Logger): Promise
       if (verbose) {
         console.log(chalk.green(`✓ Completed: ${fileName}`));
       }
-      // Report success
-      if (onResult) {
-        onResult(fileName, true);
-      }
+      // Track success
+      successfulFiles.push(fileName);
     } catch (error) {
       console.error(chalk.red(`✗ Processing failed ${fileName}: ${(error as Error).message}`));
       if (verbose) {
         console.error((error as Error).stack);
       }
-      // Report failure
-      if (onResult) {
-        onResult(fileName, false, (error as Error).message);
-      }
+      // Track failure
+      failedFiles.push({ fileName, error: (error as Error).message });
     }
   }
+  
+  // Show summary
+  logger.showSummary({ successfulFiles, failedFiles });
 }
 
 /**
  * Process a single image file
  */
-export async function processImage(
+async function processImage(
   imagePath: string, 
   config: ExifCraftConfig, 
   verbose: boolean,
@@ -100,9 +101,7 @@ export async function processImage(
       const aiResponse = await generateAIResponse(
         imageBuffer,
         (config.basePrompt || '') + tagGenerationConfig.prompt,
-        config.aiModel,
-        verbose,
-        logger
+        config.aiModel
       );
       
       logger.showAIResponse(aiResponse);

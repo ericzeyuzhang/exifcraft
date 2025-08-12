@@ -60,33 +60,16 @@ async function main(): Promise<void> {
     // Process images
     console.log(chalk.blue('Processing images...'));
     
-    // Track processing results
-    const successfulFiles: string[] = [];
-    const failedFiles: Array<{fileName: string, error: string}> = [];
-    
     try {
       const processingJob: ProcessingJob = {
         directory: options.directory,
         files: options.files,
         config: config,
         verbose: options.verbose,
-        dryRun: options.dryRun,
-        onProgress: (current: number, total: number, fileName: string) => {
-          logger.showProgress(current, total, fileName);
-        },
-        onResult: (fileName: string, success: boolean, error?: string) => {
-          if (success) {
-            successfulFiles.push(fileName);
-          } else {
-            failedFiles.push({ fileName, error: error || 'Unknown error' });
-          }
-        }
+        dryRun: options.dryRun
       };
       
       await processImages(processingJob, logger);
-      
-      // Display summary
-      logger.showSummary({ successfulFiles, failedFiles });
       
       // Clean up resources and exit successfully
       await cleanup();

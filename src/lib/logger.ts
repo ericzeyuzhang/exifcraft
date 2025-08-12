@@ -25,19 +25,6 @@ export class Logger {
     return Logger.instance;
   }
 
-  // Show progress (used multiple times)
-  showProgress(current: number, total: number, fileName: string): void {
-    console.log(chalk.yellow(`Processing ${fileName} [${current}/${total}]`));
-  }
-
-  // Show AI call information (used multiple times)
-  showAICall(endpoint: string, model: string): void {
-    if (this.options.verbose) {
-      console.log(`    Calling Ollama API: ${endpoint}`);
-      console.log(`    Model: ${model}`);
-    }
-  }
-
   // Show AI response (used multiple times)
   showAIResponse(response: string): void {
     if (this.options.verbose) {

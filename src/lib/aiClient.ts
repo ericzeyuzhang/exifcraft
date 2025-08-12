@@ -42,14 +42,12 @@ export async function generateAIResponse(
   imageBuffer: Buffer, 
   prompt: string, 
   aiConfig: AIModelConfig, 
-  verbose: boolean = false,
-  logger: Logger
 ): Promise<string> {
   const { provider, endpoint, model, options = {} } = aiConfig;
   
   switch (provider.toLowerCase()) {
     case 'ollama':
-      return await callOllamaAPI(imageBuffer, prompt, endpoint, model, options, verbose, logger);
+      return await callOllamaAPI(imageBuffer, prompt, endpoint, model, options);
     case 'openai':
     case 'gemini':
     default:
@@ -66,8 +64,6 @@ async function callOllamaAPI(
   endpoint: string, 
   model: string, 
   options: AIModelConfig['options'], 
-  verbose: boolean,
-  logger: Logger
 ): Promise<string> {
   try {
     const imageBase64 = imageBuffer.toString('base64');
@@ -82,8 +78,6 @@ async function callOllamaAPI(
         num_predict: options?.max_tokens || 200
       }
     };
-    
-    logger.showAICall(endpoint, requestData.model);
     
     const response: AxiosResponse<OllamaResponse> = await axios.post(endpoint, requestData, {
       headers: {
