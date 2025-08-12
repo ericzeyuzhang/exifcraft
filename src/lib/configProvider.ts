@@ -40,15 +40,15 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
     const tagGenerationConfig = config.tagGeneration[i];
     
     if (!tagGenerationConfig.name || typeof tagGenerationConfig.name !== 'string') {
-      throw new Error(`prompt[${i}] must contain a valid name field`);
+      throw new Error(`tagGenerationConfig[${i}] must contain a valid name field`);
     }
     
     if (!tagGenerationConfig.prompt || typeof tagGenerationConfig.prompt !== 'string') {
-      throw new Error(`prompt[${i}] must contain a valid prompt field`);
+      throw new Error(`tagGenerationConfig[${i}] must contain a valid prompt field`);
     }
     
-    if (!tagGenerationConfig.exifTags || !Array.isArray(tagGenerationConfig.exifTags) || tagGenerationConfig.exifTags.length === 0) {
-      throw new Error(`prompt[${i}] must contain at least one exifTags`);
+    if (!tagGenerationConfig.tags || !Array.isArray(tagGenerationConfig.tags) || tagGenerationConfig.tags.length === 0) {
+      throw new Error(`tagGenerationConfig[${i}] must contain at least one tags`);
     }
   }
   

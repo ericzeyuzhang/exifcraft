@@ -27,6 +27,7 @@ export interface ExifCraftConfig {
   aiModel: AIModelConfig;
   imageFormats: string[];
   preserveOriginal: boolean;
+  basePrompt?: string;
 }
 
 export interface ProcessingJob {

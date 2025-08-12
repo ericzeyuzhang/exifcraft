@@ -2,7 +2,7 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
 import { getImageFiles, filterSupportedFiles } from './imageUtils';
-import { generateAIResponse } from './aiClient';
+import { generateAIResponse, convertImageForAI } from './aiClient';
 import { writeExifData } from './exifWriter';
 import { ProcessingJob, ExifCraftConfig, ExifData } from '../types';
 
@@ -35,11 +35,15 @@ export async function processImages(job: ProcessingJob): Promise<void> {
     const imagePath = imageFiles[i];
     const fileName = path.basename(imagePath);
     
-    console.log(chalk.yellow(`\n[${i + 1}/${imageFiles.length}] Processing: ${fileName}`));
+    if (verbose) {
+      console.log(chalk.yellow(`\n[${i + 1}/${imageFiles.length}] Processing: ${fileName}`));
+    }
     
     try {
       await processImage(imagePath, config, verbose);
-      console.log(chalk.green(`✓ Completed: ${fileName}`));
+      if (verbose) {
+        console.log(chalk.green(`✓ Completed: ${fileName}`));
+      }
     } catch (error) {
       console.error(chalk.red(`✗ Processing failed ${fileName}: ${(error as Error).message}`));
       if (verbose) {
@@ -64,6 +68,9 @@ export async function processImage(
     throw new Error(`Image file does not exist: ${imagePath}`);
   }
 
+  // Convert image once for all AI calls
+  const imageBuffer = await convertImageForAI(imagePath, verbose);
+  
   // Generate AI response for each prompt and write to EXIF
   const exifData: ExifData = {};
   
@@ -75,8 +82,8 @@ export async function processImage(
     try {
       // Call AI model to generate response
       const aiResponse = await generateAIResponse(
-        imagePath,
-        tagGenerationConfig.prompt,
+        imageBuffer,
+        (config.basePrompt || '') + tagGenerationConfig.prompt,
         config.aiModel,
         verbose
       );

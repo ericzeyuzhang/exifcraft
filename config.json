@@ -1,14 +1,19 @@
 {
   "tagGeneration": [
     {
+      "name": "title", 
+      "prompt": "Please generate a title with at most 10 words for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
+      "tags": ["ImageTitle"]
+    },
+    {
       "name": "description",
-      "prompt": "Please describe this image in detail, including the main objects, scene, colors, composition and other visual elements.",
-      "exifTags": ["ImageDescription", "UserComment"]
+      "prompt": "Please describe this image in a single paragraph with 100-150 words. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
+      "tags": ["ImageDescription"]
     },
     {
       "name": "keywords",
-      "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc.",
-      "exifTags": ["Keywords", "Subject"]
+      "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
+      "tags": ["Keywords"]
     }
   ],
   "aiModel": {
@@ -16,10 +21,11 @@
     "endpoint": "http://erics-mac-mini.local:11434/api/generate",
     "model": "gemma3:4b",
     "options": {
-      "temperature": 0.7,
-      "max_tokens": 200
+      "temperature": 0,
+      "max_tokens": 500
     }
   },
-  "imageFormats": [".jpg", ".jpeg", ".jpe", ".png", ".tiff", ".tif", ".webp", ".heic", ".heif", ".raw", ".cr2", ".nef", ".arw", ".bmp", ".gif"],
-  "preserveOriginal": false
+  "imageFormats": [".jpg", ".jpeg", ".jpe", ".png", ".webp", ".bmp", ".gif", ".heic", ".heif"],
+  "preserveOriginal": false,
+  "basePrompt": "As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n"
 }

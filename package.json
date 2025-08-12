@@ -28,12 +28,13 @@
     "commander": "^11.0.0",
     "exiftool-vendored": "^30.3.0",
     "glob": "^10.3.0",
+    "heic-convert": "^2.1.0",
     "ora": "^5.4.1"
   },
   "devDependencies": {
-    "typescript": "^5.0.0",
     "@types/node": "^20.0.0",
-    "ts-node": "^10.9.0"
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
   },
   "engines": {
     "node": ">=14.0.0"

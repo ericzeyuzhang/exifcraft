@@ -1,6 +1,34 @@
 import axios, { AxiosResponse } from 'axios';
 import { promises as fs } from 'fs';
+import * as path from 'path';
+// @ts-ignore
+import heicConvert from 'heic-convert';
 import { AIModelConfig } from '../types';
+
+/**
+ * Convert image to compatible format for AI processing
+ */
+export async function convertImageForAI(imagePath: string, verbose: boolean = false): Promise<Buffer> {
+  const imageBuffer = await fs.readFile(imagePath);
+  
+  // Convert HEIC/HEIF to JPEG for Ollama compatibility
+  // TODO: Add support for TIFF (.tiff, .tif) and RAW formats (.raw, .cr2, .nef, .arw) in future versions
+  const lowerPath = imagePath.toLowerCase();
+  const isHeic = lowerPath.endsWith('.heic') || lowerPath.endsWith('.heif');
+  
+  if (isHeic) {
+    if (verbose) {
+      console.log(`    Converting ${path.extname(imagePath)} to JPEG for Ollama compatibility`);
+    }
+    return await heicConvert({
+      buffer: imageBuffer,
+      format: 'JPEG',
+      quality: 0.9
+    });
+  }
+  
+  return imageBuffer;
+}
 
 interface OllamaResponse {
   response: string;
@@ -10,7 +38,7 @@ interface OllamaResponse {
  * Generate AI response using configured AI provider
  */
 export async function generateAIResponse(
-  imagePath: string, 
+  imageBuffer: Buffer, 
   prompt: string, 
   aiConfig: AIModelConfig, 
   verbose: boolean = false
@@ -19,7 +47,7 @@ export async function generateAIResponse(
   
   switch (provider.toLowerCase()) {
     case 'ollama':
-      return await callOllamaAPI(imagePath, prompt, endpoint, model, options, verbose);
+      return await callOllamaAPI(imageBuffer, prompt, endpoint, model, options, verbose);
     case 'openai':
     case 'gemini':
     default:
@@ -31,7 +59,7 @@ export async function generateAIResponse(
  * Call Ollama API
  */
 async function callOllamaAPI(
-  imagePath: string, 
+  imageBuffer: Buffer, 
   prompt: string, 
   endpoint: string, 
   model: string, 
@@ -39,8 +67,6 @@ async function callOllamaAPI(
   verbose: boolean
 ): Promise<string> {
   try {
-    // Read and encode image to base64
-    const imageBuffer = await fs.readFile(imagePath);
     const imageBase64 = imageBuffer.toString('base64');
     
     const requestData = {
