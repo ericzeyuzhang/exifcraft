@@ -10,8 +10,6 @@
     "build": "tsc",
     "start": "node dist/bin/cli.js",
     "dev": "ts-node src/bin/cli.ts",
-    "dev:demo": "ts-node src/bin/cli.ts -d ./tests/images/demo -c ./config.ts --verbose",
-    "dev:demo:dry": "ts-node src/bin/cli.ts -d ./tests/images/demo -c ./config.ts --verbose --dry-run",
     "clean": "rm -rf dist",
     "test:demo": "npm run build && node dist/bin/cli.js -d ./tests/images/demo -c ./config.ts --verbose",
     "test:demo:dry": "npm run build && node dist/bin/cli.js -d ./tests/images/demo -c ./config.ts --verbose --dry-run"
