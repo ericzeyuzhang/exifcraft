@@ -2,3 +2,5 @@
 - 防止意外使用到exif里面的信息来生成desc
 - 增加真实的测试文件
 - Allow overwrite没有用上
+- raw还不支持
+- 
