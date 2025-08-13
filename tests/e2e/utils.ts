@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import * as path from 'path';
 import { exiftool } from 'exiftool-vendored';
 
 export interface ExifData {

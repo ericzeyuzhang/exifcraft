@@ -3,7 +3,7 @@ import { execSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
 import { setupTestEnvironment } from './setup';
-import { readExifData, extractAIGeneratedContent, verifyExifContent } from './utils';
+import { readExifData, extractAIGeneratedContent } from './utils';
 
 describe('EXIF Verification E2E Tests', () => {
   setupTestEnvironment();
