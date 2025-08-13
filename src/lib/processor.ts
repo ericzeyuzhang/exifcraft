@@ -83,7 +83,7 @@ async function processImage(
   }
 
   // Convert image once for all AI calls
-  const imageBuffer = await convertImageForAI(imagePath, verbose, logger);
+  const imageBuffer = await convertImageForAI(imagePath, verbose);
   
   // Generate AI response for each prompt and write to EXIF
   const tagsToWrite: Partial<WriteTags> = {};

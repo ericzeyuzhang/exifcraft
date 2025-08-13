@@ -1,13 +1,11 @@
 import axios, { AxiosResponse } from 'axios';
 import { promises as fs } from 'fs';
-import * as path from 'path';
 import { AIModelConfig } from '../models';
-import { Logger } from './logger';
 
 /**
  * Convert image to compatible format for AI processing
  */
-export async function convertImageForAI(imagePath: string, verbose: boolean = false, logger: Logger): Promise<Buffer> {
+export async function convertImageForAI(imagePath: string, verbose: boolean = false): Promise<Buffer> {
   const imageBuffer = await fs.readFile(imagePath);
   
   // TODO: Add support for TIFF (.tiff, .tif) and RAW formats (.raw, .cr2, .nef, .arw) in future versions

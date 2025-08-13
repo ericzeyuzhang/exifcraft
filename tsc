@@ -1,9 +1,0 @@
-
-src/models/types.ts:5:10 - error TS2305: Module '"exiftool-vendored/dist/Tags"' has no exported member 'TagName'.
-
-5 import { TagName } from 'exiftool-vendored/dist/Tags';
-           ~~~~~~~
-
-
-Found 1 error in src/models/types.ts:5
-ericzhang@Erics-MacBook-Air exifcraft % > exifcraft@1.0.0 build
