@@ -42,7 +42,7 @@ export async function processImages(jobSetting: JobSetting, logger: Logger): Pro
     const fileName = path.basename(imagePath);
     
     // Show progress
-    console.log(chalk.yellow(`Processing ${fileName} [${i + 1}/${imageFiles.length}]`));
+    console.log(chalk.yellow(`\nProcessing ${fileName} [${i + 1}/${imageFiles.length}]`));
     
     try {
       await processImage(imagePath, config, verbose, dryRun, logger);

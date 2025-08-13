@@ -51,12 +51,6 @@ async function main(): Promise<void> {
 
     const config = await loadConfig(configPath);
     
-    // Show configuration
-    if (options.verbose) {
-      console.log(chalk.blue('Configuration:'));
-      console.log(JSON.stringify(config, null, 2));
-    }
-
     // Process images
     console.log(chalk.blue('Processing images...'));
     

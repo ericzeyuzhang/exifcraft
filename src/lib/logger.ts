@@ -29,19 +29,15 @@ export class Logger {
   showSummary(summary: ProcessingSummary): void {
     console.log(chalk.green('\n✔ Processing completed!'));
     
-    if (summary.successfulFiles.length > 0) {
       console.log(chalk.green(`\nSuccess(${summary.successfulFiles.length}):`));
       summary.successfulFiles.forEach(file => {
         console.log(chalk.green(`  ✓ ${file}`));
       });
-    }
     
-    if (summary.failedFiles.length > 0) {
       console.log(chalk.red(`\nFailed (${summary.failedFiles.length}):`));
       summary.failedFiles.forEach(({ fileName, error }) => {
         console.log(chalk.red(`  ✗ ${fileName}: ${error}`));
       });
-    }
   }
 
   // Show error

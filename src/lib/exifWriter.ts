@@ -31,8 +31,7 @@ export async function writeExifData(
     const result: WriteTaskResult = await exiftool.write(imagePath, tagsToWrite, options);
     
     if (verbose) {
-      console.log(chalk.green(`✓ EXIF data written successfully`));
-      console.log(chalk.blue(`  Created: ${result.created}, Updated: ${result.updated}, Unchanged: ${result.unchanged}, ${result.warnings ? result.warnings.join(', ') : ''}`));
+      console.log(chalk.blue(`  ✓ EXIF data written successfully. Created: ${result.created}, Updated: ${result.updated}, Unchanged: ${result.unchanged}, ${result.warnings ? result.warnings.join(', ') : ''}`));
     }
     
   } catch (error) {
