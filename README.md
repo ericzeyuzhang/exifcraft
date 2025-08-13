@@ -8,7 +8,7 @@ AI-powered EXIF metadata crafting tool for images
 - Support for multiple image formats (JPG, PNG, HEIC, etc.)
 - Configurable AI models (Ollama, OpenAI, Gemini)
 - Batch processing capabilities
-- Dry-run mode for testing
+- Dry-run mode for preview
 - Preserve original files option
 
 ## Installation
@@ -28,7 +28,7 @@ npm run dev -d /path/to/images -c config.json
 # Process specific files
 npm run dev -f image1.jpg image2.png -c config.json
 
-# Dry run mode (simulate without modifying files)
+# Dry run mode (preview without modifying files)
 npm run dev -d /path/to/images -c config.json --dry-run
 
 # Verbose output
@@ -86,33 +86,7 @@ Create a `config.json` file with your settings:
 npm run build
 ```
 
-### Running Tests
 
-```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-### Test Structure
-
-The project includes comprehensive end-to-end tests:
-
-- **CLI Tests** (`tests/e2e/cli.test.ts`): Test command-line interface functionality
-- **Configuration Tests** (`tests/e2e/config.test.ts`): Test configuration loading and validation
-- **Processing Tests** (`tests/e2e/processing.test.ts`): Test image processing workflows
-
-Tests use Jest as the testing framework and include:
-- Mock file creation and cleanup
-- CLI command execution testing
-- Configuration validation
-- Error handling scenarios
-- File format support verification
 
 ## License
 
