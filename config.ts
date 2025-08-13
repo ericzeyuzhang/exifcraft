@@ -27,10 +27,6 @@ const config: ExifCraftConfig = {
         {
           name: TagNames.Title,
           allowOverwrite: true
-        }, 
-        {
-          name: TagNames.XPTitle,
-          allowOverwrite: true
         }
       ]
     },
