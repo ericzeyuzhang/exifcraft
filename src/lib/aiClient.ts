@@ -19,7 +19,7 @@ export async function convertImageForAI(imagePath: string, verbose: boolean = fa
   
   if (isHeic) {
     if (verbose) {
-      console.log(`    Converting ${path.extname(imagePath)} to JPEG for Ollama compatibility`);
+      console.log(`Converting ${path.extname(imagePath)} to JPEG for Ollama compatibility`);
     }
     return await heicConvert({
       buffer: imageBuffer,
