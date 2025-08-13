@@ -1,5 +1,5 @@
 import { promises as fs } from 'fs';
-import { ExifCraftConfig } from '../types';
+import { ExifCraftConfig } from '../models';
 
 /**
  * Load configuration file

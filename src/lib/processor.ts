@@ -4,7 +4,7 @@ import chalk from 'chalk';
 import { getImageFiles, filterSupportedFiles } from './imageUtils';
 import { generateAIResponse, convertImageForAI } from './aiClient';
 import { writeExifData } from './exifWriter';
-import { JobSetting, ExifCraftConfig, ExifData } from '../types';
+import { JobSetting, ExifCraftConfig, ExifData } from '../models';
 import { Logger } from './logger';
 
 /**
@@ -120,7 +120,9 @@ async function processImage(
       if (verbose) {
         console.log(chalk.blue(`  [DRY RUN] Would write EXIF tags: ${Object.keys(exifData).join(', ')}`));
         for (const [tagName, value] of Object.entries(exifData)) {
-          console.log(chalk.blue(`    ${tagName}: ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}`));
+          if (typeof value === 'string') {
+            console.log(chalk.blue(`    ${tagName}: ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}`));
+          }
         }
       }
     } else {

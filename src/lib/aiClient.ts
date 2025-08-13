@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 // @ts-ignore
 import heicConvert from 'heic-convert';
-import { AIModelConfig } from '../types';
+import { AIModelConfig } from '../models';
 import { Logger } from './logger';
 
 /**

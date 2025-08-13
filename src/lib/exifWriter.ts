@@ -1,6 +1,6 @@
 import { exiftool, WriteTaskOptions } from 'exiftool-vendored';
 import chalk from 'chalk';
-import { ExifData } from '../types';
+import { ExifData } from '../models';
 
 /**
  * Write EXIF data to image file
@@ -17,7 +17,7 @@ export async function writeExifData(
     
     // Copy EXIF data directly to metadata object
     for (const [tagName, value] of Object.entries(exifData)) {
-      if (value) {
+      if (value && typeof value === 'string') {
         metadata[tagName] = value;
       }
     }
