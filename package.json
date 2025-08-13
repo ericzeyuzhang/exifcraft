@@ -11,8 +11,8 @@
     "start": "node dist/bin/cli.js",
     "dev": "ts-node src/bin/cli.ts",
     "clean": "rm -rf dist",
-    "test:demo": "npm run build && node dist/bin/cli.js -d ./tests/images/demo -c ./config.ts --verbose",
-    "test:demo:dry": "npm run build && node dist/bin/cli.js -d ./tests/images/demo -c ./config.ts --verbose --dry-run"
+    "demo": "./scripts/demo.sh",
+    "demo-dry": "./scripts/demo-dry.sh"
   },
   "keywords": [
     "exif",

@@ -1,6 +1,6 @@
 // TypeScript configuration with runtime validation
 import type { ExifCraftConfig } from './src/models/types';
-import { TagNames } from 'exiftool-vendored/dist/Tags';
+import { TagNames } from 'exiftool-vendored/dist/Tags.js';
 
 const config: ExifCraftConfig = {
   tasks: [
