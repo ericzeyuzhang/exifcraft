@@ -4,8 +4,9 @@ import chalk from 'chalk';
 import { getImageFiles, filterSupportedFiles } from './imageUtils';
 import { generateAIResponse, convertImageForAI } from './aiClient';
 import { writeExifData } from './exifWriter';
-import { JobSetting, ExifCraftConfig, ExifData } from '../models';
+import { JobSetting, ExifCraftConfig } from '../models';
 import { Logger } from './logger';
+import { WriteTags } from 'exiftool-vendored';
 
 /**
  * Process image files
@@ -85,7 +86,7 @@ async function processImage(
   const imageBuffer = await convertImageForAI(imagePath, verbose, logger);
   
   // Generate AI response for each prompt and write to EXIF
-  const exifData: ExifData = {};
+  const tagsToWrite: Partial<WriteTags> = {};
   
   for (const taskConfig of config.tasks) {
     if (verbose) {
@@ -106,7 +107,7 @@ async function processImage(
       
       // Write response to corresponding EXIF tags
       for (const tagConfig of taskConfig.tags) {
-        exifData[tagConfig.name] = aiResponse;
+        (tagsToWrite as any)[tagConfig.name] = aiResponse;
       }
       
     } catch (error) {
@@ -115,18 +116,18 @@ async function processImage(
   }
   
   // Write EXIF data to image file
-  if (Object.keys(exifData).length > 0) {
+  if (Object.keys(tagsToWrite).length > 0) {
     if (dryRun) {
       if (verbose) {
-        console.log(chalk.blue(`  [DRY RUN] Would write EXIF tags: ${Object.keys(exifData).join(', ')}`));
-        for (const [tagName, value] of Object.entries(exifData)) {
+        console.log(chalk.blue(`  [DRY RUN] Would write EXIF tags: ${Object.keys(tagsToWrite).join(', ')}`));
+        for (const [tagName, value] of Object.entries(tagsToWrite)) {
           if (typeof value === 'string') {
             console.log(chalk.blue(`    ${tagName}: ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}`));
           }
         }
       }
     } else {
-      await writeExifData(imagePath, exifData, config.preserveOriginal, verbose);
+      await writeExifData(imagePath, tagsToWrite, config.preserveOriginal, verbose);
     }
   } else {
     console.warn(chalk.yellow(`  Warning: No EXIF data generated`));

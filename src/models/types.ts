@@ -2,10 +2,10 @@
  * Type definitions for ExifCraft
  */
 
-import { TagName } from 'exiftool-vendored/dist/Tags';
+import { WriteTags } from 'exiftool-vendored';
 
 export interface TagConfig {
-  name: TagName;
+  name: keyof WriteTags;
   allowOverwrite: boolean;
 }
 
@@ -42,10 +42,6 @@ export interface JobSetting {
   verbose: boolean;
   dryRun: boolean;
 }
-
-export type ExifData = {
-  [K in TagName]?: string;
-};
 
 // CLI options from commander.js
 export interface CLIOptions {

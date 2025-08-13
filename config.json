@@ -5,7 +5,7 @@
       "prompt": "Please generate a title with at most 10 words for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
       "tags": [
         {
-          "name": "ImageTitle",
+          "name": "ObjectName",
           "allowOverwrite": true
         }
       ]

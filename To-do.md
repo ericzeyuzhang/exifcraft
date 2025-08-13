@@ -2,3 +2,4 @@
 - 防止意外使用到exif里面的信息来生成desc
 - 除了heic还有什么格式需要转换？
 - 增加真实的测试文件
+- Allow overwrite没有用上

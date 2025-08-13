@@ -1,28 +1,17 @@
-import { exiftool, WriteTaskOptions } from 'exiftool-vendored';
+import { exiftool, WriteTaskOptions, WriteTags } from 'exiftool-vendored';
 import chalk from 'chalk';
-import { ExifData } from '../models';
 
 /**
  * Write EXIF data to image file
  */
 export async function writeExifData(
   imagePath: string,
-  exifData: ExifData,
+  tagsToWrite: Partial<WriteTags>,
   preserveOriginal: boolean = false,
   verbose: boolean = false
 ): Promise<void> {
   try {
-    // Prepare the metadata object for exiftool-vendored
-    const metadata: Record<string, string> = {};
-    
-    // Copy EXIF data directly to metadata object
-    for (const [tagName, value] of Object.entries(exifData)) {
-      if (value && typeof value === 'string') {
-        metadata[tagName] = value;
-      }
-    }
-    
-    if (Object.keys(metadata).length === 0) {
+    if (Object.keys(tagsToWrite).length === 0) {
       if (verbose) {
         console.log(chalk.yellow(`  No valid EXIF data to write for: ${imagePath}`));
       }
@@ -30,15 +19,15 @@ export async function writeExifData(
     }
     
     if (verbose) {
-      console.log(`Writing EXIF tags: ${Object.keys(metadata).join(', ')}`);
+      console.log(`Writing EXIF tags: ${Object.keys(tagsToWrite).join(', ')}`);
     }
     
-    // Write metadata to the image file
+    // Write tags to the image file
     // Use -overwrite_original_in_place if preserveOriginal is false, otherwise exiftool will create backup
     const writeArgs = preserveOriginal ? [] : ["-overwrite_original_in_place"];
     const options: WriteTaskOptions | undefined = writeArgs.length > 0 ? { writeArgs } : undefined;
     
-    await exiftool.write(imagePath, metadata, options);
+    await exiftool.write(imagePath, tagsToWrite, options);
     
     if (verbose) {
       console.log(chalk.green(`✓ EXIF data written successfully`));
