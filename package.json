@@ -12,7 +12,10 @@
     "dev": "ts-node src/bin/cli.ts",
     "clean": "rm -rf dist",
     "demo": "./scripts/demo.sh",
-    "demo-dry": "./scripts/demo-dry.sh"
+    "demo-dry": "./scripts/demo-dry.sh",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:e2e": "vitest run --config vitest.e2e.config.ts"
   },
   "keywords": [
     "exif",
@@ -33,7 +36,9 @@
   "devDependencies": {
     "@types/node": "^20.10.0",
     "ts-node": "^10.9.0",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "vitest": "^1.0.0",
+    "@vitest/ui": "^1.0.0"
   },
   "engines": {
     "node": ">=14.0.0"
