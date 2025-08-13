@@ -1,32 +1,54 @@
 // TypeScript configuration with runtime validation
 import type { ExifCraftConfig } from './src/models/types';
+import { TagNames } from 'exiftool-vendored/dist/Tags';
+import { WriteTags } from 'exiftool-vendored/dist/WriteTags';
 
 const config: ExifCraftConfig = {
   tasks: [
     {
       name: "title", 
-      prompt: "Please generate a title with at most 10 words for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
+      prompt: "Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
       tags: [
         {
-          name: "ObjectName",
+          name: TagNames.ImageTitle,
           allowOverwrite: true
         },
         {
-          name: "ImageDescription", 
+          name: TagNames.ImageDescription, 
           allowOverwrite: true
         },
         {
-          name: "XPTitle",
+          name: TagNames.XPTitle,
+          allowOverwrite: true
+        }, 
+        {
+          name: TagNames.ObjectName,
+          allowOverwrite: true
+        }, 
+        {
+          name: TagNames.Title,
+          allowOverwrite: true
+        }, 
+        {
+          name: TagNames.XPTitle,
           allowOverwrite: true
         }
       ]
     },
     {
       name: "description",
-      prompt: "Please describe this image in a single paragraph with 100-150 words. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
+      prompt: "Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
       tags: [
         {
-          name: "ImageDescription", // TypeScript will provide autocomplete for WriteTags keys
+          name: TagNames.ImageDescription,
+          allowOverwrite: true
+        }, 
+        {
+          name: TagNames.Description,
+          allowOverwrite: true
+        }, 
+        {
+          name: TagNames['Caption-Abstract'],
           allowOverwrite: true
         }
       ]
@@ -36,7 +58,7 @@ const config: ExifCraftConfig = {
       prompt: "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
       tags: [
         {
-          name: "Keywords", // TypeScript will provide autocomplete for WriteTags keys
+          name: TagNames.Keywords,
           allowOverwrite: true
         }
       ]

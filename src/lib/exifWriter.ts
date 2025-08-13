@@ -24,9 +24,11 @@ export async function writeExifData(
     
     // Write tags to the image file
     // Use -overwrite_original_in_place if preserveOriginal is false, otherwise exiftool will create backup
-    const writeArgs = preserveOriginal ? [] : ["-overwrite_original_in_place"];
-    
-    const result: WriteTaskResult = await exiftool.write(imagePath, tagsToWrite, writeArgs);
+    const options: WriteTaskOptions = { 
+      writeArgs: preserveOriginal ? [] : ["-overwrite_original_in_place"]
+    };
+
+    const result: WriteTaskResult = await exiftool.write(imagePath, tagsToWrite, options);
     
     if (verbose) {
       console.log(chalk.green(`✓ EXIF data written successfully`));
