@@ -1,8 +1,6 @@
 import axios, { AxiosResponse } from 'axios';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-// @ts-ignore
-import heicConvert from 'heic-convert';
 import { AIModelConfig } from '../models';
 import { Logger } from './logger';
 
@@ -12,21 +10,8 @@ import { Logger } from './logger';
 export async function convertImageForAI(imagePath: string, verbose: boolean = false, logger: Logger): Promise<Buffer> {
   const imageBuffer = await fs.readFile(imagePath);
   
-  // Convert HEIC/HEIF to JPEG for Ollama compatibility
   // TODO: Add support for TIFF (.tiff, .tif) and RAW formats (.raw, .cr2, .nef, .arw) in future versions
-  const lowerPath = imagePath.toLowerCase();
-  const isHeic = lowerPath.endsWith('.heic') || lowerPath.endsWith('.heif');
-  
-  if (isHeic) {
-    if (verbose) {
-      console.log(`Converting ${path.extname(imagePath)} to JPEG for Ollama compatibility`);
-    }
-    return await heicConvert({
-      buffer: imageBuffer,
-      format: 'JPEG',
-      quality: 0.9
-    });
-  }
+  // For now, return the image buffer as-is since most AI models support common formats
   
   return imageBuffer;
 }

@@ -5,7 +5,7 @@ AI-powered EXIF metadata crafting tool for images
 ## Features
 
 - AI-powered image analysis and metadata generation
-- Support for multiple image formats (JPG, PNG, HEIC, etc.)
+- Support for multiple image formats (JPG, PNG, WebP, BMP, GIF)
 - Configurable AI models (Ollama, OpenAI, Gemini)
 - Batch processing capabilities
 - Dry-run mode for preview
@@ -74,7 +74,7 @@ const config: ExifCraftConfig = {
       max_tokens: 500
     }
   },
-  imageFormats: [".jpg", ".jpeg", ".png", ".heic"],
+  imageFormats: [".jpg", ".jpeg", ".png"],
   preserveOriginal: false,
   basePrompt: "You are a helpful assistant."
 };

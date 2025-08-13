@@ -1,6 +1,5 @@
 // TypeScript configuration with runtime validation
 import type { ExifCraftConfig } from './src/models/types';
-import { TagNames } from 'exiftool-vendored/dist/Tags';
 
 const config: ExifCraftConfig = {
   tasks: [
@@ -9,15 +8,15 @@ const config: ExifCraftConfig = {
       prompt: "Please generate a title with at most 10 words for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
       tags: [
         {
-          name: TagNames.ObjectName,
+          name: "ObjectName",
           allowOverwrite: true
         },
         {
-          name: TagNames.ImageTitle, 
+          name: "ImageDescription", 
           allowOverwrite: true
         },
         {
-          name: TagNames.XPTitle,
+          name: "XPTitle",
           allowOverwrite: true
         }
       ]
@@ -52,7 +51,7 @@ const config: ExifCraftConfig = {
       max_tokens: 500
     }
   },
-  imageFormats: [".jpg", ".jpeg", ".jpe", ".png", ".webp", ".bmp", ".gif", ".heic", ".heif"],
+  imageFormats: [".jpg", ".jpeg", ".jpe", ".png", ".webp", ".bmp", ".gif"],
   preserveOriginal: false,
   basePrompt: "As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n"
 };
