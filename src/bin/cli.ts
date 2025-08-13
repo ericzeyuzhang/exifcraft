@@ -20,7 +20,7 @@ program
 program
   .option('-d, --directory <path>', 'Path to image directory')
   .option('-f, --files <paths...>', 'Specify image file paths')
-  .option('-c, --config <path>', 'Configuration file path', './config.json')
+  .option('-c, --config <path>', 'TypeScript configuration file path (.ts)', './config.ts')
   .option('-v, --verbose', 'Show verbose output')
   .option('--dry-run', 'Dry run mode - Simulate behaviors without modifying files')
   .parse();

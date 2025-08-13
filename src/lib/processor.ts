@@ -6,7 +6,7 @@ import { generateAIResponse, convertImageForAI } from './aiClient';
 import { writeExifData } from './exifWriter';
 import { JobSetting, ExifCraftConfig } from '../models';
 import { Logger } from './logger';
-import { WriteTags } from 'exiftool-vendored';
+import { TagName } from 'exiftool-vendored/dist/Tags';
 
 /**
  * Process image files
@@ -86,7 +86,7 @@ async function processImage(
   const imageBuffer = await convertImageForAI(imagePath, verbose, logger);
   
   // Generate AI response for each prompt and write to EXIF
-  const tagsToWrite: Partial<WriteTags> = {};
+  const tagsToWrite: Partial<Record<TagName, string>> = {};
   
   for (const taskConfig of config.tasks) {
     if (verbose) {

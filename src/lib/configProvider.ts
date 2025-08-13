@@ -1,13 +1,20 @@
-import { promises as fs } from 'fs';
+import * as path from 'path';
 import { ExifCraftConfig } from '../models';
 
 /**
- * Load configuration file
+ * Load TypeScript configuration file
  */
 export async function loadConfig(configPath: string): Promise<ExifCraftConfig> {
   try {
-    const configData = await fs.readFile(configPath, 'utf8');
-    const config = JSON.parse(configData) as ExifCraftConfig;
+    const ext = path.extname(configPath);
+    
+    if (ext !== '.ts') {
+      throw new Error(`Configuration file must be a TypeScript file (.ts), got: ${ext}`);
+    }
+    
+    // Load TypeScript configuration
+    const configModule = await import(path.resolve(configPath));
+    const config = configModule.default as ExifCraftConfig;
     
     // Validate configuration format
     validateConfig(config);

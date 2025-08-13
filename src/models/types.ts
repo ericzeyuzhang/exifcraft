@@ -2,10 +2,10 @@
  * Type definitions for ExifCraft
  */
 
-import { WriteTags } from 'exiftool-vendored';
+import { TagName } from 'exiftool-vendored/dist/Tags';
 
 export interface TagConfig {
-  name: keyof WriteTags;
+  name: TagName;
   allowOverwrite: boolean;
 }
 

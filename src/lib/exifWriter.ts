@@ -1,4 +1,4 @@
-import { exiftool, WriteTaskOptions, WriteTags } from 'exiftool-vendored';
+import { exiftool, WriteTaskOptions, WriteTags, WriteTaskResult } from 'exiftool-vendored';
 import chalk from 'chalk';
 
 /**
@@ -27,10 +27,11 @@ export async function writeExifData(
     const writeArgs = preserveOriginal ? [] : ["-overwrite_original_in_place"];
     const options: WriteTaskOptions | undefined = writeArgs.length > 0 ? { writeArgs } : undefined;
     
-    await exiftool.write(imagePath, tagsToWrite, options);
+    const result: WriteTaskResult = await exiftool.write(imagePath, tagsToWrite, options);
     
     if (verbose) {
       console.log(chalk.green(`✓ EXIF data written successfully`));
+      console.log(chalk.blue(`  Created: ${result.created}, Updated: ${result.updated}, Unchanged: ${result.unchanged}, ${result.warnings ? result.warnings.join(', ') : ''}`));
     }
     
   } catch (error) {
