@@ -111,7 +111,7 @@ ehthumbs.db
 Thumbs.db
 
 # Test data
-/tests/images
+/packages/cli/tests/images
 
 # Personal notes
 To-do.md
