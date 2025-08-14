@@ -4,11 +4,7 @@ import { Command } from 'commander';
 import * as path from 'path';
 import * as fs from 'fs';
 import chalk from 'chalk';
-import { processImages } from '../lib/processor';
-import { loadConfig } from '../lib/configProvider';
-import { cleanup } from '../lib/exifWriter';
-import { CLIOptions, JobSetting } from '../models/types';
-import { Logger } from '../lib/logger';
+import { processImages, loadConfig, cleanup, CLIOptions, JobSetting, Logger } from 'exifcraft-core';
 
 const program = new Command();
 

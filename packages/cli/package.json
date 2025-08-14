@@ -1,0 +1,41 @@
+{
+  "name": "exifcraft-cli",
+  "version": "1.0.0",
+  "description": "CLI interface for AI-powered EXIF metadata crafting",
+  "main": "dist/index.js",
+  "bin": {
+    "exifcraft": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "vitest run --config ./vitest.e2e.config.ts",
+    "dev": "ts-node src/cli.ts",
+    "start": "node dist/cli.js",
+    "demo": "../../scripts/demo.sh",
+    "demo-dry": "../../scripts/demo.sh --dry-run"
+  },
+  "keywords": [
+    "exif",
+    "metadata",
+    "ai",
+    "image",
+    "cli"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "exifcraft-core": "file:../core",
+    "chalk": "^5.5.0",
+    "commander": "^14.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.2.1",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.3.0",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
