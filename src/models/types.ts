@@ -35,13 +35,7 @@ export interface ExifCraftConfig {
   basePrompt?: string;
 }
 
-export interface JobSetting {
-  directory?: string;
-  files?: string[];
-  config: ExifCraftConfig;
-  verbose: boolean;
-  dryRun: boolean;
-}
+
 
 // CLI options from commander.js
 export interface CLIOptions {
@@ -50,4 +44,9 @@ export interface CLIOptions {
   config: string;
   verbose: boolean;
   dryRun: boolean;
+}
+
+// Job settings derived from CLI options
+export interface JobSetting extends Omit<CLIOptions, 'config'> {
+  config: ExifCraftConfig;
 }

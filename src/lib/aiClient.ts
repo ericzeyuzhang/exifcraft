@@ -1,18 +1,5 @@
 import axios, { AxiosResponse } from 'axios';
-import { promises as fs } from 'fs';
-import { AIModelConfig } from '../models';
-
-/**
- * Convert image to compatible format for AI processing
- */
-export async function convertImageForAI(imagePath: string, verbose: boolean = false): Promise<Buffer> {
-  const imageBuffer = await fs.readFile(imagePath);
-  
-  // TODO: Add support for TIFF (.tiff, .tif) and RAW formats (.raw, .cr2, .nef, .arw) in future versions
-  // For now, return the image buffer as-is since most AI models support common formats
-  
-  return imageBuffer;
-}
+import { AIModelConfig } from '../models/types';
 
 interface OllamaResponse {
   response: string;

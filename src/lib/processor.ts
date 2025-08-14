@@ -2,9 +2,9 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
 import { getImageFiles, filterSupportedFiles } from './imageUtils';
-import { generateAIResponse, convertImageForAI } from './aiClient';
+import { generateAIResponse } from './aiClient';
 import { writeExifData } from './exifWriter';
-import { JobSetting, ExifCraftConfig } from '../models';
+import { JobSetting, ExifCraftConfig } from '../models/types';
 import { Logger } from './logger';
 import { WriteTags } from 'exiftool-vendored';
 
@@ -82,8 +82,8 @@ async function processImage(
     throw new Error(`Image file does not exist: ${imagePath}`);
   }
 
-  // Convert image once for all AI calls
-  const imageBuffer = await convertImageForAI(imagePath, verbose);
+  // Read image file for AI processing
+  const imageBuffer = await fs.readFile(imagePath);
   
   // Generate AI response for each prompt and write to EXIF
   const tagsToWrite: Partial<WriteTags> = {};

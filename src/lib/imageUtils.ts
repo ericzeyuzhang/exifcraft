@@ -1,6 +1,5 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { glob } from 'glob';
 
 /**
  * Filter array of file paths to only include supported formats

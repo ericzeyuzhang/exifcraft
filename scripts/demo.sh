@@ -1,9 +1,15 @@
 #!/bin/bash
 
 # Demo script for exifcraft
-# This script prepares the test environment and runs the image processing
+# Usage: ./demo.sh [--dry-run]
 
 set -e  # Exit on any error
+
+DRY_RUN=false
+if [[ "$1" == "--dry-run" ]]; then
+  DRY_RUN=true
+  echo "🔍 Running in DRY RUN mode"
+fi
 
 echo "🧹 Cleaning demo directory..."
 rm -rf ./tests/images/demo/*
@@ -18,5 +24,10 @@ npm run build
 echo "✅ Build completed"
 
 echo "🚀 Starting image processing..."
-node --no-warnings dist/bin/cli.js -d ./tests/images/demo -c ./config.ts --verbose
-echo "🎉 Demo completed successfully!"
+if [ "$DRY_RUN" = true ]; then
+  node --no-warnings dist/bin/cli.js -d ./tests/images/demo -c ./config.ts --verbose --dry-run
+  echo "🎉 Demo dry run completed successfully!"
+else
+  node --no-warnings dist/bin/cli.js -d ./tests/images/demo -c ./config.ts --verbose
+  echo "🎉 Demo completed successfully!"
+fi

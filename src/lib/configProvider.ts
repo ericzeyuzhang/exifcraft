@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { ExifCraftConfig } from '../models';
+import { ExifCraftConfig } from '../models/types';
 
 /**
  * Load TypeScript configuration file
@@ -35,62 +35,41 @@ export async function loadConfig(configPath: string): Promise<ExifCraftConfig> {
  * Validate configuration file format
  */
 export function validateConfig(config: any): asserts config is ExifCraftConfig {
-  if (!config.tasks || !Array.isArray(config.tasks)) {
-    throw new Error('Configuration file must contain tasks array');
+  // Validate tasks
+  if (!Array.isArray(config.tasks) || config.tasks.length === 0) {
+    throw new Error('Configuration must contain at least one task');
   }
   
-  if (config.tasks.length === 0) {
-    throw new Error('At least one task config must be configured');
-  }
-  
-  for (let i = 0; i < config.tasks.length; i++) {
-    const taskConfig = config.tasks[i];
-    
-    if (!taskConfig.name || typeof taskConfig.name !== 'string') {
-      throw new Error(`taskConfig[${i}] must contain a valid name field`);
+  // Validate each task
+  config.tasks.forEach((task: any, i: number) => {
+    if (!task.name || !task.prompt || !Array.isArray(task.tags) || task.tags.length === 0) {
+      throw new Error(`Task[${i}] must have name, prompt, and at least one tag`);
     }
     
-    if (!taskConfig.prompt || typeof taskConfig.prompt !== 'string') {
-      throw new Error(`taskConfig[${i}] must contain a valid prompt field`);
-    }
-    
-    if (!taskConfig.tags || !Array.isArray(taskConfig.tags) || taskConfig.tags.length === 0) {
-      throw new Error(`taskConfig[${i}] must contain at least one tags`);
-    }
-    
-    // Validate each tag configuration
-    for (let j = 0; j < taskConfig.tags.length; j++) {
-      const tagConfig = taskConfig.tags[j];
-      if (!tagConfig.name) {
-        throw new Error(`taskConfig[${i}].tags[${j}] must contain a valid name field`);
+    // Validate tags
+    task.tags.forEach((tag: any, j: number) => {
+      if (!tag.name || typeof tag.allowOverwrite !== 'boolean') {
+        throw new Error(`Task[${i}].tag[${j}] must have name and allowOverwrite`);
       }
-      if (typeof tagConfig.allowOverwrite !== 'boolean') {
-        throw new Error(`taskConfig[${i}].tags[${j}] must contain a valid allowOverwrite field`);
-      }
-    }
+    });
+  });
+  
+  // Validate AI model
+  if (!config.aiModel?.provider || !config.aiModel?.endpoint) {
+    throw new Error('AI model must have provider and endpoint');
   }
   
-  if (!config.aiModel || typeof config.aiModel !== 'object') {
-    throw new Error('Configuration file must contain aiModel configuration');
-  }
-  
-  if (!config.aiModel.provider || !config.aiModel.endpoint) {
-    throw new Error('aiModel must contain provider and endpoint fields');
-  }
-  
-  // Validate imageFormats if present
+  // Validate image formats
   if (config.imageFormats && Array.isArray(config.imageFormats)) {
-    const invalidFormats = config.imageFormats.filter((format: any) => 
-      typeof format !== 'string' || !format.startsWith('.')
-    );
-    if (invalidFormats.length > 0) {
-      throw new Error(`Invalid image formats found: ${invalidFormats.join(', ')}. Formats must be strings starting with a dot (e.g., '.jpg')`);
+    const invalid = config.imageFormats.filter((f: any) => typeof f !== 'string' || !f.startsWith('.'));
+    if (invalid.length > 0) {
+      throw new Error(`Invalid formats: ${invalid.join(', ')}. Must start with '.'`);
     }
   }
   
   // Validate preserveOriginal
   if (config.preserveOriginal !== undefined && typeof config.preserveOriginal !== 'boolean') {
-    throw new Error('preserveOriginal must be a boolean value');
+    throw new Error('preserveOriginal must be boolean');
   }
 }
 

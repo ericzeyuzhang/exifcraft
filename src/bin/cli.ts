@@ -7,7 +7,7 @@ import chalk from 'chalk';
 import { processImages } from '../lib/processor';
 import { loadConfig } from '../lib/configProvider';
 import { cleanup } from '../lib/exifWriter';
-import { CLIOptions, JobSetting } from '../models';
+import { CLIOptions, JobSetting } from '../models/types';
 import { Logger } from '../lib/logger';
 
 const program = new Command();
