@@ -113,12 +113,3 @@ export function getFileModTime(filePath: string): number {
     return 0;
   }
 }
-
-/**
- * Check if file was modified recently (within specified seconds)
- */
-export function wasFileModifiedRecently(filePath: string, seconds: number = 300): boolean {
-  const modTime = getFileModTime(filePath);
-  const currentTime = Math.floor(Date.now() / 1000);
-  return (currentTime - modTime) < seconds;
-}

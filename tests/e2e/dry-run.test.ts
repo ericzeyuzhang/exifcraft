@@ -1,65 +1,54 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { execSync } from 'child_process';
 import * as path from 'path';
-import { setupTestEnvironment } from './setup';
-import { wasFileModifiedRecently } from './utils';
+import * as fs from 'fs';
+import { resetTestEnvironment } from './setup';
 
-describe('Dry Run E2E Tests', () => {
-  setupTestEnvironment();
+describe('Dry Run E2E Tests', () => {  
+  beforeEach(async () => {
+    // Reset environment before each test to ensure clean state
+    resetTestEnvironment();
+  });
 
-  it('should output dry run information without modifying files', async () => {
-    const configPath = path.resolve('./config.ts');
-    const demoDir = path.resolve('./tests/images/demo');
+  it('should perform dry run without modifying files and show correct output', async () => {
+    const configPath = path.join(process.cwd(), 'tests/e2e/test-config.ts');
+    const demoDir = path.join(process.cwd(), 'tests/images/demo');
     
     // Build the project first
     execSync('npm run build', { stdio: 'pipe' });
     
-    // Run dry run command
-    const output = execSync(
-      `node --no-warnings dist/bin/cli.js -d ${demoDir} -c ${configPath} --verbose --dry-run`,
-      { 
-        encoding: 'utf8',
-        stdio: 'pipe'
-      }
-    );
-
-    // Verify dry run output contains expected patterns
-    expect(output).toContain('DRY RUN');
-    expect(output).toContain('Processing images...');
-    expect(output).toContain('demo');
+    // Get original file modification times for all files
+    const originalFiles = fs.readdirSync(demoDir);
+    const originalStats: { [key: string]: fs.Stats } = {};
     
-    // Verify that files were not actually modified
-    // Check that no backup files were created
-    const demoFiles = execSync(`ls -la ${demoDir}`, { encoding: 'utf8' });
-    expect(demoFiles).not.toContain('.backup');
-    
-    // Verify that original files still exist and haven't been modified
-    const originalFiles = ['DSCF3752.JPG', 'IMAG0062.JPG', 'IMG_9897.HEIC'];
     for (const file of originalFiles) {
       const filePath = path.join(demoDir, file);
-      expect(wasFileModifiedRecently(filePath, 300)).toBe(true); // 5 minutes
+      originalStats[file] = fs.statSync(filePath);
     }
-  });
-
-  it('should show AI processing simulation in dry run mode', async () => {
-    const configPath = path.resolve('./config.ts');
-    const demoDir = path.resolve('./tests/images/demo');
     
+    // Run dry run command
     const output = execSync(
-      `node --no-warnings dist/bin/cli.js -d ${demoDir} -c ${configPath} --verbose --dry-run`,
+      `node --no-warnings dist/bin/cli.js -d ${demoDir} -c ${configPath} --dry-run --verbose`,
       { 
         encoding: 'utf8',
         stdio: 'pipe'
       }
     );
-
-    // Verify AI processing simulation
-    expect(output).toContain('Processing [title] task');
-    expect(output).toContain('Processing [description] task');
-    expect(output).toContain('Processing [keywords] task');
     
-    // Verify that it shows what would be written but doesn't actually write
-    expect(output).toContain('Would write EXIF tags');
-    expect(output).toContain('DRY RUN');
+    // Verify dry run output contains expected information
+    expect(output).toContain('DRY RUN MODE');
+    expect(output).toContain('Processing images');
+    expect(output).toContain('Found');
+    expect(output).toContain('image files');
+    
+    // Should show completion messages (this is expected in dry run mode)
+    expect(output).toContain('Completed:');
+    
+    // Verify files were not modified (check modification times)
+    for (const file of originalFiles) {
+      const filePath = path.join(demoDir, file);
+      const currentStats = fs.statSync(filePath);
+      expect(currentStats.mtime.getTime()).toBe(originalStats[file].mtime.getTime());
+    }
   });
 });

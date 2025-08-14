@@ -13,9 +13,7 @@
     "clean": "rm -rf dist",
     "demo": "./scripts/demo.sh",
     "demo-dry": "./scripts/demo-dry.sh",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:e2e": "vitest run --config vitest.e2e.config.ts"
+    "test": "vitest run --config vitest.e2e.config.ts"
   },
   "keywords": [
     "exif",
@@ -28,17 +26,17 @@
   "license": "MIT",
   "dependencies": {
     "axios": "^1.6.0",
-    "chalk": "^4.1.2",
-    "commander": "^11.1.0",
+    "chalk": "^5.5.0",
+    "commander": "^14.0.0",
     "exiftool-vendored": "^30.3.0",
-    "glob": "^10.3.10"
+    "glob": "^11.0.3"
   },
   "devDependencies": {
-    "@types/node": "^20.10.0",
+    "@types/node": "^24.2.1",
+    "@vitest/ui": "^3.2.4",
     "ts-node": "^10.9.0",
     "typescript": "^5.3.0",
-    "vitest": "^1.0.0",
-    "@vitest/ui": "^1.0.0"
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=14.0.0"

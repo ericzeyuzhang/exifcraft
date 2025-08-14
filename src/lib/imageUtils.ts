@@ -23,17 +23,23 @@ export async function getImageFiles(directory: string, supportedFormats: string[
       throw new Error(`Specified path is not a directory: ${directory}`);
     }
     
-    // Build glob pattern
-    const extensions = supportedFormats.map(ext => ext.replace('.', '')).join(',');
-    const pattern = path.join(directory, `**/*.{${extensions}}`);
+    // Read directory contents
+    const files = await fs.readdir(directory);
+    const imageFiles: string[] = [];
     
-    // Search files
-    const files = await glob(pattern, { 
-      nocase: true,  // Ignore case
-      absolute: true // Return absolute paths
-    });
+    for (const file of files) {
+      const filePath = path.join(directory, file);
+      const stat = await fs.stat(filePath);
+      
+      if (stat.isFile()) {
+        const ext = path.extname(file).toLowerCase();
+        if (supportedFormats.includes(ext)) {
+          imageFiles.push(filePath);
+        }
+      }
+    }
     
-    return files.sort(); // Sort alphabetically
+    return imageFiles.sort(); // Sort alphabetically
     
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {

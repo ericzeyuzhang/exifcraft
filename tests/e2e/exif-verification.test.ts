@@ -1,16 +1,19 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
-import { setupTestEnvironment } from './setup';
+import { resetTestEnvironment } from './setup';
 import { readExifData, extractAIGeneratedContent } from './utils';
 
 describe('EXIF Verification E2E Tests', () => {
-  setupTestEnvironment();
+  beforeEach(async () => {
+    // Reset environment before each test to ensure clean state
+    resetTestEnvironment();
+  });
 
   it('should write AI-generated EXIF data to image files', async () => {
-    const configPath = path.resolve('./config.ts');
-    const demoDir = path.resolve('./tests/images/demo');
+    const configPath = path.join(process.cwd(), 'tests/e2e/test-config.ts');
+    const demoDir = path.join(process.cwd(), 'tests/images/demo');
     
     // Build the project first
     execSync('npm run build', { stdio: 'pipe' });
@@ -76,12 +79,14 @@ describe('EXIF Verification E2E Tests', () => {
   });
 
   it('should preserve original EXIF data while adding new fields', async () => {
-    const configPath = path.resolve('./config.ts');
-    const demoDir = path.resolve('./tests/images/demo');
+    const configPath = path.join(process.cwd(), 'tests/e2e/test-config.ts');
+    const demoDir = path.join(process.cwd(), 'tests/images/demo');
+    
+    // Use the file that was already copied by setup.ts
+    const testImage = path.join(demoDir, 'DSCF3752.JPG');
     
     // Read original EXIF data before processing
-    const originalImage = path.join(demoDir, 'DSCF3752.JPG');
-    const originalExifData = await readExifData(originalImage);
+    const originalExifData = await readExifData(testImage);
     
     // Run processing
     execSync(
@@ -90,7 +95,7 @@ describe('EXIF Verification E2E Tests', () => {
     );
     
     // Read EXIF data after processing
-    const processedExifData = await readExifData(originalImage);
+    const processedExifData = await readExifData(testImage);
     
     // Verify that original technical EXIF data is preserved
     const technicalFields = [

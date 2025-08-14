@@ -16,7 +16,7 @@ export interface TaskConfig {
 }
 
 export interface AIModelConfig {
-  provider: 'ollama' | 'openai' | 'gemini';
+  provider: 'ollama' | 'openai' | 'gemini' | 'mock';
   /** Placeholder for online model (e.g. OpenAI, Gemini) api key */
   key?: string;
   endpoint: string;

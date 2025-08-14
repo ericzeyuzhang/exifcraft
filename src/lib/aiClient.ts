@@ -31,10 +31,31 @@ export async function generateAIResponse(
   switch (provider.toLowerCase()) {
     case 'ollama':
       return await callOllamaAPI(imageBuffer, prompt, endpoint, model, options);
+    case 'mock':
+      return await callMockAPI(prompt);
     case 'openai':
     case 'gemini':
     default:
-      throw new Error(`Unsupported AI model provider: ${provider}. Currently only 'ollama' is implemented.`);
+      throw new Error(`Unsupported AI model provider: ${provider}. Currently only 'ollama' and 'mock' are implemented.`);
+  }
+}
+
+/**
+ * Mock AI API for integration testing
+ */
+async function callMockAPI(prompt: string): Promise<string> {
+  // Simulate network delay
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // Return different responses based on the prompt content
+  if (prompt.toLowerCase().includes('title')) {
+    return 'Beautiful sunset over mountains';
+  } else if (prompt.toLowerCase().includes('description')) {
+    return 'A stunning landscape photograph featuring golden hour light illuminating snow-capped peaks with dramatic clouds in the background';
+  } else if (prompt.toLowerCase().includes('keyword')) {
+    return 'landscape, nature, mountains, sunset, golden hour, photography, outdoor, scenic, dramatic, beautiful';
+  } else {
+    return 'Mock AI response for testing purposes';
   }
 }
 

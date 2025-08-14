@@ -10,6 +10,8 @@ export default defineConfig({
     setupFiles: ['./tests/e2e/setup.ts'],
     include: ['tests/e2e/**/*.test.ts'],
     exclude: ['node_modules', 'dist'],
+    minWorkers: 1,
+    maxWorkers: 1,
   },
   resolve: {
     alias: {

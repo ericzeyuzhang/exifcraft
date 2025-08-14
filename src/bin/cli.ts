@@ -52,6 +52,9 @@ async function main(): Promise<void> {
     const config = await loadConfig(configPath);
     
     // Process images
+    if (options.dryRun) {
+      console.log(chalk.yellow('DRY RUN MODE - No files will be modified'));
+    }
     console.log(chalk.blue('Processing images...'));
     
     try {

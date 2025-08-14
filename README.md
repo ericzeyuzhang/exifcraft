@@ -5,7 +5,7 @@ AI-powered EXIF metadata crafting tool for images
 ## Features
 
 - AI-powered image analysis and metadata generation
-- Support for multiple image formats (JPG, PNG, WebP, BMP, GIF)
+- Support for JPG and JPEG image formats
 - Configurable AI models (Ollama, OpenAI, Gemini)
 - Batch processing capabilities
 - Dry-run mode for preview
@@ -26,7 +26,7 @@ npm install
 npm run dev -d /path/to/images -c config.ts
 
 # Process specific files
-npm run dev -f image1.jpg image2.png -c config.ts
+npm run dev -f image1.jpg image2.jpeg -c config.ts
 
 # Dry run mode (preview without modifying files)
 npm run dev -d /path/to/images -c config.ts --dry-run
@@ -74,7 +74,7 @@ const config: ExifCraftConfig = {
       max_tokens: 500
     }
   },
-  imageFormats: [".jpg", ".jpeg", ".png"],
+  imageFormats: [".jpg", ".jpeg"],
   preserveOriginal: false,
   basePrompt: "You are a helpful assistant."
 };
