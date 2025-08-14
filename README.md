@@ -10,6 +10,7 @@ AI-powered EXIF metadata crafting tool for images
 - Batch processing capabilities
 - Dry-run mode for preview
 - Preserve original files option
+- **allowOverwrite control** - Prevent overwriting existing non-empty EXIF tags
 
 ## Installation
 
@@ -50,7 +51,7 @@ const config: ExifCraftConfig = {
       tags: [
         {
           name: "ImageTitle", // TypeScript provides autocomplete for all available EXIF tags
-          allowOverwrite: true
+          allowOverwrite: true  // Will overwrite existing non-empty values
         }
       ]
     },
@@ -60,7 +61,7 @@ const config: ExifCraftConfig = {
       tags: [
         {
           name: "ImageDescription", // TypeScript provides autocomplete for all available EXIF tags
-          allowOverwrite: true
+          allowOverwrite: false  // Will NOT overwrite existing non-empty values
         }
       ]
     }
@@ -82,6 +83,23 @@ const config: ExifCraftConfig = {
 export default config;
 ```
 
+### allowOverwrite Feature
+
+The `allowOverwrite` field controls whether existing non-empty EXIF tags should be overwritten:
+
+- **`allowOverwrite: true`** - Always overwrite the tag, even if it already has a non-empty value
+- **`allowOverwrite: false`** - Only write to the tag if it's currently empty or doesn't exist
+
+This is useful for:
+- Preserving manually added metadata while filling in missing fields
+- Preventing accidental overwrites of important existing EXIF data
+- Selective updates where you only want to fill gaps in metadata
+
+**Example behavior:**
+- If `ImageTitle` already contains "My Photo" and `allowOverwrite: false`, the new AI-generated title will be skipped
+- If `ImageTitle` is empty and `allowOverwrite: false`, the new AI-generated title will be written
+- If `allowOverwrite: true`, the new AI-generated title will always overwrite the existing value
+
 ## Development
 
 ### Building
@@ -89,8 +107,6 @@ export default config;
 ```bash
 npm run build
 ```
-
-
 
 ## License
 

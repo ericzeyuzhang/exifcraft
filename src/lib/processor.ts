@@ -87,6 +87,7 @@ async function processImage(
   
   // Generate AI response for each prompt and write to EXIF
   const tagsToWrite: Partial<WriteTags> = {};
+  const allowOverwriteMap: Record<string, boolean> = {};
   
   for (const taskConfig of config.tasks) {
     if (verbose) {
@@ -108,6 +109,7 @@ async function processImage(
       // Write response to corresponding EXIF tags
       for (const tagConfig of taskConfig.tags) {
         (tagsToWrite as any)[tagConfig.name] = aiResponse;
+        allowOverwriteMap[tagConfig.name] = tagConfig.allowOverwrite;
       }
       
     } catch (error) {
@@ -125,9 +127,13 @@ async function processImage(
             console.log(chalk.blue(`    ${tagName}: ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}`));
           }
         }
+        // Show allowOverwrite information in dry run
+        for (const [tagName, allowOverwrite] of Object.entries(allowOverwriteMap)) {
+          console.log(chalk.blue(`    ${tagName} allowOverwrite: ${allowOverwrite}`));
+        }
       }
     } else {
-      await writeExifData(imagePath, tagsToWrite, config.preserveOriginal, verbose);
+      await writeExifData(imagePath, tagsToWrite, config.preserveOriginal, verbose, allowOverwriteMap);
     }
   } else {
     console.warn(chalk.yellow(`  Warning: No EXIF data generated`));
