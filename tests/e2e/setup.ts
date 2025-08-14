@@ -42,9 +42,10 @@ export const resetTestEnvironment = () => {
     // Copy all files (not just supported formats)
     if (fs.statSync(sourcePath).isFile()) {
       fs.copyFileSync(sourcePath, destPath);
-      console.log(`Copied ${file} to demo directory`);
     }
   }
+
+  console.log(`Copied ${originalFiles.length} files to demo directory`);
 };
 
 export const cleanTestEnvironment = () => {

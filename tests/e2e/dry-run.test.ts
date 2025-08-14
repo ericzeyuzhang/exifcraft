@@ -1,15 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { execSync } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
-import { resetTestEnvironment } from './setup';
 
 describe('Dry Run E2E Tests', () => {  
-  beforeEach(async () => {
-    // Reset environment before each test to ensure clean state
-    resetTestEnvironment();
-  });
-
   it('should perform dry run without modifying files and show correct output', async () => {
     const configPath = path.join(process.cwd(), 'tests/e2e/test-config.ts');
     const demoDir = path.join(process.cwd(), 'tests/images/demo');

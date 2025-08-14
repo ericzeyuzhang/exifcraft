@@ -1,15 +1,9 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { execSync } from 'child_process';
 import * as path from 'path';
-import * as fs from 'fs';
-import { resetTestEnvironment } from './setup';
+import * as fs from 'fs'; 
 
 describe('Smoke Tests', () => {
-  beforeEach(async () => {
-    // Reset environment before each test to ensure clean state
-    resetTestEnvironment();
-  });
-
   it('should build the project successfully', () => {
     expect(() => {
       execSync('npm run build', { stdio: 'pipe' });
