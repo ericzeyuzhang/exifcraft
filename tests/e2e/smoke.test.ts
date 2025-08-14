@@ -32,19 +32,9 @@ describe('Smoke Tests', () => {
     // Check that all files from original are copied to demo
     expect(demoFiles.length).toBe(originalFiles.length);
     
-    // Check for key image files (JPG and JPEG)
-    const keyImageFiles = ['DSCF3752.JPG', 'IMAG0062.JPG'];
-    
-    for (const file of keyImageFiles) {
+    // Verify that all files from original directory are present in demo directory
+    for (const file of originalFiles) {
       expect(demoFiles).toContain(file);
-      expect(originalFiles).toContain(file);
-    }
-    
-    // Verify that non-supported formats are also copied (for testing filter functionality)
-    const nonSupportedFiles = ['DSCF0709.RAF', 'DSC_0243.NEF', 'IMG_9897.HEIC', 'a-text-file.txt'];
-    for (const file of nonSupportedFiles) {
-      expect(demoFiles).toContain(file);
-      expect(originalFiles).toContain(file);
     }
   });
 
