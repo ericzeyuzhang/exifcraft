@@ -28,7 +28,8 @@
     "axios": "^1.6.0",
     "chalk": "^5.5.0",
     "commander": "^14.0.0",
-    "exiftool-vendored": "^30.3.0"
+    "exiftool-vendored": "^30.3.0",
+    "heic-convert": "^2.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",

@@ -50,3 +50,6 @@ export interface CLIOptions {
 export interface JobSetting extends Omit<CLIOptions, 'config'> {
   config: ExifCraftConfig;
 }
+
+// Image processing types
+export type ImageConverter = (imagePath: string) => Promise<Buffer>;

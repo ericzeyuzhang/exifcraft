@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { getImageFiles, filterSupportedFiles } from './imageUtils';
+import { getImageFiles, filterSupportedFiles, getFileSizeMB, getImageBufferForAI } from './imageUtils';
 import { generateAIResponse } from './aiClient';
 import { writeExifData } from './exifWriter';
 import { JobSetting, ExifCraftConfig } from '../models/types';
@@ -82,8 +82,19 @@ async function processImage(
     throw new Error(`Image file does not exist: ${imagePath}`);
   }
 
-  // Read image file for AI processing
-  const imageBuffer = await fs.readFile(imagePath);
+  // Check file size
+  const fileSizeMB = await getFileSizeMB(imagePath);
+  
+  if (fileSizeMB > 100) {
+    throw new Error(`File too large (${fileSizeMB.toFixed(1)}MB). Maximum supported size is 100MB.`);
+  }
+
+  // Read image file for AI processing, converting if necessary
+  const imageBuffer = await getImageBufferForAI(imagePath);
+  
+  if (verbose) {
+    console.log(`  File size: ${fileSizeMB.toFixed(1)}MB`);
+  }
   
   // Generate AI response for each prompt and write to EXIF
   const tagsToWrite: Partial<WriteTags> = {};
@@ -127,10 +138,7 @@ async function processImage(
             console.log(chalk.blue(`    ${tagName}: ${value.substring(0, 100)}${value.length > 100 ? '...' : ''}`));
           }
         }
-        // Show allowOverwrite information in dry run
-        for (const [tagName, allowOverwrite] of Object.entries(allowOverwriteMap)) {
-          console.log(chalk.blue(`    ${tagName} allowOverwrite: ${allowOverwrite}`));
-        }
+
       }
     } else {
       await writeExifData(imagePath, tagsToWrite, config.preserveOriginal, verbose, allowOverwriteMap);

@@ -5,12 +5,15 @@ AI-powered EXIF metadata crafting tool for images
 ## Features
 
 - AI-powered image analysis and metadata generation
-- Support for JPG and JPEG image formats
+- Support for multiple image formats:
+  - **Standard formats**: JPG, JPEG, TIFF
+  - **RAW formats**: NEF (Nikon), RAF (Fujifilm), CR2 (Canon), ARW (Sony), DNG (Adobe), RAW, ORF (Olympus), RW2 (Panasonic), PEF (Pentax), SRW (Samsung)
 - Configurable AI models (Ollama, OpenAI, Gemini)
 - Batch processing capabilities
 - Dry-run mode for preview
 - Preserve original files option
 - **allowOverwrite control** - Prevent overwriting existing non-empty EXIF tags
+- **Large file handling** - Automatic size checks and warnings for RAW files
 
 ## Installation
 
@@ -75,7 +78,7 @@ const config: ExifCraftConfig = {
       max_tokens: 500
     }
   },
-  imageFormats: [".jpg", ".jpeg"],
+  imageFormats: [".jpg", ".jpeg", ".nef", ".raf", ".cr2", ".arw", ".dng", ".raw", ".tiff", ".tif"],
   preserveOriginal: false,
   basePrompt: "You are a helpful assistant."
 };
