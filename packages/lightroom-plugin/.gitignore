@@ -1,0 +1,7 @@
+# Packaged plugin & distributables
+ExifCraft.lrplugin/
+ExifCraft.zip
+
+# Logs & temporary files
+*.log
+.tmp/

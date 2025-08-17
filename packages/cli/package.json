@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "package": "npm run build && pkg .",
     "clean": "rm -rf dist",
     "test": "vitest run --config ./vitest.e2e.config.ts",
     "dev": "ts-node src/cli.ts",
@@ -33,7 +34,17 @@
     "@types/node": "^24.2.1",
     "ts-node": "^10.9.0",
     "typescript": "^5.3.0",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "pkg": "^5.8.1"
+  },
+  "pkg": {
+    "scripts": "dist/**/*.js",
+    "assets": [],
+    "targets": [
+      "node18-macos-x64",
+      "node18-win-x64"
+    ],
+    "outputPath": "dist/bin"
   },
   "engines": {
     "node": ">=14.0.0"
