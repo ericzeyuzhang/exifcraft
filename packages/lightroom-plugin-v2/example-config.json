@@ -1,0 +1,57 @@
+{
+  "description": "Example configuration showing what the plugin generates for the CLI",
+  "note": "This file is for reference only - the plugin generates this automatically",
+  "tasks": [
+    {
+      "name": "Generate Title",
+      "tags": [
+        {
+          "name": "ImageDescription",
+          "allowOverwrite": true
+        }
+      ],
+      "prompt": "Generate a concise, descriptive title for this image."
+    },
+    {
+      "name": "Generate Description", 
+      "tags": [
+        {
+          "name": "Caption-Abstract",
+          "allowOverwrite": true
+        }
+      ],
+      "prompt": "Provide a detailed description of this image, including key visual elements, composition, and mood."
+    },
+    {
+      "name": "Generate Keywords",
+      "tags": [
+        {
+          "name": "Keywords", 
+          "allowOverwrite": true
+        }
+      ],
+      "prompt": "Generate relevant keywords for this image, separated by commas."
+    }
+  ],
+  "aiModel": {
+    "provider": "ollama",
+    "endpoint": "http://localhost:11434",
+    "model": "llama3.2-vision",
+    "options": {
+      "temperature": 0.7
+    }
+  },
+  "imageFormats": [
+    "jpg",
+    "jpeg", 
+    "tiff",
+    "tif",
+    "png",
+    "dng",
+    "cr2",
+    "nef",
+    "arw"
+  ],
+  "preserveOriginal": true,
+  "basePrompt": "Analyze this image and provide metadata."
+}

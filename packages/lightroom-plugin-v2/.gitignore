@@ -1,0 +1,16 @@
+# Build and distribution files
+dist/
+*.zip
+
+# Logs & temporary files
+*.log
+.tmp/
+
+# Test files
+test-*.lua
+*-test.lua
+
+# Lightroom plugin specific
+# Local configuration overrides
+local-config.lua
+debug.lua
