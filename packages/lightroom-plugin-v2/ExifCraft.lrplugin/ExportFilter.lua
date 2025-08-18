@@ -10,6 +10,8 @@ local LrDialogs = import 'LrDialogs'
 local LrPathUtils = import 'LrPathUtils'
 local LrTasks = import 'LrTasks'
 local LrProgressScope = import 'LrProgressScope'
+local LrFileUtils = import 'LrFileUtils'
+local LrDate = import 'LrDate'
 local bind = LrView.bind
 
 -- Use global logger
@@ -19,38 +21,53 @@ if not logger then
 end
 logger:info('ExifCraft v2 Export Filter loaded')
 
--- Default settings aligned with ExifCraftConfig
+-- Default settings aligned with ExifCraftConfig and config.ts
 local DEFAULT_SETTINGS = {
     -- AI Model Configuration
     aiProvider = 'ollama',
-    aiEndpoint = 'http://localhost:11434',
-    aiModel = 'llama3.2-vision',
+    aiEndpoint = 'http://erics-mac-mini.local:11434/api/generate',
+    aiModel = 'llava',
     aiApiKey = '',
-    aiTemperature = 0.7,
-    aiMaxTokens = 1000,
+    aiTemperature = 0,
+    aiMaxTokens = 500,
     
-    -- Task Configuration
-    taskTitle = true,
-    taskDescription = true,
-    taskKeywords = true,
-    taskCustom = false,
+    -- Task Configuration (as TaskConfig objects)
+    taskTitleEnabled = 'true',
+    taskTitleName = 'title',
+    taskTitlePrompt = 'Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ',
+    taskTitleTags = 'ImageTitle,ImageDescription,XPTitle,ObjectName,Title',
+    
+    taskDescriptionEnabled = 'true',
+    taskDescriptionName = 'description',
+    taskDescriptionPrompt = 'Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ',
+    taskDescriptionTags = 'ImageDescription,Description,Caption-Abstract',
+    
+    taskKeywordsEnabled = 'true',
+    taskKeywordsName = 'keywords',
+    taskKeywordsPrompt = 'Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ',
+    taskKeywordsTags = 'Keywords',
+    
+    taskCustomEnabled = 'false',
     taskCustomName = 'Custom Task',
     taskCustomPrompt = 'Analyze this image and provide metadata.',
     taskCustomTags = 'ImageDescription,Caption-Abstract,Keywords',
     
     -- General Configuration
-    preserveOriginal = true,
-    basePrompt = 'Analyze this image and provide metadata.',
-    imageFormats = 'jpg,jpeg,tiff,tif,png,dng,cr2,nef,arw',
-    verbose = false,
-    dryRun = false,
+    preserveOriginal = 'false',
+    basePrompt = 'As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n',
+    imageFormats = '.jpg,.jpeg,.nef,.raf,.cr2,.arw,.dng,.raw,.tiff,.tif,.heic,.heif',
+    verbose = 'false',
+    dryRun = 'false',
 }
 
 -- Export filter provider table
 local exportFilterProvider = {
     exportPresetFields = { 
         "aiProvider", "aiEndpoint", "aiModel", "aiApiKey", "aiTemperature", "aiMaxTokens",
-        "taskTitle", "taskDescription", "taskKeywords", "taskCustom", "taskCustomName", "taskCustomPrompt", "taskCustomTags",
+        "taskTitleEnabled", "taskTitleName", "taskTitlePrompt", "taskTitleTags",
+        "taskDescriptionEnabled", "taskDescriptionName", "taskDescriptionPrompt", "taskDescriptionTags",
+        "taskKeywordsEnabled", "taskKeywordsName", "taskKeywordsPrompt", "taskKeywordsTags",
+        "taskCustomEnabled", "taskCustomName", "taskCustomPrompt", "taskCustomTags",
         "preserveOriginal", "basePrompt", "imageFormats", "verbose", "dryRun"
     }
 }
@@ -200,24 +217,227 @@ local function createTaskSection(viewFactory)
         title = "Task Configuration",
         spacing = viewFactory:control_spacing(),
         
-        viewFactory:checkbox {
-            title = "Generate Title",
-            value = bind 'taskTitle',
+        -- Title Task
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Title Task:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'taskTitleEnabled',
+                items = {
+                    { title = "Enabled", value = "true" },
+                    { title = "Disabled", value = "false" },
+                },
+                width_in_chars = 15,
+            },
         },
         
-        viewFactory:checkbox {
-            title = "Generate Description",
-            value = bind 'taskDescription',
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Title Name:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskTitleName',
+                immediate = true,
+                width_in_chars = 20,
+                fill_horizontal = 1,
+            },
         },
         
-        viewFactory:checkbox {
-            title = "Generate Keywords",
-            value = bind 'taskKeywords',
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Title Prompt:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskTitlePrompt',
+                immediate = true,
+                width_in_chars = 40,
+                height_in_lines = 2,
+                fill_horizontal = 1,
+            },
         },
         
-        viewFactory:checkbox {
-            title = "Custom Task",
-            value = bind 'taskCustom',
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Title Tags:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskTitleTags',
+                immediate = true,
+                width_in_chars = 40,
+                fill_horizontal = 1,
+            },
+        },
+        
+        -- Description Task
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Description Task:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'taskDescriptionEnabled',
+                items = {
+                    { title = "Enabled", value = "true" },
+                    { title = "Disabled", value = "false" },
+                },
+                width_in_chars = 15,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Description Name:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskDescriptionName',
+                immediate = true,
+                width_in_chars = 20,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Description Prompt:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskDescriptionPrompt',
+                immediate = true,
+                width_in_chars = 40,
+                height_in_lines = 2,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Description Tags:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskDescriptionTags',
+                immediate = true,
+                width_in_chars = 40,
+                fill_horizontal = 1,
+            },
+        },
+        
+        -- Keywords Task
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Keywords Task:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'taskKeywordsEnabled',
+                items = {
+                    { title = "Enabled", value = "true" },
+                    { title = "Disabled", value = "false" },
+                },
+                width_in_chars = 15,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Keywords Name:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskKeywordsName',
+                immediate = true,
+                width_in_chars = 20,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Keywords Prompt:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskKeywordsPrompt',
+                immediate = true,
+                width_in_chars = 40,
+                height_in_lines = 2,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Keywords Tags:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskKeywordsTags',
+                immediate = true,
+                width_in_chars = 40,
+                fill_horizontal = 1,
+            },
+        },
+        
+        -- Custom Task
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Custom Task:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'taskCustomEnabled',
+                items = {
+                    { title = "Enabled", value = "true" },
+                    { title = "Disabled", value = "false" },
+                },
+                width_in_chars = 15,
+            },
         },
         
         viewFactory:row {
@@ -277,19 +497,58 @@ local function createGeneralSection(viewFactory)
         title = "General Options",
         spacing = viewFactory:control_spacing(),
         
-        viewFactory:checkbox {
-            title = "Preserve Original Files",
-            value = bind 'preserveOriginal',
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Preserve Original:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'preserveOriginal',
+                items = {
+                    { title = "True", value = "true" },
+                    { title = "False", value = "false" },
+                },
+                width_in_chars = 15,
+            },
         },
         
-        viewFactory:checkbox {
-            title = "Verbose Logging",
-            value = bind 'verbose',
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Verbose Logging:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'verbose',
+                items = {
+                    { title = "True", value = "true" },
+                    { title = "False", value = "false" },
+                },
+                width_in_chars = 15,
+            },
         },
         
-        viewFactory:checkbox {
-            title = "Dry Run (No Changes)",
-            value = bind 'dryRun',
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Dry Run:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'dryRun',
+                items = {
+                    { title = "True", value = "true" },
+                    { title = "False", value = "false" },
+                },
+                width_in_chars = 15,
+            },
         },
         
         viewFactory:row {
@@ -356,6 +615,109 @@ end
 -- Load Utils module
 local Utils = require 'Utils'
 
+-- Helper function to parse tags string into TagConfig array
+local function parseTags(tagsString)
+    local tags = {}
+    for tag in tagsString:gmatch("[^,]+") do
+        table.insert(tags, { name = tag:gsub("^%s*(.-)%s*$", "%1"), allowOverwrite = true })
+    end
+    return tags
+end
+
+-- Helper function to parse CLI output and extract metadata
+local function parseCliOutput(output)
+    local metadata = {}
+    
+    -- Try to parse JSON output first
+    local dkjson = require 'dkjson'
+    local success, parsed = pcall(dkjson.decode, output)
+    if success and type(parsed) == 'table' then
+        return parsed
+    end
+    
+    -- Fallback to text parsing for simple output
+    local lines = {}
+    for line in output:gmatch("[^\r\n]+") do
+        table.insert(lines, line)
+    end
+    
+    for _, line in ipairs(lines) do
+        -- Parse title
+        local title = line:match("Title:%s*(.+)")
+        if title then
+            metadata.title = title:gsub("^%s*(.-)%s*$", "%1") -- trim whitespace
+        end
+        
+        -- Parse description
+        local description = line:match("Description:%s*(.+)")
+        if description then
+            metadata.description = description:gsub("^%s*(.-)%s*$", "%1")
+        end
+        
+        -- Parse keywords
+        local keywords = line:match("Keywords:%s*(.+)")
+        if keywords then
+            metadata.keywords = keywords:gsub("^%s*(.-)%s*$", "%1")
+        end
+        
+        -- Parse custom task results
+        local custom = line:match("Custom:%s*(.+)")
+        if custom then
+            metadata.custom = custom:gsub("^%s*(.-)%s*$", "%1")
+        end
+    end
+    
+    return metadata
+end
+
+-- Helper function to write metadata back to Lightroom database
+local function writeMetadataToLightroom(photo, metadata, settings)
+    if not photo then
+        logger:error('No photo object provided for metadata writing')
+        return false
+    end
+    
+    local success = pcall(function()
+        -- Write AI-generated content to custom metadata fields
+        if metadata.title then
+            photo:setPropertyForPlugin(_PLUGIN, 'aiTitle', metadata.title)
+        end
+        
+        if metadata.description then
+            photo:setPropertyForPlugin(_PLUGIN, 'aiDescription', metadata.description)
+        end
+        
+        if metadata.keywords then
+            photo:setPropertyForPlugin(_PLUGIN, 'aiKeywords', metadata.keywords)
+        end
+        
+        if metadata.custom then
+            photo:setPropertyForPlugin(_PLUGIN, 'aiCustomTask', metadata.custom)
+        end
+        
+        -- Write processing status and configuration
+        photo:setPropertyForPlugin(_PLUGIN, 'aiProcessingStatus', 'completed')
+        photo:setPropertyForPlugin(_PLUGIN, 'aiProcessingDate', LrDate.currentTime())
+        photo:setPropertyForPlugin(_PLUGIN, 'aiModelUsed', settings.aiModel or 'unknown')
+        photo:setPropertyForPlugin(_PLUGIN, 'aiProviderUsed', settings.aiProvider or 'unknown')
+        
+        -- Write task configuration status
+        photo:setPropertyForPlugin(_PLUGIN, 'aiTaskTitleEnabled', settings.taskTitleEnabled or 'false')
+        photo:setPropertyForPlugin(_PLUGIN, 'aiTaskDescriptionEnabled', settings.taskDescriptionEnabled or 'false')
+        photo:setPropertyForPlugin(_PLUGIN, 'aiTaskKeywordsEnabled', settings.taskKeywordsEnabled or 'false')
+        photo:setPropertyForPlugin(_PLUGIN, 'aiTaskCustomEnabled', settings.taskCustomEnabled or 'false')
+        
+        logger:info('Metadata written to Lightroom for photo: ' .. tostring(photo:getRawMetadata('path')))
+    end)
+    
+    if not success then
+        logger:error('Failed to write metadata to Lightroom for photo: ' .. tostring(photo:getRawMetadata('path')))
+        return false
+    end
+    
+    return true
+end
+
 -- Create configuration JSON for CLI
 local function createConfigJson(settings, tempDir)
     logger:info('Creating configuration JSON')
@@ -371,11 +733,11 @@ local function createConfigJson(settings, tempDir)
     -- Build AI model configuration
     local aiModelConfig = {
         provider = settings.aiProvider or 'ollama',
-        endpoint = settings.aiEndpoint or 'http://localhost:11434',
-        model = settings.aiModel or 'llama3.2-vision',
+        endpoint = settings.aiEndpoint or 'http://erics-mac-mini.local:11434/api/generate',
+        model = settings.aiModel or 'llava',
         options = {
-            temperature = tonumber(settings.aiTemperature) or 0.7,
-            max_tokens = tonumber(settings.aiMaxTokens) or 1000,
+            temperature = tonumber(settings.aiTemperature) or 0,
+            max_tokens = tonumber(settings.aiMaxTokens) or 500,
         }
     }
     
@@ -388,45 +750,39 @@ local function createConfigJson(settings, tempDir)
         tasks = {},
         aiModel = aiModelConfig,
         imageFormats = imageFormats,
-        preserveOriginal = settings.preserveOriginal ~= false,
-        basePrompt = settings.basePrompt or 'Analyze this image and provide metadata.',
+        preserveOriginal = settings.preserveOriginal == 'true',
+        basePrompt = settings.basePrompt or 'As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n',
     }
     
-    -- Add standard tasks based on settings
-    if settings.taskTitle ~= false then
+    -- Add tasks based on settings (following TaskConfig schema)
+    if settings.taskTitleEnabled == 'true' then
         table.insert(config.tasks, {
-            name = 'Generate Title',
-            tags = {{ name = 'ImageDescription', allowOverwrite = true }},
-            prompt = 'Generate a concise, descriptive title for this image.',
+            name = settings.taskTitleName or 'title',
+            tags = parseTags(settings.taskTitleTags or 'ImageTitle,ImageDescription,XPTitle,ObjectName,Title'),
+            prompt = settings.taskTitlePrompt or 'Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ',
         })
     end
     
-    if settings.taskDescription ~= false then
+    if settings.taskDescriptionEnabled == 'true' then
         table.insert(config.tasks, {
-            name = 'Generate Description',
-            tags = {{ name = 'Caption-Abstract', allowOverwrite = true }},
-            prompt = 'Provide a detailed description of this image.',
+            name = settings.taskDescriptionName or 'description',
+            tags = parseTags(settings.taskDescriptionTags or 'ImageDescription,Description,Caption-Abstract'),
+            prompt = settings.taskDescriptionPrompt or 'Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ',
         })
     end
     
-    if settings.taskKeywords ~= false then
+    if settings.taskKeywordsEnabled == 'true' then
         table.insert(config.tasks, {
-            name = 'Generate Keywords',
-            tags = {{ name = 'Keywords', allowOverwrite = true }},
-            prompt = 'Generate relevant keywords for this image, separated by commas.',
+            name = settings.taskKeywordsName or 'keywords',
+            tags = parseTags(settings.taskKeywordsTags or 'Keywords'),
+            prompt = settings.taskKeywordsPrompt or 'Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ',
         })
     end
     
-    -- Add custom task if enabled
-    if settings.taskCustom and settings.taskCustomName and settings.taskCustomName ~= '' then
-        local customTags = {}
-        for tag in settings.taskCustomTags:gmatch("[^,]+") do
-            table.insert(customTags, { name = tag:gsub("^%s*(.-)%s*$", "%1"), allowOverwrite = true })
-        end
-        
+    if settings.taskCustomEnabled == 'true' then
         table.insert(config.tasks, {
-            name = settings.taskCustomName,
-            tags = customTags,
+            name = settings.taskCustomName or 'Custom Task',
+            tags = parseTags(settings.taskCustomTags or 'ImageDescription,Caption-Abstract,Keywords'),
             prompt = settings.taskCustomPrompt or 'Analyze this image and provide metadata.',
         })
     end
@@ -495,15 +851,16 @@ function exportFilterProvider.postProcessRenderedPhotos(functionContext, filterC
             if renderSuccess then
                 progressScope:setCaption('Processing: ' .. tostring(LrPathUtils.leafName(pathOrMessage)))
                 
-                -- Build CLI command
-                local command = string.format('"%s" -f "%s" -c "%s"', 
-                    cliPath, pathOrMessage, configPath)
+                -- Build CLI command with output capture
+                local outputFile = LrPathUtils.child(tempDir, 'output_' .. os.time() .. '.json')
+                local command = string.format('"%s" -f "%s" -c "%s" --output "%s"', 
+                    cliPath, pathOrMessage, configPath, outputFile)
                 
-                if exportSettings.verbose then
+                if exportSettings.verbose == 'true' then
                     command = command .. ' -v'
                 end
                 
-                if exportSettings.dryRun then
+                if exportSettings.dryRun == 'true' then
                     command = command .. ' --dry-run'
                 end
                 
@@ -514,6 +871,36 @@ function exportFilterProvider.postProcessRenderedPhotos(functionContext, filterC
                 
                 if exitCode == 0 then
                     logger:info('Successfully processed: ' .. tostring(pathOrMessage))
+                    
+                    -- Read CLI output and write metadata to Lightroom
+                    if LrFileUtils.exists(outputFile) then
+                        local file = io.open(outputFile, 'r')
+                        if file then
+                            local output = file:read('*all') or ""
+                            file:close()
+                            
+                            -- Parse output and write to Lightroom
+                            local metadata = parseCliOutput(output)
+                            if metadata and next(metadata) then
+                                local writeSuccess = writeMetadataToLightroom(photo, metadata, exportSettings)
+                                if writeSuccess then
+                                    logger:info('Metadata successfully written to Lightroom')
+                                else
+                                    logger:error('Failed to write metadata to Lightroom')
+                                end
+                            else
+                                logger:warning('No metadata found in CLI output')
+                            end
+                        else
+                            logger:error('Failed to read CLI output file: ' .. tostring(outputFile))
+                        end
+                        
+                        -- Clean up output file
+                        LrFileUtils.delete(outputFile)
+                    else
+                        logger:warning('CLI output file not found: ' .. tostring(outputFile))
+                    end
+                    
                     successCount = successCount + 1
                 else
                     logger:error('Failed to process: ' .. tostring(pathOrMessage) .. ' (exit code: ' .. tostring(exitCode) .. ')')
