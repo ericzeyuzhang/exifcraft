@@ -16,7 +16,7 @@ program
 program
   .option('-d, --directory <path>', 'Path to image directory')
   .option('-f, --files <paths...>', 'Specify image file paths')
-  .option('-c, --config <path>', 'TypeScript configuration file path (.ts)', './config.ts')
+  .option('-c, --config <path>', 'Configuration file path (.ts or .json)', './config.ts')
   .option('-v, --verbose', 'Show verbose output')
   .option('--dry-run', 'Dry run mode - Simulate behaviors without modifying files')
   .parse();
@@ -41,7 +41,7 @@ async function main(): Promise<void> {
     const configPath = path.resolve(options.config);
     if (!fs.existsSync(configPath)) {
       console.error(chalk.red(`Error: Configuration file does not exist: ${configPath}`));
-      console.log(chalk.yellow('Hint: Please create a configuration file or use the default ./config.json'));
+      console.log(chalk.yellow('Hint: Please create a configuration file (./config.ts or ./config.json)'));
       process.exit(1);
     }
 

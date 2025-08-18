@@ -1,20 +1,26 @@
 import * as path from 'path';
+import * as fs from 'fs';
 import { ExifCraftConfig } from '../models/types';
 
 /**
- * Load TypeScript configuration file
+ * Load configuration file (supports both TypeScript .ts and JSON .json formats)
  */
 export async function loadConfig(configPath: string): Promise<ExifCraftConfig> {
   try {
     const ext = path.extname(configPath);
+    let config: ExifCraftConfig;
     
-    if (ext !== '.ts') {
-      throw new Error(`Configuration file must be a TypeScript file (.ts), got: ${ext}`);
+    if (ext === '.ts') {
+      // Load TypeScript configuration
+      const configModule = await import(path.resolve(configPath));
+      config = configModule.default as ExifCraftConfig;
+    } else if (ext === '.json') {
+      // Load JSON configuration
+      const configContent = fs.readFileSync(configPath, 'utf-8');
+      config = JSON.parse(configContent) as ExifCraftConfig;
+    } else {
+      throw new Error(`Configuration file must be either TypeScript (.ts) or JSON (.json), got: ${ext}`);
     }
-    
-    // Load TypeScript configuration
-    const configModule = await import(path.resolve(configPath));
-    const config = configModule.default as ExifCraftConfig;
     
     // Validate configuration format
     validateConfig(config);
@@ -61,9 +67,9 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
   
   // Validate image formats
   if (config.imageFormats && Array.isArray(config.imageFormats)) {
-    const invalid = config.imageFormats.filter((f: any) => typeof f !== 'string' || !f.startsWith('.'));
+    const invalid = config.imageFormats.filter((f: any) => typeof f !== 'string' || f.length === 0);
     if (invalid.length > 0) {
-      throw new Error(`Invalid formats: ${invalid.join(', ')}. Must start with '.'`);
+      throw new Error(`Invalid image formats: ${invalid.join(', ')}. Must be non-empty strings`);
     }
   }
   
