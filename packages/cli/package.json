@@ -8,7 +8,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "package": "npm run build && pkg .",
+    "package": "npm run build && npm run package:bun-mac && npm run package:bun-win",
+    "package:bun-mac": "~/.bun/bin/bun build dist/cli.js --compile --outfile dist/bin/mac/exifcraft",
+    "package:bun-win": "BUN_COMPILE_TARGET=bun-windows-x64 ~/.bun/bin/bun build dist/cli.js --compile --outfile dist/bin/win/exifcraft.exe",
     "clean": "rm -rf dist",
     "test": "vitest run --config ./vitest.e2e.config.ts",
     "dev": "ts-node src/cli.ts",
@@ -26,25 +28,15 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "exifcraft-core": "file:../core",
-    "chalk": "^5.5.0",
-    "commander": "^14.0.0"
+    "chalk": "^4.1.2",
+    "commander": "^14.0.0",
+    "exifcraft-core": "file:../core"
   },
   "devDependencies": {
     "@types/node": "^24.2.1",
     "ts-node": "^10.9.0",
     "typescript": "^5.3.0",
-    "vitest": "^3.2.4",
-    "pkg": "^5.8.1"
-  },
-  "pkg": {
-    "scripts": "dist/**/*.js",
-    "assets": [],
-    "targets": [
-      "node18-macos-x64",
-      "node18-win-x64"
-    ],
-    "outputPath": "dist/bin"
+    "vitest": "^3.2.4"
   },
   "engines": {
     "node": ">=14.0.0"
