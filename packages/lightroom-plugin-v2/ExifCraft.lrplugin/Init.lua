@@ -11,7 +11,7 @@ and logging infrastructure.
 local LrLogger = import 'LrLogger'
 
 -- Create and configure the main logger
-local logger = LrLogger('ExifCraftV2Init')
+local logger = LrLogger('ExifCraftV2')
 logger:enable("logfile")
 
 -- Log plugin initialization

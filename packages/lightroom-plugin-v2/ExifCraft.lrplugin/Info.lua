@@ -28,5 +28,5 @@ return {
 
     LrMetadataProvider = 'MetadataDefinition.lua',
 
-    VERSION = { major = 2, minor = 0, revision = 0, build = 20 },
+    VERSION = { major = 0, minor = 0, revision = 1, build = 22 },
 }

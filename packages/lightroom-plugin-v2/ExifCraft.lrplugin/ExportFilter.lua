@@ -6,41 +6,52 @@ Main export filter implementation for ExifCraft v2
 ------------------------------------------------------------------------------]]
 
 local LrView = import 'LrView'
-local LrBinding = import 'LrBinding'
 local LrDialogs = import 'LrDialogs'
-local LrFileUtils = import 'LrFileUtils'
 local LrPathUtils = import 'LrPathUtils'
 local LrTasks = import 'LrTasks'
-local LrApplication = import 'LrApplication'
 local LrProgressScope = import 'LrProgressScope'
-local LrLogger = import 'LrLogger'
-local LrColor = import 'LrColor'
 local bind = LrView.bind
 
--- Logger setup
-local logger = LrLogger('ExifCraftV2')
-logger:enable("logfile")
+-- Use global logger
+local logger = _G.ExifCraftLogger
+if not logger then
+    error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
+end
 logger:info('ExifCraft v2 Export Filter loaded')
 
--- Default settings
+-- Default settings aligned with ExifCraftConfig
 local DEFAULT_SETTINGS = {
-    ollamaEndpoint = 'http://localhost:11434',
-    ollamaModel = 'llama3.2-vision',
-    writeTitle = true,
-    writeDescription = true,
-    writeKeywords = true,
+    -- AI Model Configuration
+    aiProvider = 'ollama',
+    aiEndpoint = 'http://localhost:11434',
+    aiModel = 'llama3.2-vision',
+    aiApiKey = '',
+    aiTemperature = 0.7,
+    aiMaxTokens = 1000,
+    
+    -- Task Configuration
+    taskTitle = true,
+    taskDescription = true,
+    taskKeywords = true,
+    taskCustom = false,
+    taskCustomName = 'Custom Task',
+    taskCustomPrompt = 'Analyze this image and provide metadata.',
+    taskCustomTags = 'ImageDescription,Caption-Abstract,Keywords',
+    
+    -- General Configuration
     preserveOriginal = true,
     basePrompt = 'Analyze this image and provide metadata.',
-    temperature = 0.7,
+    imageFormats = 'jpg,jpeg,tiff,tif,png,dng,cr2,nef,arw',
     verbose = false,
+    dryRun = false,
 }
 
 -- Export filter provider table
 local exportFilterProvider = {
     exportPresetFields = { 
-        "ollamaEndpoint", "ollamaModel", "temperature", 
-        "writeTitle", "writeDescription", "writeKeywords", 
-        "preserveOriginal", "basePrompt", "verbose"
+        "aiProvider", "aiEndpoint", "aiModel", "aiApiKey", "aiTemperature", "aiMaxTokens",
+        "taskTitle", "taskDescription", "taskKeywords", "taskCustom", "taskCustomName", "taskCustomPrompt", "taskCustomTags",
+        "preserveOriginal", "basePrompt", "imageFormats", "verbose", "dryRun"
     }
 }
 
@@ -62,6 +73,260 @@ function exportFilterProvider.endDialog(propertyTable)
     logger:info('Export filter dialog ended')
 end
 
+-- Create AI Model Configuration UI
+local function createAIModelSection(viewFactory)
+    return viewFactory:group_box {
+        title = "AI Model Configuration",
+        spacing = viewFactory:control_spacing(),
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Provider:",
+                width = 80,
+            },
+            
+            viewFactory:popup_menu {
+                value = bind 'aiProvider',
+                items = {
+                    { title = "Ollama", value = "ollama" },
+                    { title = "OpenAI", value = "openai" },
+                    { title = "Gemini", value = "gemini" },
+                    { title = "Mock (Testing)", value = "mock" },
+                },
+                width_in_chars = 15,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Endpoint/API:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'aiEndpoint',
+                immediate = true,
+                width_in_chars = 35,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Model:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'aiModel',
+                immediate = true,
+                width_in_chars = 25,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "API Key:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'aiApiKey',
+                immediate = true,
+                width_in_chars = 30,
+                fill_horizontal = 1,
+                password = true,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Temperature:",
+                width = 80,
+            },
+            
+            viewFactory:slider {
+                value = bind 'aiTemperature',
+                integral = false,
+                min = 0.0,
+                max = 2.0,
+                width = 150,
+            },
+            
+            viewFactory:static_text {
+                title = bind 'aiTemperature',
+                width = 40,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Max Tokens:",
+                width = 80,
+            },
+            
+            viewFactory:slider {
+                value = bind 'aiMaxTokens',
+                integral = true,
+                min = 100,
+                max = 4000,
+                width = 150,
+            },
+            
+            viewFactory:static_text {
+                title = bind 'aiMaxTokens',
+                width = 40,
+            },
+        },
+    }
+end
+
+-- Create Task Configuration UI
+local function createTaskSection(viewFactory)
+    return viewFactory:group_box {
+        title = "Task Configuration",
+        spacing = viewFactory:control_spacing(),
+        
+        viewFactory:checkbox {
+            title = "Generate Title",
+            value = bind 'taskTitle',
+        },
+        
+        viewFactory:checkbox {
+            title = "Generate Description",
+            value = bind 'taskDescription',
+        },
+        
+        viewFactory:checkbox {
+            title = "Generate Keywords",
+            value = bind 'taskKeywords',
+        },
+        
+        viewFactory:checkbox {
+            title = "Custom Task",
+            value = bind 'taskCustom',
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Custom Name:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskCustomName',
+                immediate = true,
+                width_in_chars = 25,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Custom Prompt:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskCustomPrompt',
+                immediate = true,
+                width_in_chars = 40,
+                height_in_lines = 2,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Custom Tags:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'taskCustomTags',
+                immediate = true,
+                width_in_chars = 40,
+                fill_horizontal = 1,
+            },
+        },
+    }
+end
+
+-- Create General Options UI
+local function createGeneralSection(viewFactory)
+    return viewFactory:group_box {
+        title = "General Options",
+        spacing = viewFactory:control_spacing(),
+        
+        viewFactory:checkbox {
+            title = "Preserve Original Files",
+            value = bind 'preserveOriginal',
+        },
+        
+        viewFactory:checkbox {
+            title = "Verbose Logging",
+            value = bind 'verbose',
+        },
+        
+        viewFactory:checkbox {
+            title = "Dry Run (No Changes)",
+            value = bind 'dryRun',
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Base Prompt:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'basePrompt',
+                immediate = true,
+                width_in_chars = 40,
+                height_in_lines = 2,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            
+            viewFactory:static_text {
+                title = "Image Formats:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = bind 'imageFormats',
+                immediate = true,
+                width_in_chars = 40,
+                fill_horizontal = 1,
+            },
+        },
+    }
+end
+
 -- Create the UI section for the export dialog
 function exportFilterProvider.sectionForFilterInDialog(viewFactory, propertyTable)
     logger:info('Creating ExifCraft AI configuration UI')
@@ -73,119 +338,14 @@ function exportFilterProvider.sectionForFilterInDialog(viewFactory, propertyTabl
         viewFactory:column {
             spacing = viewFactory:control_spacing(),
             
-            -- Ollama Settings Group
-            viewFactory:group_box {
-                title = "Ollama Settings",
-                spacing = viewFactory:control_spacing(),
-                
-                viewFactory:row {
-                    spacing = viewFactory:label_spacing(),
-                    
-                    viewFactory:static_text {
-                        title = "Endpoint:",
-                        width = 80,
-                    },
-                    
-                    viewFactory:edit_field {
-                        value = bind 'ollamaEndpoint',
-                        immediate = true,
-                        width_in_chars = 35,
-                        fill_horizontal = 1,
-                    },
-                },
-                
-                viewFactory:row {
-                    spacing = viewFactory:label_spacing(),
-                    
-                    viewFactory:static_text {
-                        title = "Model:",
-                        width = 80,
-                    },
-                    
-                    viewFactory:edit_field {
-                        value = bind 'ollamaModel',
-                        immediate = true,
-                        width_in_chars = 25,
-                        fill_horizontal = 1,
-                    },
-                },
-                
-                viewFactory:row {
-                    spacing = viewFactory:label_spacing(),
-                    
-                    viewFactory:static_text {
-                        title = "Temperature:",
-                        width = 80,
-                    },
-                    
-                    viewFactory:slider {
-                        value = bind 'temperature',
-                        integral = false,
-                        min = 0.0,
-                        max = 2.0,
-                        width = 150,
-                    },
-                    
-                    viewFactory:static_text {
-                        title = bind 'temperature',
-                        width = 40,
-                    },
-                },
-            },
+            -- AI Model Configuration
+            createAIModelSection(viewFactory),
             
-            -- Metadata Options Group
-            viewFactory:group_box {
-                title = "Metadata Options",
-                spacing = viewFactory:control_spacing(),
-                
-                viewFactory:checkbox {
-                    title = "Generate Title",
-                    value = bind 'writeTitle',
-                },
-                
-                viewFactory:checkbox {
-                    title = "Generate Description",
-                    value = bind 'writeDescription',
-                },
-                
-                viewFactory:checkbox {
-                    title = "Generate Keywords",
-                    value = bind 'writeKeywords',
-                },
-                
-                viewFactory:checkbox {
-                    title = "Preserve Original Files",
-                    value = bind 'preserveOriginal',
-                },
-            },
+            -- Task Configuration
+            createTaskSection(viewFactory),
             
-            -- Advanced Options Group
-            viewFactory:group_box {
-                title = "Advanced Options",
-                spacing = viewFactory:control_spacing(),
-                
-                viewFactory:row {
-                    spacing = viewFactory:label_spacing(),
-                    
-                    viewFactory:static_text {
-                        title = "Base Prompt:",
-                        width = 80,
-                    },
-                    
-                    viewFactory:edit_field {
-                        value = bind 'basePrompt',
-                        immediate = true,
-                        width_in_chars = 40,
-                        height_in_lines = 2,
-                        fill_horizontal = 1,
-                    },
-                },
-                
-                viewFactory:checkbox {
-                    title = "Verbose Logging",
-                    value = bind 'verbose',
-                },
-            },
+            -- General Options
+            createGeneralSection(viewFactory),
         }
     }
     
@@ -193,55 +353,8 @@ function exportFilterProvider.sectionForFilterInDialog(viewFactory, propertyTabl
     return result
 end
 
--- Alternative function names that Lightroom might call
-function exportFilterProvider.sectionsForTopOfDialog(viewFactory, propertyTable)
-    logger:info('Creating export dialog UI sections (alternative)')
-    return { exportFilterProvider.sectionForFilterInDialog(viewFactory, propertyTable) }
-end
-
--- Synopsis and section control functions
-function exportFilterProvider.hideSections()
-    return false
-end
-
-function exportFilterProvider.showSections()
-    return true
-end
-
-function exportFilterProvider.updateExportSettings(propertyTable)
-    logger:info('updateExportSettings called')
-end
-
-function exportFilterProvider.updateFilterSettings(propertyTable)
-    logger:info('updateFilterSettings called')
-end
-
--- Safe Utils loading
-local Utils
-local success, result = pcall(require, 'Utils')
-if success then
-    Utils = result
-else
-    -- Fallback Utils if loading fails
-    Utils = {
-        createTempDirectory = function(prefix)
-            local tempDir = LrPathUtils.getStandardFilePath('temp')
-            return LrPathUtils.child(tempDir, (prefix or 'ExifCraft') .. '_' .. os.time())
-        end,
-        findCliExecutable = function()
-            return 'exifcraft'  -- Fallback to global command
-        end,
-        cleanupTempDirectory = function(tempDir)
-            if tempDir and LrFileUtils.exists(tempDir) then
-                LrFileUtils.delete(tempDir)
-            end
-        end,
-        logProcessingStats = function(total, success, failed, startTime)
-            local duration = os.time() - startTime
-            logger:info('Processing stats: ' .. success .. '/' .. total .. ' successful, ' .. failed .. ' failed, ' .. duration .. 's')
-        end
-    }
-end
+-- Load Utils module
+local Utils = require 'Utils'
 
 -- Create configuration JSON for CLI
 local function createConfigJson(settings, tempDir)
@@ -249,23 +362,38 @@ local function createConfigJson(settings, tempDir)
     
     local dkjson = require 'dkjson'
     
+    -- Parse image formats
+    local imageFormats = {}
+    for format in settings.imageFormats:gmatch("[^,]+") do
+        table.insert(imageFormats, format:gsub("^%s*(.-)%s*$", "%1")) -- trim whitespace
+    end
+    
+    -- Build AI model configuration
+    local aiModelConfig = {
+        provider = settings.aiProvider or 'ollama',
+        endpoint = settings.aiEndpoint or 'http://localhost:11434',
+        model = settings.aiModel or 'llama3.2-vision',
+        options = {
+            temperature = tonumber(settings.aiTemperature) or 0.7,
+            max_tokens = tonumber(settings.aiMaxTokens) or 1000,
+        }
+    }
+    
+    -- Add API key if provided
+    if settings.aiApiKey and settings.aiApiKey ~= '' then
+        aiModelConfig.key = settings.aiApiKey
+    end
+    
     local config = {
         tasks = {},
-        aiModel = {
-            provider = 'ollama',
-            endpoint = settings.ollamaEndpoint or 'http://localhost:11434',
-            model = settings.ollamaModel or 'llama3.2-vision',
-            options = {
-                temperature = tonumber(settings.temperature) or 0.7,
-            },
-        },
-        imageFormats = { 'jpg', 'jpeg', 'tiff', 'tif', 'png', 'dng', 'cr2', 'nef', 'arw' },
+        aiModel = aiModelConfig,
+        imageFormats = imageFormats,
         preserveOriginal = settings.preserveOriginal ~= false,
         basePrompt = settings.basePrompt or 'Analyze this image and provide metadata.',
     }
     
-    -- Add tasks based on settings
-    if settings.writeTitle ~= false then
+    -- Add standard tasks based on settings
+    if settings.taskTitle ~= false then
         table.insert(config.tasks, {
             name = 'Generate Title',
             tags = {{ name = 'ImageDescription', allowOverwrite = true }},
@@ -273,7 +401,7 @@ local function createConfigJson(settings, tempDir)
         })
     end
     
-    if settings.writeDescription ~= false then
+    if settings.taskDescription ~= false then
         table.insert(config.tasks, {
             name = 'Generate Description',
             tags = {{ name = 'Caption-Abstract', allowOverwrite = true }},
@@ -281,11 +409,25 @@ local function createConfigJson(settings, tempDir)
         })
     end
     
-    if settings.writeKeywords ~= false then
+    if settings.taskKeywords ~= false then
         table.insert(config.tasks, {
             name = 'Generate Keywords',
             tags = {{ name = 'Keywords', allowOverwrite = true }},
             prompt = 'Generate relevant keywords for this image, separated by commas.',
+        })
+    end
+    
+    -- Add custom task if enabled
+    if settings.taskCustom and settings.taskCustomName and settings.taskCustomName ~= '' then
+        local customTags = {}
+        for tag in settings.taskCustomTags:gmatch("[^,]+") do
+            table.insert(customTags, { name = tag:gsub("^%s*(.-)%s*$", "%1"), allowOverwrite = true })
+        end
+        
+        table.insert(config.tasks, {
+            name = settings.taskCustomName,
+            tags = customTags,
+            prompt = settings.taskCustomPrompt or 'Analyze this image and provide metadata.',
         })
     end
     
@@ -318,8 +460,8 @@ function exportFilterProvider.postProcessRenderedPhotos(functionContext, filterC
     })
     
     -- Basic validation
-    if not exportSettings.ollamaEndpoint or exportSettings.ollamaEndpoint == '' then
-        LrDialogs.showError('Configuration Error', 'Ollama endpoint is required')
+    if not exportSettings.aiEndpoint or exportSettings.aiEndpoint == '' then
+        LrDialogs.showError('Configuration Error', 'AI endpoint is required')
         progressScope:done()
         return
     end
@@ -359,6 +501,10 @@ function exportFilterProvider.postProcessRenderedPhotos(functionContext, filterC
                 
                 if exportSettings.verbose then
                     command = command .. ' -v'
+                end
+                
+                if exportSettings.dryRun then
+                    command = command .. ' --dry-run'
                 end
                 
                 logger:info('Executing: ' .. tostring(command))
