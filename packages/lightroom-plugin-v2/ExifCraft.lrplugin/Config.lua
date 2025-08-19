@@ -9,6 +9,7 @@ and configuration validation.
 ------------------------------------------------------------------------------]]
 
 local LrPrefs = import 'LrPrefs'
+local dkjson = require 'Dkjson'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -16,7 +17,8 @@ if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
 end
 
--- Centralized format definitions by group (with both property and format names)
+
+-- Format definitions by group
 local FORMAT_DEFINITIONS = {
     Standard = {
         { property = 'formatJpg', format = 'jpg' },
@@ -39,38 +41,6 @@ local FORMAT_DEFINITIONS = {
     }
 }
 
--- Generate format name lookup table
-local function generateFormatNames()
-    local formatNames = {}
-    for groupName, formatDefs in pairs(FORMAT_DEFINITIONS) do
-        for _, formatDef in ipairs(formatDefs) do
-            formatNames[formatDef.property] = formatDef.format
-        end
-    end
-    return formatNames
-end
-
-
-
-
-
--- Generate supported formats list
-local function generateSupportedFormats()
-    local formats = {}
-    for groupName, formatDefs in pairs(FORMAT_DEFINITIONS) do
-        for _, formatDef in ipairs(formatDefs) do
-            table.insert(formats, '.' .. formatDef.format)
-        end
-    end
-    return formats
-end
-
-
-
--- Generate all derived data structures
-local FORMAT_NAMES = generateFormatNames()
-local SUPPORTED_FORMATS = generateSupportedFormats()
-
 -- Default settings
 local DEFAULT_SETTINGS = {
     -- AI Model Configuration
@@ -81,34 +51,45 @@ local DEFAULT_SETTINGS = {
     aiTemperature = 0,
     aiMaxTokens = 500,
     
-    -- Task Configuration
-    taskTitleEnabled = 'true',
-    taskTitleName = 'Title',
-    taskTitlePrompt = 'Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ',
-    taskTitleTags = 'ImageTitle,ImageDescription,XPTitle,ObjectName,Title',
-    taskTitleAllowOverwrite = 'true',
+    -- Task Configuration (default tasks matching ExifCraftConfig schema)
+    tasks = {
+        {
+            name = 'title',
+            enabled = true,
+            prompt = 'Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ',
+            tags = {
+                { name = 'ImageTitle', allowOverwrite = true },
+                { name = 'ImageDescription', allowOverwrite = true },
+                { name = 'XPTitle', allowOverwrite = true },
+                { name = 'ObjectName', allowOverwrite = true },
+                { name = 'Title', allowOverwrite = true }
+            }
+        },
+        {
+            name = 'description',
+            enabled = true,
+            prompt = 'Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ',
+            tags = {
+                { name = 'ImageDescription', allowOverwrite = true },
+                { name = 'Description', allowOverwrite = true },
+                { name = 'Caption-Abstract', allowOverwrite = true }
+            }
+        },
+        {
+            name = 'keywords',
+            enabled = true,
+            prompt = 'Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ',
+            tags = {
+                { name = 'Keywords', allowOverwrite = true }
+            }
+        }
+    },
     
-    taskDescriptionEnabled = 'true',
-    taskDescriptionName = 'Description',
-    taskDescriptionPrompt = 'Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ',
-    taskDescriptionTags = 'ImageDescription,Description,Caption-Abstract',
-    taskDescriptionAllowOverwrite = 'true',
-    
-    taskKeywordsEnabled = 'true',
-    taskKeywordsName = 'Keywords',
-    taskKeywordsPrompt = 'Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ',
-    taskKeywordsTags = 'Keywords',
-    taskKeywordsAllowOverwrite = 'true',
-    
-    taskCustomEnabled = 'false',
-    taskCustomName = 'Custom',
-    taskCustomPrompt = 'Analyze this image and provide metadata.',
-    taskCustomTags = 'ImageDescription,Caption-Abstract,Keywords',
-    taskCustomAllowOverwrite = 'true',
+
     
     -- General Configuration
-    preserveOriginal = 'false',
     basePrompt = 'As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n',
+    preserveOriginal = false,
     verbose = true,
     dryRun = false,
     
@@ -136,6 +117,40 @@ local function toBoolean(value)
     return value == true
 end
 
+-- Serialize tasks to JSON string for preferences storage
+local function serializeTasks(tasks)
+    if not tasks or #tasks == 0 then
+        return dkjson.encode(DEFAULT_SETTINGS.tasks)
+    end
+    return dkjson.encode(tasks)
+end
+
+-- Deserialize tasks from JSON string
+local function deserializeTasks(tasksJson)
+    if not tasksJson or tasksJson == '' then
+        return DEFAULT_SETTINGS.tasks
+    end
+    
+    local success, tasks = pcall(dkjson.decode, tasksJson)
+    if not success or type(tasks) ~= 'table' then
+        logger:warning('Failed to parse tasks JSON, using default tasks')
+        return DEFAULT_SETTINGS.tasks
+    end
+    
+    return tasks
+end
+
+-- Get enabled tasks from task configuration
+local function getEnabledTasks(tasks)
+    local enabledTasks = {}
+    for _, task in ipairs(tasks) do
+        if task.enabled then
+            table.insert(enabledTasks, task)
+        end
+    end
+    return enabledTasks
+end
+
 -- Load configuration from preferences
 local function loadConfiguration()
     local prefs = LrPrefs.prefsForPlugin()
@@ -146,9 +161,23 @@ local function loadConfiguration()
         config[key] = prefs[key] or defaultValue
     end
     
+    -- Load tasks from preferences or use defaults
+    local tasksJson = prefs.tasksJson
+    if tasksJson and tasksJson ~= '' then
+        config.tasks = deserializeTasks(tasksJson)
+    else
+        config.tasks = DEFAULT_SETTINGS.tasks
+    end
+    
     -- Set default imageFormats if not exists
     if not config.imageFormats then
-        config.imageFormats = table.concat(SUPPORTED_FORMATS, ',')
+        local formats = {}
+        for _, formatDefs in pairs(FORMAT_DEFINITIONS) do
+            for _, formatDef in ipairs(formatDefs) do
+                table.insert(formats, formatDef.format)
+            end
+        end
+        config.imageFormats = table.concat(formats, ',')
     end
     
     logger:info('Configuration loaded from preferences')
@@ -164,16 +193,22 @@ local function saveConfiguration(config)
         prefs[key] = config[key]
     end
     
+    -- Save tasks as JSON string
+    if config.tasks then
+        prefs.tasksJson = serializeTasks(config.tasks)
+    end
+    
     logger:info('Configuration saved to preferences')
 end
 
 -- Export module
 return {
     DEFAULT_SETTINGS = DEFAULT_SETTINGS,
-    SUPPORTED_FORMATS = SUPPORTED_FORMATS,
-    FORMAT_NAMES = FORMAT_NAMES,
     FORMAT_DEFINITIONS = FORMAT_DEFINITIONS,
     toBoolean = toBoolean,
+    serializeTasks = serializeTasks,
+    deserializeTasks = deserializeTasks,
+    getEnabledTasks = getEnabledTasks,
     loadConfiguration = loadConfiguration,
     saveConfiguration = saveConfiguration,
 }

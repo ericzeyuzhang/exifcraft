@@ -53,48 +53,13 @@ local function createConfigJson(settings, tempDir)
         basePrompt = settings.basePrompt,
     }
     
-    -- Helper function to create TagConfig objects
-    local function createTagConfigs(tagString, allowOverwrite)
-        local tags = {}
-        for tag in tagString:gmatch('[^,]+') do
-            table.insert(tags, {
-                name = tag:match('^%s*(.-)%s*$'), -- trim whitespace
-                allowOverwrite = Config.toBoolean(allowOverwrite)
-            })
-        end
-        return tags
-    end
-    
-    -- Add enabled tasks from static configuration
-    if Config.toBoolean(settings.taskTitleEnabled) then
+    -- Add enabled tasks from dynamic configuration
+    local enabledTasks = Config.getEnabledTasks(settings.tasks or {})
+    for _, task in ipairs(enabledTasks) do
         table.insert(config.tasks, {
-            name = settings.taskTitleName,
-            prompt = settings.taskTitlePrompt,
-            tags = createTagConfigs(settings.taskTitleTags, settings.taskTitleAllowOverwrite),
-        })
-    end
-    
-    if Config.toBoolean(settings.taskDescriptionEnabled) then
-        table.insert(config.tasks, {
-            name = settings.taskDescriptionName,
-            prompt = settings.taskDescriptionPrompt,
-            tags = createTagConfigs(settings.taskDescriptionTags, settings.taskDescriptionAllowOverwrite),
-        })
-    end
-    
-    if Config.toBoolean(settings.taskKeywordsEnabled) then
-        table.insert(config.tasks, {
-            name = settings.taskKeywordsName,
-            prompt = settings.taskKeywordsPrompt,
-            tags = createTagConfigs(settings.taskKeywordsTags, settings.taskKeywordsAllowOverwrite),
-        })
-    end
-    
-    if Config.toBoolean(settings.taskCustomEnabled) then
-        table.insert(config.tasks, {
-            name = settings.taskCustomName,
-            prompt = settings.taskCustomPrompt,
-            tags = createTagConfigs(settings.taskCustomTags, settings.taskCustomAllowOverwrite),
+            name = task.name,
+            prompt = task.prompt,
+            tags = task.tags -- Already in correct format from Config.lua
         })
     end
     
@@ -239,7 +204,12 @@ local function processPhotosWithSettings(settings)
                     local fileExt = LrPathUtils.extension(photoPath):lower()
                     local supportedFormats = {}
                     for format in settings.imageFormats:lower():gmatch('[^,]+') do
-                        table.insert(supportedFormats, format:match('^%s*(.-)%s*$')) -- trim whitespace
+                        local trimmedFormat = format:match('^%s*(.-)%s*$') -- trim whitespace
+                        -- Ensure format starts with dot for comparison with fileExt
+                        if not trimmedFormat:match('^%.') then
+                            trimmedFormat = '.' .. trimmedFormat
+                        end
+                        table.insert(supportedFormats, trimmedFormat)
                     end
                     local isSupported = false
                     for _, format in ipairs(supportedFormats) do

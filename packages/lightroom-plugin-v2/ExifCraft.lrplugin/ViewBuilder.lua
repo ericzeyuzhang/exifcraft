@@ -144,33 +144,174 @@ local function createAIModelSection(viewFactory, dialogProps)
     }
 end
 
--- Create General Configuration UI
-local function createGeneralSection(viewFactory, dialogProps, supportedFormats, context)
-    -- Initialize format properties with defaults based on FORMAT_NAMES structure
-    for property, _ in pairs(Config.FORMAT_NAMES) do
-        dialogProps[property] = true
+-- Helper function to create task UI for a single task
+local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
+    return viewFactory:group_box {
+        title = task.name or ("Task " .. taskIndex),
+        spacing = viewFactory:control_spacing(),
+        fill_horizontal = 1,
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            fill_horizontal = 1,
+            
+            viewFactory:checkbox {
+                title = "Enabled",
+                value = LrView.bind {
+                    key = 'tasks',
+                    transform = function(value, fromTable)
+                        if fromTable then
+                            if value and value[taskIndex] then
+                                return value[taskIndex].enabled
+                            end
+                            return false
+                        else
+                            if dialogProps.tasks and dialogProps.tasks[taskIndex] then
+                                dialogProps.tasks[taskIndex].enabled = value
+                            end
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
+                },
+                checked_value = true,
+                unchecked_value = false,
+            },
+        },
+        
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            fill_horizontal = 1,
+            
+            viewFactory:static_text {
+                title = "Prompt:",
+                width = 60,
+            },
+            
+            viewFactory:edit_field {
+                value = LrView.bind {
+                    key = 'tasks',
+                    transform = function(value, fromTable)
+                        if fromTable then
+                            if value and value[taskIndex] then
+                                return value[taskIndex].prompt or ''
+                            end
+                            return ''
+                        else
+                            if dialogProps.tasks and dialogProps.tasks[taskIndex] then
+                                dialogProps.tasks[taskIndex].prompt = value
+                            end
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
+                },
+                immediate = true,
+                height_in_lines = 2,
+                fill_horizontal = 1,
+            },
+        },
+    }
+end
+
+-- Create Task Configuration UI
+local function createTaskSection(viewFactory, dialogProps, context)
+    -- Initialize tasks if not present
+    if not dialogProps.tasks then
+        dialogProps.tasks = Config.DEFAULT_SETTINGS.tasks
     end
     
-    -- Get group names directly
-    local standardGroupName = 'Standard'
-    local rawGroupName = 'Raw'
-    local tiffGroupName = 'Tiff'
+    local taskUIs = {}
     
-    -- Get format properties by group directly from definitions
+    -- Create UI for each task
+    for i, task in ipairs(dialogProps.tasks or {}) do
+        table.insert(taskUIs, createTaskUI(viewFactory, dialogProps, i, task))
+    end
+    
+    return viewFactory:column {
+        spacing = viewFactory:control_spacing(),
+        fill_horizontal = 1,
+        
+        -- Section header
+        viewFactory:static_text {
+            title = "Task Configuration",
+            font = '<system/bold/14>',
+            fill_horizontal = 1,
+        },
+        
+        viewFactory:group_box {
+            title = "",
+            spacing = viewFactory:control_spacing(),
+            fill_horizontal = 1,
+            
+            -- Task list
+            viewFactory:column {
+                spacing = viewFactory:control_spacing(),
+                fill_horizontal = 1,
+                unpackFn(taskUIs),
+            },
+            
+            viewFactory:separator { fill_horizontal = 1 },
+            
+            -- Task management buttons
+            viewFactory:row {
+                spacing = viewFactory:control_spacing(),
+                fill_horizontal = 1,
+                
+                viewFactory:push_button {
+                    title = "Add Custom Task",
+                    action = function()
+                        -- Add a new custom task
+                        local newTask = {
+                            name = 'custom_' .. tostring(os.time()),
+                            enabled = true,
+                            prompt = 'Enter your custom prompt here...',
+                            tags = {
+                                { name = 'Keywords', allowOverwrite = true }
+                            }
+                        }
+                        
+                        if not dialogProps.tasks then
+                            dialogProps.tasks = {}
+                        end
+                        
+                        table.insert(dialogProps.tasks, newTask)
+                        logger:info('Added new custom task: ' .. newTask.name)
+                    end,
+                },
+                
+                viewFactory:push_button {
+                    title = "Reset Tasks to Default",
+                    action = function()
+                        dialogProps.tasks = Config.DEFAULT_SETTINGS.tasks
+                        logger:info('Tasks reset to defaults')
+                    end,
+                },
+            },
+        },
+    }
+end
+
+-- Create General Configuration UI
+local function createGeneralSection(viewFactory, dialogProps, supportedFormats, context)
+    -- Initialize format properties with defaults
+    for _, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
+        for _, formatDef in ipairs(formatDefs) do
+            dialogProps[formatDef.property] = true
+        end
+    end
+    
+    -- Get format properties by group directly from FORMAT_DEFINITIONS
     local standardFormats = {}
     local rawFormats = {}
     local tiffFormats = {}
     
-    for groupName, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
-        for _, formatDef in ipairs(formatDefs) do
-            if groupName == 'Standard' then
-                table.insert(standardFormats, formatDef.property)
-            elseif groupName == 'Raw' then
-                table.insert(rawFormats, formatDef.property)
-            elseif groupName == 'Tiff' then
-                table.insert(tiffFormats, formatDef.property)
-            end
-        end
+    for _, formatDef in ipairs(Config.FORMAT_DEFINITIONS.Standard) do
+        table.insert(standardFormats, formatDef.property)
+    end
+    for _, formatDef in ipairs(Config.FORMAT_DEFINITIONS.Raw) do
+        table.insert(rawFormats, formatDef.property)
+    end
+    for _, formatDef in ipairs(Config.FORMAT_DEFINITIONS.Tiff) do
+        table.insert(tiffFormats, formatDef.property)
     end
     
     return viewFactory:column {
@@ -214,7 +355,8 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = standardGroupName .. ": ",
+                title = "Standard: ",
+                font = '<system/bold/10>',
                 value = LrView.bind {
                     keys = standardFormats, 
                     operation = function(_, values, fromTable)
@@ -261,28 +403,32 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatJpg:upper(),
+                title = "jpg",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatJpg'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatJpeg:upper(),
+                title = "jpeg",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatJpeg'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatHeic:upper(),
+                title = "heic",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatHeic'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatHeif:upper(),
+                title = "heif",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatHeif'),
                 checked_value = true,
                 unchecked_value = false,
@@ -297,7 +443,8 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = rawGroupName .. ": ",
+                title = "Raw: ",
+                font = '<system/bold/10>',
                 value = LrView.bind {
                     keys = rawFormats,
                     operation = function(_, values, fromTable)
@@ -345,49 +492,56 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatDng:upper(),
+                title = "dng",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatDng'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatArw:upper(),
+                title = "arw",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatArw'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatNef:upper(),
+                title = "nef",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatNef'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatCr2:upper(),
+                title = "cr2",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatCr2'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatCr3:upper(),
+                title = "cr3",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatCr3'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatRaw:upper(),
+                title = "raw",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatRaw'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatRaf:upper(),
+                title = "raf",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatRaf'),
                 checked_value = true,
                 unchecked_value = false,
@@ -402,7 +556,8 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = tiffGroupName .. ": ",
+                title = "Tiff: ",
+                font = '<system/bold/10>',
                 value = LrView.bind {
                     keys = tiffFormats,
                     operation = function(_, values, fromTable)
@@ -449,14 +604,16 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatTiff:upper(),
+                title = "tiff",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatTiff'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = Config.FORMAT_NAMES.formatTif:upper(),
+                title = "tif",
+                font = '<system/bold/10>',
                 value = LrView.bind('formatTif'),
                 checked_value = true,
                 unchecked_value = false,
@@ -502,6 +659,7 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
         fill_vertical = 1,
         
         createAIModelSection(viewFactory, dialogProps),
+        createTaskSection(viewFactory, dialogProps, context),
         createGeneralSection(viewFactory, dialogProps, supportedFormats, context),
         
         viewFactory:separator { fill_horizontal = 1 },
@@ -518,7 +676,10 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
                         dialogProps[key] = defaultValue
                     end
                     
-                    logger:info('Settings reset to defaults')
+                    -- Reset tasks to default
+                    dialogProps.tasks = Config.DEFAULT_SETTINGS.tasks
+                    
+                    logger:info('Settings and tasks reset to defaults')
                 end,
             },
             

@@ -44,8 +44,14 @@ local function showUnifiedDialog()
         
 
         
-        -- Create the main dialog UI
-        local ui = ViewBuilder.createMainDialog(f, dialogProps, Config.SUPPORTED_FORMATS, context)
+        -- Create the main dialog UI  
+        local supportedFormats = {}
+        for _, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
+            for _, formatDef in ipairs(formatDefs) do
+                table.insert(supportedFormats, formatDef.format)
+            end
+        end
+        local ui = ViewBuilder.createMainDialog(f, dialogProps, supportedFormats, context)
         
         local result = LrDialogs.presentModalDialog {
             title = 'ExifCraft v2 - Configure & Process',
