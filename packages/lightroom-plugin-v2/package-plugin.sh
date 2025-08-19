@@ -18,10 +18,12 @@ echo "Validating plugin structure..."
 REQUIRED_FILES=(
     "Info.lua"
     "Init.lua"
-    "ExportFilter.lua"
-    "MetadataDefinition.lua"
+    "Main.lua"
+    "Config.lua"
+    "ViewBuilder.lua"
+    "PhotoProcessor.lua"
     "Utils.lua"
-    "dkjson.lua"
+    "Dkjson.lua"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -33,6 +35,33 @@ for file in "${REQUIRED_FILES[@]}"; do
 done
 
 echo "Plugin structure validation passed!"
+
+# Validate Lua syntax
+echo "Validating Lua syntax..."
+LUA_FILES=(
+    "Info.lua"
+    "Init.lua"
+    "Main.lua"
+    "Config.lua"
+    "ViewBuilder.lua"
+    "PhotoProcessor.lua"
+    "Utils.lua"
+    "Dkjson.lua"
+)
+
+for file in "${LUA_FILES[@]}"; do
+    echo "Checking syntax: $file"
+    # Use a more comprehensive syntax check
+    if lua -c "$PLUGIN_DIR/$file" 2>&1 | grep -q "syntax error\|unexpected symbol\|missing symbol"; then
+        echo "ERROR: Syntax error in $file"
+        lua -c "$PLUGIN_DIR/$file" 2>&1
+        exit 1
+    else
+        echo "✓ Syntax OK: $file"
+    fi
+done
+
+echo "Lua syntax validation passed!"
 
 # Create dist directory
 mkdir -p "$DIST_DIR"

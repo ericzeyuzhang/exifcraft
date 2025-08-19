@@ -1,14 +1,15 @@
 # ExifCraft v2 - Lightroom Plugin
 
-AI-powered EXIF metadata generation plugin for Adobe Lightroom, featuring a complete GUI configuration interface.
+AI-powered EXIF metadata generation plugin for Adobe Lightroom, featuring integrated configuration and processing in a single unified interface.
 
 ## Features
 
-- **GUI Configuration**: Configure Ollama endpoint, model, and metadata options directly in Lightroom's Export dialog
+- **Unified Interface**: Configure AI settings and process photos in a single dialog
+- **Library Menu Integration**: Access ExifCraft directly from Lightroom's Library module menu
 - **Cross-Platform Support**: Uses official Lightroom SDK method (WIN_ENV) to detect Windows/macOS and select appropriate CLI binary
 - **AI Metadata Generation**: Automatically generate titles, descriptions, and keywords using AI vision models
-- **Custom Metadata Fields**: Store AI-generated content in Lightroom's database for searchability
-- **Flexible Options**: Choose which metadata to generate and write
+- **Standard Metadata Fields**: Store AI-generated content in Lightroom's standard metadata fields (title, caption, keywords)
+- **Flexible Configuration**: Choose which metadata to generate and customize AI prompts
 - **Preserve Originals**: Option to keep backup copies of original files
 - **Progress Tracking**: Real-time progress indication during batch processing
 - **Multiple CLI Options**: Includes compiled binaries for Windows/macOS and Node.js fallback
@@ -22,58 +23,57 @@ AI-powered EXIF metadata generation plugin for Adobe Lightroom, featuring a comp
 
 ## Usage
 
-### 1. Configure Export Filter
+### Process Photos with AI
 
-1. In Lightroom, go to **File > Export** or press `Cmd+Shift+E`
-2. In the Export dialog, scroll down to find **ExifCraft AI Metadata** section
-3. Configure your settings:
-   - **Ollama Endpoint**: URL to your Ollama instance (default: `http://localhost:11434`)
-   - **Model**: Vision model to use (e.g., `llama3.2-vision`)
-   - **Temperature**: AI creativity level (0.0-1.0)
-   - **Metadata Options**: Choose which fields to generate
-   - **Base Prompt**: Customize the AI prompt template
-
-### 2. Export with AI Processing
-
-1. Select your images in Lightroom
-2. Click **Export** 
-3. The plugin will:
-   - Export your images to the specified location
+1. Select your images in Lightroom's Library module
+2. Go to **Library > Process with ExifCraft v2**
+3. Configure all settings in the unified dialog:
+   - **AI Model Configuration**: Set provider, endpoint, model, and API parameters
+   - **Task Configuration**: Choose which metadata tasks to enable and customize prompts
+   - **General Options**: Set base prompt, supported formats, and processing options
+4. Click **Process** to start AI metadata generation
+5. The plugin will:
    - Generate AI metadata using your configured model
-   - Write EXIF data to the exported files
+   - Write EXIF data to the image files
    - Update Lightroom's database with the generated metadata
+   - Show progress and completion summary
 
-### 3. View Generated Metadata
+### View Generated Metadata
 
 After processing, you can view the AI-generated metadata in Lightroom's Metadata panel:
-- **AI Generated Title**
-- **AI Generated Description** 
-- **AI Generated Keywords**
-- **AI Processing Status**
+- **Title**: AI-generated image titles
+- **Caption**: AI-generated image descriptions
+- **Keywords**: AI-generated keywords/tags
 
 ## Configuration Details
 
-### Ollama Settings
-- **Endpoint**: Full URL to your Ollama API (e.g., `http://localhost:11434`)
-- **Model**: Name of the vision model (must be installed in Ollama)
-- **Temperature**: Controls randomness in AI responses (0.0 = deterministic, 1.0 = creative)
+### AI Model Settings
+- **Provider**: Choose between Ollama, OpenAI, Gemini, or Mock for testing
+- **Endpoint**: Full URL to your AI service API
+- **Model**: Name of the vision model to use
+- **API Key**: Authentication key (if required)
+- **Temperature**: Controls randomness in AI responses (0.0 = deterministic, 2.0 = creative)
+- **Max Tokens**: Maximum response length
 
-### Metadata Options
-- **Write Title**: Generates concise image titles
-- **Write Description**: Creates detailed image descriptions
-- **Write Keywords**: Extracts relevant keywords/tags
-- **Preserve Original**: Keeps backup copies of original files
-- **Verbose Logging**: Enables detailed processing logs
+### Task Configuration
+- **Title Task**: Generate concise image titles (50 characters max)
+- **Description Task**: Create detailed image descriptions (200 characters max)
+- **Keywords Task**: Extract relevant keywords/tags
+- **Custom Task**: Define your own metadata generation task
+- Each task can be enabled/disabled and customized with specific prompts and tag configurations
 
-### AI Prompt Configuration
+### General Options
 - **Base Prompt**: Template prompt sent to the AI model
-- Default: "Analyze this image and provide metadata."
+- **Image Formats**: Supported file extensions for processing
+- **Preserve Original**: Keep backup copies of original files
+- **Verbose Logging**: Enable detailed processing logs
+- **Dry Run**: Preview mode without making changes
 
 ## Requirements
 
 - Adobe Lightroom Classic (version 3.0+)
 - ExifCraft CLI installed and accessible (with JSON config support)
-- Ollama with a vision model installed
+- AI service (Ollama, OpenAI, Gemini, etc.) with a vision model
 - Node.js runtime (for CLI execution)
 
 ## Troubleshooting
@@ -87,15 +87,17 @@ The plugin automatically detects your platform and uses the appropriate CLI bina
 
 If all fail, ensure ExifCraft CLI is installed globally: `npm install -g exifcraft-cli`
 
-### Ollama Connection Issues
-- Verify Ollama is running: `ollama list`
+### AI Service Connection Issues
+- Verify your AI service is running and accessible
 - Check the endpoint URL is correct
-- Ensure the specified model is installed: `ollama pull llama3.2-vision`
+- Ensure the specified model is available
+- Verify API keys are valid (if required)
 
 ### Processing Failures
 - Check Lightroom's Plugin Manager for error logs
 - Enable verbose logging for detailed error information
 - Verify image file permissions and formats
+- Ensure selected images are supported file types
 
 ## Development
 

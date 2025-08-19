@@ -18,6 +18,7 @@ logger:enable("logfile")
 logger:info('=== ExifCraft v2 Plugin Initialization ===')
 logger:info('Plugin path: ' .. _PLUGIN.path)
 logger:info('Plugin ID: ' .. _PLUGIN.id)
+logger:info('Main entry point: Main.lua')
 
 -- Set up global logger for other modules to use
 _G.ExifCraftLogger = logger

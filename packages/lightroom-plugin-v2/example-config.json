@@ -1,57 +1,36 @@
 {
   "description": "Example configuration showing what the plugin generates for the CLI",
   "note": "This file is for reference only - the plugin generates this automatically",
-  "tasks": [
-    {
-      "name": "Generate Title",
-      "tags": [
-        {
-          "name": "ImageDescription",
-          "allowOverwrite": true
-        }
-      ],
-      "prompt": "Generate a concise, descriptive title for this image."
-    },
-    {
-      "name": "Generate Description", 
-      "tags": [
-        {
-          "name": "Caption-Abstract",
-          "allowOverwrite": true
-        }
-      ],
-      "prompt": "Provide a detailed description of this image, including key visual elements, composition, and mood."
-    },
-    {
-      "name": "Generate Keywords",
-      "tags": [
-        {
-          "name": "Keywords", 
-          "allowOverwrite": true
-        }
-      ],
-      "prompt": "Generate relevant keywords for this image, separated by commas."
-    }
-  ],
-  "aiModel": {
+  "ai": {
     "provider": "ollama",
     "endpoint": "http://localhost:11434",
-    "model": "llama3.2-vision",
-    "options": {
-      "temperature": 0.7
-    }
+    "model": "llava",
+    "apiKey": "",
+    "temperature": 0.0,
+    "maxTokens": 500
   },
-  "imageFormats": [
-    "jpg",
-    "jpeg", 
-    "tiff",
-    "tif",
-    "png",
-    "dng",
-    "cr2",
-    "nef",
-    "arw"
+  "tasks": [
+    {
+      "name": "title",
+      "prompt": "Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
+      "tags": ["ImageTitle", "ImageDescription", "XPTitle", "ObjectName", "Title"]
+    },
+    {
+      "name": "description",
+      "prompt": "Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
+      "tags": ["ImageDescription", "Description", "Caption-Abstract"]
+    },
+    {
+      "name": "keywords",
+      "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
+      "tags": ["Keywords"]
+    }
   ],
-  "preserveOriginal": true,
-  "basePrompt": "Analyze this image and provide metadata."
+  "general": {
+    "preserveOriginal": false,
+    "basePrompt": "As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n",
+    "imageFormats": ".jpg,.jpeg,.nef,.raf,.cr2,.arw,.dng,.raw,.tiff,.tif,.heic,.heif",
+    "verbose": false,
+    "dryRun": false
+  }
 }
