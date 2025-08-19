@@ -16,6 +16,61 @@ if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
 end
 
+-- Centralized format definitions by group (with both property and format names)
+local FORMAT_DEFINITIONS = {
+    Standard = {
+        { property = 'formatJpg', format = 'jpg' },
+        { property = 'formatJpeg', format = 'jpeg' },
+        { property = 'formatHeic', format = 'heic' },
+        { property = 'formatHeif', format = 'heif' }
+    },
+    Raw = {
+        { property = 'formatNef', format = 'nef' },
+        { property = 'formatRaf', format = 'raf' },
+        { property = 'formatCr2', format = 'cr2' },
+        { property = 'formatCr3', format = 'cr3' },
+        { property = 'formatArw', format = 'arw' },
+        { property = 'formatDng', format = 'dng' },
+        { property = 'formatRaw', format = 'raw' }
+    },
+    Tiff = {
+        { property = 'formatTiff', format = 'tiff' },
+        { property = 'formatTif', format = 'tif' }
+    }
+}
+
+-- Generate format name lookup table
+local function generateFormatNames()
+    local formatNames = {}
+    for groupName, formatDefs in pairs(FORMAT_DEFINITIONS) do
+        for _, formatDef in ipairs(formatDefs) do
+            formatNames[formatDef.property] = formatDef.format
+        end
+    end
+    return formatNames
+end
+
+
+
+
+
+-- Generate supported formats list
+local function generateSupportedFormats()
+    local formats = {}
+    for groupName, formatDefs in pairs(FORMAT_DEFINITIONS) do
+        for _, formatDef in ipairs(formatDefs) do
+            table.insert(formats, '.' .. formatDef.format)
+        end
+    end
+    return formats
+end
+
+
+
+-- Generate all derived data structures
+local FORMAT_NAMES = generateFormatNames()
+local SUPPORTED_FORMATS = generateSupportedFormats()
+
 -- Default settings
 local DEFAULT_SETTINGS = {
     -- AI Model Configuration
@@ -56,44 +111,22 @@ local DEFAULT_SETTINGS = {
     basePrompt = 'As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n',
     verbose = true,
     dryRun = false,
-}
-
--- Format type constants with all metadata
-local FORMAT_TYPES = {
-    -- Property-based format definitions for direct access
-    formatJpg = { group = 'Standard', extension = '.jpg', displayName = 'JPG', groupDisplayName = 'Standard Formats' },
-    formatJpeg = { group = 'Standard', extension = '.jpeg', displayName = 'JPEG', groupDisplayName = 'Standard Formats' },
-    formatHeic = { group = 'Standard', extension = '.heic', displayName = 'HEIC', groupDisplayName = 'Standard Formats' },
-    formatHeif = { group = 'Standard', extension = '.heif', displayName = 'HEIF', groupDisplayName = 'Standard Formats' },
     
-    formatNef = { group = 'Raw', extension = '.nef', displayName = 'NEF', groupDisplayName = 'RAW Formats' },
-    formatRaf = { group = 'Raw', extension = '.raf', displayName = 'RAF', groupDisplayName = 'RAW Formats' },
-    formatCr2 = { group = 'Raw', extension = '.cr2', displayName = 'CR2', groupDisplayName = 'RAW Formats' },
-    formatArw = { group = 'Raw', extension = '.arw', displayName = 'ARW', groupDisplayName = 'RAW Formats' },
-    formatDng = { group = 'Raw', extension = '.dng', displayName = 'DNG', groupDisplayName = 'RAW Formats' },
-    formatRawExt = { group = 'Raw', extension = '.raw', displayName = 'RAW', groupDisplayName = 'RAW Formats' },
-    
-    formatTiff = { group = 'Tiff', extension = '.tiff', displayName = 'TIFF', groupDisplayName = 'TIFF Formats' },
-    formatTif = { group = 'Tiff', extension = '.tif', displayName = 'TIF', groupDisplayName = 'TIFF Formats' },
+    -- Format Settings (all enabled by default)
+    formatJpg = true,
+    formatJpeg = true,
+    formatHeic = true,
+    formatHeif = true,
+    formatNef = true,
+    formatRaf = true,
+    formatCr2 = true,
+    formatCr3 = true,
+    formatArw = true,
+    formatDng = true,
+    formatRaw = true,
+    formatTiff = true,
+    formatTif = true,
 }
-
--- Group property mappings for Select All functionality
-local GROUP_PROPERTIES = {
-    Standard = 'formatStandard',
-    Raw = 'formatRaw', 
-    Tiff = 'formatTiffGroup'
-}
-
--- Generate supported formats list from FORMAT_TYPES
-local function generateSupportedFormats()
-    local formats = {}
-    for property, formatData in pairs(FORMAT_TYPES) do
-        table.insert(formats, formatData.extension)
-    end
-    return formats
-end
-
-local SUPPORTED_FORMATS = generateSupportedFormats()
 
 -- Helper function to normalize boolean values
 local function toBoolean(value)
@@ -101,32 +134,6 @@ local function toBoolean(value)
         return value == 'true'
     end
     return value == true
-end
-
--- Helper function to convert format selections to imageFormats string
-local function formatSelectionsToString(formatProps)
-    local formats = {}
-    
-    for property, formatData in pairs(FORMAT_TYPES) do
-        if formatProps[property] then
-            table.insert(formats, formatData.extension)
-        end
-    end
-    
-    return table.concat(formats, ',')
-end
-
--- Helper function to convert imageFormats string to format selections
-local function stringToFormatSelections(imageFormats, formatProps)
-    local formats = {}
-    for format in imageFormats:gmatch('[^,]+') do
-        formats[format:match('^%s*(.-)%s*$')] = true -- trim whitespace
-    end
-    
-    -- Set format properties based on FORMAT_TYPES
-    for property, formatData in pairs(FORMAT_TYPES) do
-        formatProps[property] = formats[formatData.extension] == true
-    end
 end
 
 -- Load configuration from preferences
@@ -149,13 +156,8 @@ local function loadConfiguration()
 end
 
 -- Save configuration to preferences
-local function saveConfiguration(config, formatProps)
+local function saveConfiguration(config)
     local prefs = LrPrefs.prefsForPlugin()
-    
-    -- Convert format selections to imageFormats string
-    if formatProps then
-        config.imageFormats = formatSelectionsToString(formatProps)
-    end
     
     -- Save default settings
     for key, _ in pairs(DEFAULT_SETTINGS) do
@@ -169,11 +171,9 @@ end
 return {
     DEFAULT_SETTINGS = DEFAULT_SETTINGS,
     SUPPORTED_FORMATS = SUPPORTED_FORMATS,
-    FORMAT_TYPES = FORMAT_TYPES,
-    GROUP_PROPERTIES = GROUP_PROPERTIES,
+    FORMAT_NAMES = FORMAT_NAMES,
+    FORMAT_DEFINITIONS = FORMAT_DEFINITIONS,
     toBoolean = toBoolean,
     loadConfiguration = loadConfiguration,
     saveConfiguration = saveConfiguration,
-    formatSelectionsToString = formatSelectionsToString,
-    stringToFormatSelections = stringToFormatSelections,
 }

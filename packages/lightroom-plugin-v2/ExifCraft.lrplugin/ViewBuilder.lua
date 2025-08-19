@@ -11,6 +11,9 @@ local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
 local unpackFn = table.unpack or unpack
 
+-- Import Config module
+local Config = require 'Config'
+
 -- Use global logger
 local logger = _G.ExifCraftLogger
 if not logger then
@@ -143,20 +146,31 @@ end
 
 -- Create General Configuration UI
 local function createGeneralSection(viewFactory, dialogProps, supportedFormats, context)
-    -- Import Config module for format types
-    local Config = require 'Config'
-    
-    -- Create property table for UI binding
-    -- local formatProps = LrBinding.makePropertyTable(context)
-    
-    -- Initialize format properties with defaults based on new FORMAT_TYPES structure
-    for property, _ in pairs(Config.FORMAT_TYPES) do
+    -- Initialize format properties with defaults based on FORMAT_NAMES structure
+    for property, _ in pairs(Config.FORMAT_NAMES) do
         dialogProps[property] = true
     end
     
-    -- Initialize group properties (Select All checkboxes)
-    for _, groupProperty in pairs(Config.GROUP_PROPERTIES) do
-        dialogProps[groupProperty] = true
+    -- Get group names directly
+    local standardGroupName = 'Standard'
+    local rawGroupName = 'Raw'
+    local tiffGroupName = 'Tiff'
+    
+    -- Get format properties by group directly from definitions
+    local standardFormats = {}
+    local rawFormats = {}
+    local tiffFormats = {}
+    
+    for groupName, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
+        for _, formatDef in ipairs(formatDefs) do
+            if groupName == 'Standard' then
+                table.insert(standardFormats, formatDef.property)
+            elseif groupName == 'Raw' then
+                table.insert(rawFormats, formatDef.property)
+            elseif groupName == 'Tiff' then
+                table.insert(tiffFormats, formatDef.property)
+            end
+        end
     end
     
     return viewFactory:column {
@@ -194,19 +208,26 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
         },
             
-        -- standard formats group
+        -- Standard formats group
         viewFactory:row {
             spacing = viewFactory:control_spacing(),
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = "Standard Formats: ",
+                title = standardGroupName .. ": ",
                 value = LrView.bind {
-                    keys = {'formatJpg', 'formatJpeg', 'formatHeic', 'formatHeif'}, 
+                    keys = standardFormats, 
                     operation = function(_, values, fromTable)
                         if fromTable then
-                            local allSelected = values.formatJpg and values.formatJpeg and values.formatHeic and values.formatHeif
-                            local anySelected = values.formatJpg or values.formatJpeg or values.formatHeic or values.formatHeif
+                            local allSelected = true
+                            local anySelected = false
+                            for _, prop in ipairs(standardFormats) do
+                                if values[prop] then
+                                    anySelected = true
+                                else
+                                    allSelected = false
+                                end
+                            end
                             
                             if allSelected then
                                 return true
@@ -223,10 +244,9 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
                         if fromTable then
                             return value
                         else
-                            dialogProps.formatJpg = value
-                            dialogProps.formatJpeg = value
-                            dialogProps.formatHeic = value
-                            dialogProps.formatHeif = value
+                            for _, prop in ipairs(standardFormats) do
+                                dialogProps[prop] = value
+                            end
                             return LrBinding.kUnsupportedDirection
                         end
                     end,
@@ -241,28 +261,28 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = "JPG",
+                title = Config.FORMAT_NAMES.formatJpg:upper(),
                 value = LrView.bind('formatJpg'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = "JPEG",
+                title = Config.FORMAT_NAMES.formatJpeg:upper(),
                 value = LrView.bind('formatJpeg'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = "HEIC",
+                title = Config.FORMAT_NAMES.formatHeic:upper(),
                 value = LrView.bind('formatHeic'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = "HEIF",
+                title = Config.FORMAT_NAMES.formatHeif:upper(),
                 value = LrView.bind('formatHeif'),
                 checked_value = true,
                 unchecked_value = false,
@@ -271,19 +291,26 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
 
         viewFactory:separator { fill_horizontal = 1 },
 
-        -- raw format group 
+        -- Raw format group 
         viewFactory:row {
             spacing = viewFactory:label_spacing(),
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = "Raw Formats: ",
+                title = rawGroupName .. ": ",
                 value = LrView.bind {
-                    keys = {'formatDng', 'formatArw', 'formatNef', 'formatCr2', 'formatCr3', 'formatRaw'},
+                    keys = rawFormats,
                     operation = function(_, values, fromTable)
                         if fromTable then
-                            local allSelected = values.formatDng and values.formatArw and values.formatNef and values.formatCr2 and values.formatCr3 and values.formatRaw
-                            local anySelected = values.formatDng or values.formatArw or values.formatNef or values.formatCr2 or values.formatCr3 or values.formatRaw
+                            local allSelected = true
+                            local anySelected = false
+                            for _, prop in ipairs(rawFormats) do
+                                if values[prop] then
+                                    anySelected = true
+                                else
+                                    allSelected = false
+                                end
+                            end
 
                             if allSelected then
                                 return true
@@ -301,12 +328,9 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
                         if fromTable then
                             return value
                         else
-                            dialogProps.formatDng = value
-                            dialogProps.formatArw = value
-                            dialogProps.formatNef = value
-                            dialogProps.formatCr2 = value
-                            dialogProps.formatCr3 = value
-                            dialogProps.formatRaw = value
+                            for _, prop in ipairs(rawFormats) do
+                                dialogProps[prop] = value
+                            end
                             return LrBinding.kUnsupportedDirection
                         end
                     end,
@@ -321,43 +345,50 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = "DNG",
+                title = Config.FORMAT_NAMES.formatDng:upper(),
                 value = LrView.bind('formatDng'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = "ARW",
+                title = Config.FORMAT_NAMES.formatArw:upper(),
                 value = LrView.bind('formatArw'),
                 checked_value = true,
                 unchecked_value = false,
             },
             
             viewFactory:checkbox {
-                title = "NEF",
+                title = Config.FORMAT_NAMES.formatNef:upper(),
                 value = LrView.bind('formatNef'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = "CR2",
+                title = Config.FORMAT_NAMES.formatCr2:upper(),
                 value = LrView.bind('formatCr2'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = "CR3",
+                title = Config.FORMAT_NAMES.formatCr3:upper(),
                 value = LrView.bind('formatCr3'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = "Raw",
+                title = Config.FORMAT_NAMES.formatRaw:upper(),
                 value = LrView.bind('formatRaw'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+
+            viewFactory:checkbox {
+                title = Config.FORMAT_NAMES.formatRaf:upper(),
+                value = LrView.bind('formatRaf'),
                 checked_value = true,
                 unchecked_value = false,
             },
@@ -371,13 +402,20 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = "TIFF Formats: ",
+                title = tiffGroupName .. ": ",
                 value = LrView.bind {
-                    keys = {'formatTiff', 'formatTif'},
+                    keys = tiffFormats,
                     operation = function(_, values, fromTable)
                         if fromTable then
-                            local allSelected = values.formatTiff and values.formatTif
-                            local anySelected = values.formatTiff or values.formatTif
+                            local allSelected = true
+                            local anySelected = false
+                            for _, prop in ipairs(tiffFormats) do
+                                if values[prop] then
+                                    anySelected = true
+                                else
+                                    allSelected = false
+                                end
+                            end
 
                             if allSelected then
                                 return true
@@ -394,8 +432,9 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
                         if fromTable then
                             return value
                         else
-                            dialogProps.formatTiff = value
-                            dialogProps.formatTif = value
+                            for _, prop in ipairs(tiffFormats) do
+                                dialogProps[prop] = value
+                            end
                             return LrBinding.kUnsupportedDirection
                         end
                     end,
@@ -410,14 +449,14 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
 
             viewFactory:checkbox {
-                title = "TIFF",
+                title = Config.FORMAT_NAMES.formatTiff:upper(),
                 value = LrView.bind('formatTiff'),
                 checked_value = true,
                 unchecked_value = false,
             },
 
             viewFactory:checkbox {
-                title = "TIF",
+                title = Config.FORMAT_NAMES.formatTif:upper(),
                 value = LrView.bind('formatTif'),
                 checked_value = true,
                 unchecked_value = false,
@@ -475,7 +514,6 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
                 title = "Reset to Defaults",
                 action = function()
                     -- Reset to default settings
-                    local Config = require 'Config'
                     for key, defaultValue in pairs(Config.DEFAULT_SETTINGS) do
                         dialogProps[key] = defaultValue
                     end
