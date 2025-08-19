@@ -30,8 +30,6 @@ local function createAIModelSection(viewFactory, bind)
             fill_horizontal = 1,
         },
         
-        viewFactory:separator { fill_horizontal = 1 },
-        
         viewFactory:group_box {
             title = "",
             spacing = viewFactory:control_spacing(),
@@ -378,8 +376,6 @@ local function createTaskSection(viewFactory, bind, context)
             fill_horizontal = 1,
         },
         
-        viewFactory:separator { fill_horizontal = 1 },
-        
         viewFactory:group_box {
             title = "",
             spacing = viewFactory:control_spacing(),
@@ -401,8 +397,6 @@ local function createGeneralSection(viewFactory, bind, supportedFormats)
             font = '<system/bold/14>',
             fill_horizontal = 1,
         },
-        
-        viewFactory:separator { fill_horizontal = 1 },
         
         viewFactory:group_box {
             title = "",
