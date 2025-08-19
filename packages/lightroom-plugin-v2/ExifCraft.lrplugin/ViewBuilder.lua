@@ -9,12 +9,70 @@ This module contains all UI creation functions for the configuration dialog.
 
 local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
+local LrFunctionContext = import 'LrFunctionContext'
 local unpackFn = table.unpack or unpack
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
 if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
+end
+
+local function createObserverDemo(viewFactory, bind)
+    -- local props = LrBinding.makePropertyTable(context)
+    bind.fa = true
+    bind.fb = true
+    bind.f= true
+
+    -- local function onFSubChange(properties, key, newValue)
+    --     bind.f = bind.f and newValue
+    -- end
+
+    -- bind:addObserver('fa', onFSubChange)
+    -- bind:addObserver('fb', onFSubChange)
+
+    return viewFactory:column {
+        spacing = viewFactory:dialog_spacing(),
+        bind_to_object = bind,
+        fill_horizontal = 1,
+
+        viewFactory:checkbox {
+            title = "fa",
+            value = LrView.bind('fa'),
+            checked_value = true,
+            unchecked_value = false,
+        },
+
+        viewFactory:checkbox {
+            title = "fb",
+            value = LrView.bind('fb'),
+            checked_value = true,
+            unchecked_value = false,
+        },
+
+        viewFactory:checkbox {
+            title = "f",
+            value = LrView.bind{
+                keys = {'fa', 'fb'},
+                operation = function(_, values, fromTable)
+                    if fromTable then
+                        return values.fa and values.fb
+                    else 
+                        return nil
+                    end
+                end,
+                transform = function(value, fromTable)
+                    if not fromTable then
+                        bind.fa = value
+                        bind.fb = value
+                    end
+                    return value
+                end,
+            },
+            checked_value = true,
+            unchecked_value = false,
+        },
+    }
 end
 
 -- Create AI Model Configuration UI
@@ -437,6 +495,7 @@ local function createMainDialog(viewFactory, bind, supportedFormats, context)
         fill_horizontal = 1,
         fill_vertical = 1,
         
+        createObserverDemo(viewFactory, bind),
         createAIModelSection(viewFactory, bind),
         createGeneralSection(viewFactory, bind, supportedFormats, context),
         
@@ -480,7 +539,5 @@ end
 
 -- Export module
 return {
-    createAIModelSection = createAIModelSection,
-    createGeneralSection = createGeneralSection,
     createMainDialog = createMainDialog,
 }

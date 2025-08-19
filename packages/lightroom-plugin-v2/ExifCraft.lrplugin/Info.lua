@@ -30,5 +30,5 @@ return {
         { title = "Process with ExifCraft v2", file = "Main.lua" },
     },
 
-    VERSION = { major = 0, minor = 0, revision = 1, build = 104 },
+    VERSION = { major = 0, minor = 0, revision = 1, build = 109 },
 }
