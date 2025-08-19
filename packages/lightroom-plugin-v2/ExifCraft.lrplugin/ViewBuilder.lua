@@ -170,80 +170,69 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             fill_horizontal = 1,
         },
         
-        viewFactory:group_box {
-            title = "",
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            fill_horizontal = 1,
+
+            viewFactory:static_text {
+                title = "Base Prompt:",
+                width = 80,
+            },
+            
+            viewFactory:edit_field {
+                value = LrView.bind('basePrompt'),
+                immediate = true,
+                -- width_in_chars = 50,
+                height_in_lines = 3,
+                fill_horizontal = 1,
+            },
+        },
+        
+        viewFactory:static_text {
+            title = "Image Formats:",
+            font = '<system/bold/14>',
+            fill_horizontal = 1,
+        },
+            
+        -- standard formats group
+        viewFactory:row {
             spacing = viewFactory:control_spacing(),
             fill_horizontal = 1,
-        
-            viewFactory:row {
-                spacing = viewFactory:label_spacing(),
-                fill_horizontal = 1,
 
-                viewFactory:static_text {
-                    title = "Base Prompt:",
-                    width = 80,
-                },
-                
-                viewFactory:edit_field {
-                    value = LrView.bind('basePrompt'),
-                    immediate = true,
-                    -- width_in_chars = 50,
-                    height_in_lines = 3,
-                    fill_horizontal = 1,
-                },
-            },
-            
-            viewFactory:static_text {
-                title = "Image Formats:",
-                font = '<system/bold/12>',
-            },
-            
-            -- Standard Formats Group
-
-            
-            viewFactory:row {
-                spacing = viewFactory:control_spacing(),
-                fill_horizontal = 1,
-                
-                viewFactory:static_text {
-                    title = "Standard Formats:",
-                },
-
-                viewFactory:checkbox {
-                    title = "Select All",
-                    value = LrView.bind {
-                        keys = {'formatJpg', 'formatJpeg', 'formatHeic', 'formatHeif'}, 
-                        operation = function(_, values, fromTable)
-                            if fromTable then
-                                local allSelected = values.formatJpg and values.formatJpeg and values.formatHeic and values.formatHeif
-                                local anySelected = values.formatJpg or values.formatJpeg or values.formatHeic or values.formatHeif
-                                
-                                if allSelected then
-                                    return true
-                                elseif anySelected then
-                                    return nil
-                                else
-                                    return false
-                                end
+            viewFactory:checkbox {
+                title = "Standard Formats: ",
+                value = LrView.bind {
+                    keys = {'formatJpg', 'formatJpeg', 'formatHeic', 'formatHeif'}, 
+                    operation = function(_, values, fromTable)
+                        if fromTable then
+                            local allSelected = values.formatJpg and values.formatJpeg and values.formatHeic and values.formatHeif
+                            local anySelected = values.formatJpg or values.formatJpeg or values.formatHeic or values.formatHeif
+                            
+                            if allSelected then
+                                return true
+                            elseif anySelected then
+                                return nil
                             else
-                                return LrBinding.kUnsupportedDirection
+                                return false
                             end
-                        end,
-                        transform = function(value, fromTable)
-                            if fromTable then
-                                return value
-                            else
-                                dialogProps.formatJpg = value
-                                dialogProps.formatJpeg = value
-                                dialogProps.formatHeic = value
-                                dialogProps.formatHeif = value
-                                return LrBinding.kUnsupportedDirection
-                            end
-                        end,
-                    },
-                    checked_value = false,
-                    unchecked_value = false,
+                        else
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
+                    transform = function(value, fromTable)
+                        if fromTable then
+                            return value
+                        else
+                            dialogProps.formatJpg = value
+                            dialogProps.formatJpeg = value
+                            dialogProps.formatHeic = value
+                            dialogProps.formatHeif = value
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
                 },
+                checked_value = false,
+                unchecked_value = false,
             },
         },
 
@@ -279,138 +268,189 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
                 unchecked_value = false,
             }
         }, 
-            
-            -- -- RAW Formats Group
-            -- viewFactory:static_text {
-            --     title = "RAW Formats:",
-            --     font = '<system/bold/12>',
-            -- },
-            
-            -- viewFactory:row {
-            --     spacing = viewFactory:label_spacing(),
-            --     fill_horizontal = 1,
-            --     bind_to_object = formatProps,
-                
-            --     viewFactory:checkbox {
-            --         title = "Select All",
-            --         bind_to_property = "formatRaw",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-            -- },
-            
-            -- viewFactory:row {
-            --     spacing = viewFactory:label_spacing(),
-            --     fill_horizontal = 1,
-            --     bind_to_object = formatProps,
-                
-            --     viewFactory:checkbox {
-            --         title = "NEF",
-            --         bind_to_property = "formatNef",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-                
-            --     viewFactory:checkbox {
-            --         title = "RAF",
-            --         bind_to_property = "formatRaf",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-                
-            --     viewFactory:checkbox {
-            --         title = "CR2",
-            --         bind_to_property = "formatCr2",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-                
-            --     viewFactory:checkbox {
-            --         title = "ARW",
-            --         bind_to_property = "formatArw",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-                
-            --     viewFactory:checkbox {
-            --         title = "DNG",
-            --         bind_to_property = "formatDng",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-                
-            --     viewFactory:checkbox {
-            --         title = "RAW",
-            --         bind_to_property = "formatRawExt",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-            -- },
-            
-            -- -- TIFF Formats Group
-            -- viewFactory:static_text {
-            --     title = "TIFF Formats:",
-            --     font = '<system/bold/12>',
-            -- },
-            
-            -- viewFactory:row {
-            --     spacing = viewFactory:label_spacing(),
-            --     fill_horizontal = 1,
-            --     bind_to_object = formatProps,
-                
-            --     viewFactory:checkbox {
-            --         title = "Select All",
-            --         bind_to_property = "formatTiffGroup",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-            -- },
-            
-            -- viewFactory:row {
-            --     spacing = viewFactory:label_spacing(),
-            --     fill_horizontal = 1,
-            --     bind_to_object = formatProps,
-                
-            --     viewFactory:checkbox {
-            --         title = "TIFF",
-            --         bind_to_property = "formatTiff",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-                
-            --     viewFactory:checkbox {
-            --         title = "TIF",
-            --         bind_to_property = "formatTif",
-            --         checked_value = true,
-            --         unchecked_value = false,
-            --     },
-            -- },
-            
-            viewFactory:row {
-                spacing = viewFactory:label_spacing(),
-                fill_horizontal = 1,
 
-                viewFactory:checkbox {
-                    title = "Preserve Original Files",
-                    value = LrView.bind('preserveOriginal'),
-                    checked_value = true,
-                    unchecked_value = false,
+        viewFactory:separator { fill_horizontal = 1 },
+
+        -- raw format group 
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            fill_horizontal = 1,
+
+            viewFactory:checkbox {
+                title = "Raw Formats: ",
+                value = LrView.bind {
+                    keys = {'formatDng', 'formatArw', 'formatNef', 'formatCr2', 'formatCr3', 'formatRaw'},
+                    operation = function(_, values, fromTable)
+                        if fromTable then
+                            local allSelected = values.formatDng and values.formatArw and values.formatNef and values.formatCr2 and values.formatCr3 and values.formatRaw
+                            local anySelected = values.formatDng or values.formatArw or values.formatNef or values.formatCr2 or values.formatCr3 or values.formatRaw
+
+                            if allSelected then
+                                return true
+                            elseif anySelected then
+                                return nil
+                            else
+                                return false
+                            end
+                        else
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
+
+                    transform = function(value, fromTable)
+                        if fromTable then
+                            return value
+                        else
+                            dialogProps.formatDng = value
+                            dialogProps.formatArw = value
+                            dialogProps.formatNef = value
+                            dialogProps.formatCr2 = value
+                            dialogProps.formatCr3 = value
+                            dialogProps.formatRaw = value
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
                 },
-                
-                viewFactory:checkbox {
-                    title = "Verbose Logging",
-                    value = LrView.bind('verbose'),
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "Dry Run (Preview Only)",
-                    value = LrView.bind('dryRun'),
-                    checked_value = true,
-                    unchecked_value = false,
-                },
+                checked_value = false,
+                unchecked_value = false,
             },
+        },
+
+        viewFactory:row {
+            spacing = viewFactory:control_spacing(),
+            fill_horizontal = 1,
+
+            viewFactory:checkbox {
+                title = "DNG",
+                value = LrView.bind('formatDng'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+
+            viewFactory:checkbox {
+                title = "ARW",
+                value = LrView.bind('formatArw'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+            
+            viewFactory:checkbox {
+                title = "NEF",
+                value = LrView.bind('formatNef'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+
+            viewFactory:checkbox {
+                title = "CR2",
+                value = LrView.bind('formatCr2'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+
+            viewFactory:checkbox {
+                title = "CR3",
+                value = LrView.bind('formatCr3'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+
+            viewFactory:checkbox {
+                title = "Raw",
+                value = LrView.bind('formatRaw'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+        },
+
+        viewFactory:separator { fill_horizontal = 1 },
+
+        -- TIFF format group
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            fill_horizontal = 1,
+
+            viewFactory:checkbox {
+                title = "TIFF Formats: ",
+                value = LrView.bind {
+                    keys = {'formatTiff', 'formatTif'},
+                    operation = function(_, values, fromTable)
+                        if fromTable then
+                            local allSelected = values.formatTiff and values.formatTif
+                            local anySelected = values.formatTiff or values.formatTif
+
+                            if allSelected then
+                                return true
+                            elseif anySelected then
+                                return nil
+                            else
+                                return false
+                            end
+                        else
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
+                    transform = function(value, fromTable)
+                        if fromTable then
+                            return value
+                        else
+                            dialogProps.formatTiff = value
+                            dialogProps.formatTif = value
+                            return LrBinding.kUnsupportedDirection
+                        end
+                    end,
+                },
+                checked_value = false,
+                unchecked_value = false,
+            },
+        },
+
+        viewFactory:row {
+            spacing = viewFactory:control_spacing(),
+            fill_horizontal = 1,
+
+            viewFactory:checkbox {
+                title = "TIFF",
+                value = LrView.bind('formatTiff'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+
+            viewFactory:checkbox {
+                title = "TIF",
+                value = LrView.bind('formatTif'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+        },
+
+        viewFactory:separator { fill_horizontal = 1 },
+            
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            fill_horizontal = 1,
+
+            viewFactory:checkbox {
+                title = "Preserve Original Files",
+                value = LrView.bind('preserveOriginal'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+            
+            viewFactory:checkbox {
+                title = "Verbose Logging",
+                value = LrView.bind('verbose'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+            
+            viewFactory:checkbox {
+                title = "Dry Run (Preview Only)",
+                value = LrView.bind('dryRun'),
+                checked_value = true,
+                unchecked_value = false,
+            },
+        },
     }
 end
 
