@@ -32,20 +32,20 @@ local function showUnifiedDialog()
     
     LrFunctionContext.callWithContext("showUnifiedDialog", function(context)
         local f = LrView.osFactory()
-        local bind = LrBinding.makePropertyTable(context)
+        local dialogProps = LrBinding.makePropertyTable(context)
         
         -- Load configuration
         local settings = Config.loadConfiguration()
         
         -- Initialize bindings with loaded settings
         for key, value in pairs(settings) do
-            bind[key] = value
+            dialogProps[key] = value
         end
         
 
         
         -- Create the main dialog UI
-        local ui = ViewBuilder.createMainDialog(f, bind, Config.SUPPORTED_FORMATS, context)
+        local ui = ViewBuilder.createMainDialog(f, dialogProps, Config.SUPPORTED_FORMATS, context)
         
         local result = LrDialogs.presentModalDialog {
             title = 'ExifCraft v2 - Configure & Process',
@@ -59,10 +59,10 @@ local function showUnifiedDialog()
         
         if result == 'ok' then
             -- Save configuration
-            Config.saveConfiguration(bind)
+            Config.saveConfiguration(dialogProps)
             
             -- Start processing with the settings
-            PhotoProcessor.processPhotosWithSettings(bind)
+            PhotoProcessor.processPhotosWithSettings(dialogProps)
         else
             logger:info('Processing cancelled by user')
         end

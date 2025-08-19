@@ -9,7 +9,6 @@ This module contains all UI creation functions for the configuration dialog.
 
 local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
-local LrFunctionContext = import 'LrFunctionContext'
 local unpackFn = table.unpack or unpack
 
 -- Use global logger
@@ -18,65 +17,8 @@ if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
 end
 
-local function createObserverDemo(viewFactory, bind)
-    -- local props = LrBinding.makePropertyTable(context)
-    bind.fa = true
-    bind.fb = true
-    bind.f= true
-
-    -- local function onFSubChange(properties, key, newValue)
-    --     bind.f = bind.f and newValue
-    -- end
-
-    -- bind:addObserver('fa', onFSubChange)
-    -- bind:addObserver('fb', onFSubChange)
-
-    return viewFactory:column {
-        spacing = viewFactory:dialog_spacing(),
-        bind_to_object = bind,
-        fill_horizontal = 1,
-
-        viewFactory:checkbox {
-            title = "fa",
-            value = LrView.bind('fa'),
-            checked_value = true,
-            unchecked_value = false,
-        },
-
-        viewFactory:checkbox {
-            title = "fb",
-            value = LrView.bind('fb'),
-            checked_value = true,
-            unchecked_value = false,
-        },
-
-        viewFactory:checkbox {
-            title = "f",
-            value = LrView.bind{
-                keys = {'fa', 'fb'},
-                operation = function(_, values, fromTable)
-                    if fromTable then
-                        return values.fa and values.fb
-                    else 
-                        return nil
-                    end
-                end,
-                transform = function(value, fromTable)
-                    if not fromTable then
-                        bind.fa = value
-                        bind.fb = value
-                    end
-                    return value
-                end,
-            },
-            checked_value = true,
-            unchecked_value = false,
-        },
-    }
-end
-
 -- Create AI Model Configuration UI
-local function createAIModelSection(viewFactory, bind)
+local function createAIModelSection(viewFactory, dialogProps)
     return viewFactory:column {
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
@@ -200,64 +142,21 @@ local function createAIModelSection(viewFactory, bind)
 end
 
 -- Create General Configuration UI
-local function createGeneralSection(viewFactory, bind, supportedFormats, context)
+local function createGeneralSection(viewFactory, dialogProps, supportedFormats, context)
     -- Import Config module for format types
     local Config = require 'Config'
     
     -- Create property table for UI binding
-    local formatProps = LrBinding.makePropertyTable(context)
+    -- local formatProps = LrBinding.makePropertyTable(context)
     
     -- Initialize format properties with defaults based on new FORMAT_TYPES structure
     for property, _ in pairs(Config.FORMAT_TYPES) do
-        formatProps[property] = true
+        dialogProps[property] = true
     end
     
     -- Initialize group properties (Select All checkboxes)
     for _, groupProperty in pairs(Config.GROUP_PROPERTIES) do
-        formatProps[groupProperty] = true
-    end
-    
-    -- Use format types from Config
-    local FormatTypes = Config.FORMAT_TYPES
-    local GroupProperties = Config.GROUP_PROPERTIES
-    
-    -- Function to update specific Select All state based on changed format
-    -- This function is called when individual format checkboxes are changed
-    -- It ensures the Select All checkbox for the group reflects the current state
-    local function updateSelectAllState(changedFormat, newValue)
-        -- Find which group contains the changed format
-        local formatData = FormatTypes[changedFormat]
-        if formatData then
-            local group = formatData.group
-            local groupProperty = GroupProperties[group]
-            
-            if groupProperty then
-                -- Update Select All state based on the changed format
-                -- Logic: formatProps[groupProperty] = formatProps[groupProperty] and newValue
-                -- - If newValue is true: Select All remains in its current state
-                -- - If newValue is false: Select All becomes false (since at least one format is unchecked)
-                -- This ensures Select All is unchecked when any format in the group is unchecked
-                formatProps[groupProperty] = formatProps[groupProperty] and newValue
-            end
-        end
-    end
-    
-    -- Add observers for format changes
-    for property, _ in pairs(FormatTypes) do
-        formatProps:addObserver(property, function(properties, key, newValue)
-            updateSelectAllState(key, newValue)
-        end)
-    end
-    
-    -- Add observers for Select All changes
-    for group, groupProperty in pairs(GroupProperties) do
-        formatProps:addObserver(groupProperty, function(properties, key, newValue)
-            for property, formatData in pairs(FormatTypes) do
-                if formatData.group == group then
-                    formatProps[property] = newValue
-                end
-            end
-        end)
+        dialogProps[groupProperty] = true
     end
     
     return viewFactory:column {
@@ -300,163 +199,192 @@ local function createGeneralSection(viewFactory, bind, supportedFormats, context
             },
             
             -- Standard Formats Group
-            viewFactory:static_text {
-                title = "Standard Formats:",
-                font = '<system/bold/12>',
-            },
+
             
             viewFactory:row {
-                spacing = viewFactory:label_spacing(),
+                spacing = viewFactory:control_spacing(),
                 fill_horizontal = 1,
-                bind_to_object = formatProps,
                 
+                viewFactory:static_text {
+                    title = "Standard Formats:",
+                },
+
                 viewFactory:checkbox {
                     title = "Select All",
-                    bind_to_property = "formatStandard",
-                    checked_value = true,
+                    value = LrView.bind {
+                        keys = {'formatJpg', 'formatJpeg', 'formatHeic', 'formatHeif'}, 
+                        operation = function(_, values, fromTable)
+                            if fromTable then
+                                local allSelected = values.formatJpg and values.formatJpeg and values.formatHeic and values.formatHeif
+                                local anySelected = values.formatJpg or values.formatJpeg or values.formatHeic or values.formatHeif
+                                
+                                if allSelected then
+                                    return true
+                                elseif anySelected then
+                                    return nil
+                                else
+                                    return false
+                                end
+                            else
+                                return LrBinding.kUnsupportedDirection
+                            end
+                        end,
+                        transform = function(value, fromTable)
+                            if fromTable then
+                                return value
+                            else
+                                dialogProps.formatJpg = value
+                                dialogProps.formatJpeg = value
+                                dialogProps.formatHeic = value
+                                dialogProps.formatHeif = value
+                                return LrBinding.kUnsupportedDirection
+                            end
+                        end,
+                    },
+                    checked_value = false,
                     unchecked_value = false,
                 },
+            },
+        },
+
+        viewFactory:row {
+            spacing = viewFactory:control_spacing(),
+            fill_horizontal = 1,
+
+            viewFactory:checkbox {
+                title = "JPG",
+                value = LrView.bind('formatJpg'),
+                checked_value = true,
+                unchecked_value = false,
             },
             
-            viewFactory:row {
-                spacing = viewFactory:label_spacing(),
-                fill_horizontal = 1,
-                bind_to_object = formatProps,
-                
-                viewFactory:checkbox {
-                    title = "JPG",
-                    bind_to_property = "formatJpg",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "JPEG",
-                    bind_to_property = "formatJpeg",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "HEIC",
-                    bind_to_property = "formatHeic",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "HEIF",
-                    bind_to_property = "formatHeif",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
+            viewFactory:checkbox {
+                title = "JPEG",
+                value = LrView.bind('formatJpeg'),
+                checked_value = true,
+                unchecked_value = false,
             },
             
-            -- RAW Formats Group
-            viewFactory:static_text {
-                title = "RAW Formats:",
-                font = '<system/bold/12>',
+            viewFactory:checkbox {
+                title = "HEIC",
+                value = LrView.bind('formatHeic'),
+                checked_value = true,
+                unchecked_value = false,
             },
             
-            viewFactory:row {
-                spacing = viewFactory:label_spacing(),
-                fill_horizontal = 1,
-                bind_to_object = formatProps,
-                
-                viewFactory:checkbox {
-                    title = "Select All",
-                    bind_to_property = "formatRaw",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-            },
+            viewFactory:checkbox {
+                title = "HEIF",
+                value = LrView.bind('formatHeif'),
+                checked_value = true,
+                unchecked_value = false,
+            }
+        }, 
             
-            viewFactory:row {
-                spacing = viewFactory:label_spacing(),
-                fill_horizontal = 1,
-                bind_to_object = formatProps,
-                
-                viewFactory:checkbox {
-                    title = "NEF",
-                    bind_to_property = "formatNef",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "RAF",
-                    bind_to_property = "formatRaf",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "CR2",
-                    bind_to_property = "formatCr2",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "ARW",
-                    bind_to_property = "formatArw",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "DNG",
-                    bind_to_property = "formatDng",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-                
-                viewFactory:checkbox {
-                    title = "RAW",
-                    bind_to_property = "formatRawExt",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-            },
+            -- -- RAW Formats Group
+            -- viewFactory:static_text {
+            --     title = "RAW Formats:",
+            --     font = '<system/bold/12>',
+            -- },
             
-            -- TIFF Formats Group
-            viewFactory:static_text {
-                title = "TIFF Formats:",
-                font = '<system/bold/12>',
-            },
+            -- viewFactory:row {
+            --     spacing = viewFactory:label_spacing(),
+            --     fill_horizontal = 1,
+            --     bind_to_object = formatProps,
+                
+            --     viewFactory:checkbox {
+            --         title = "Select All",
+            --         bind_to_property = "formatRaw",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+            -- },
             
-            viewFactory:row {
-                spacing = viewFactory:label_spacing(),
-                fill_horizontal = 1,
-                bind_to_object = formatProps,
+            -- viewFactory:row {
+            --     spacing = viewFactory:label_spacing(),
+            --     fill_horizontal = 1,
+            --     bind_to_object = formatProps,
                 
-                viewFactory:checkbox {
-                    title = "Select All",
-                    bind_to_property = "formatTiffGroup",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-            },
+            --     viewFactory:checkbox {
+            --         title = "NEF",
+            --         bind_to_property = "formatNef",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+                
+            --     viewFactory:checkbox {
+            --         title = "RAF",
+            --         bind_to_property = "formatRaf",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+                
+            --     viewFactory:checkbox {
+            --         title = "CR2",
+            --         bind_to_property = "formatCr2",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+                
+            --     viewFactory:checkbox {
+            --         title = "ARW",
+            --         bind_to_property = "formatArw",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+                
+            --     viewFactory:checkbox {
+            --         title = "DNG",
+            --         bind_to_property = "formatDng",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+                
+            --     viewFactory:checkbox {
+            --         title = "RAW",
+            --         bind_to_property = "formatRawExt",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+            -- },
             
-            viewFactory:row {
-                spacing = viewFactory:label_spacing(),
-                fill_horizontal = 1,
-                bind_to_object = formatProps,
+            -- -- TIFF Formats Group
+            -- viewFactory:static_text {
+            --     title = "TIFF Formats:",
+            --     font = '<system/bold/12>',
+            -- },
+            
+            -- viewFactory:row {
+            --     spacing = viewFactory:label_spacing(),
+            --     fill_horizontal = 1,
+            --     bind_to_object = formatProps,
                 
-                viewFactory:checkbox {
-                    title = "TIFF",
-                    bind_to_property = "formatTiff",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
+            --     viewFactory:checkbox {
+            --         title = "Select All",
+            --         bind_to_property = "formatTiffGroup",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+            -- },
+            
+            -- viewFactory:row {
+            --     spacing = viewFactory:label_spacing(),
+            --     fill_horizontal = 1,
+            --     bind_to_object = formatProps,
                 
-                viewFactory:checkbox {
-                    title = "TIF",
-                    bind_to_property = "formatTif",
-                    checked_value = true,
-                    unchecked_value = false,
-                },
-            },
+            --     viewFactory:checkbox {
+            --         title = "TIFF",
+            --         bind_to_property = "formatTiff",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+                
+            --     viewFactory:checkbox {
+            --         title = "TIF",
+            --         bind_to_property = "formatTif",
+            --         checked_value = true,
+            --         unchecked_value = false,
+            --     },
+            -- },
             
             viewFactory:row {
                 spacing = viewFactory:label_spacing(),
@@ -483,21 +411,19 @@ local function createGeneralSection(viewFactory, bind, supportedFormats, context
                     unchecked_value = false,
                 },
             },
-        },
-    }, formatProps
+    }
 end
 
 -- Create the main dialog UI
-local function createMainDialog(viewFactory, bind, supportedFormats, context)
+local function createMainDialog(viewFactory, dialogProps, supportedFormats, context)
     local content = viewFactory:column {
-        bind_to_object = bind,
+        bind_to_object = dialogProps,
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
         fill_vertical = 1,
         
-        createObserverDemo(viewFactory, bind),
-        createAIModelSection(viewFactory, bind),
-        createGeneralSection(viewFactory, bind, supportedFormats, context),
+        createAIModelSection(viewFactory, dialogProps),
+        createGeneralSection(viewFactory, dialogProps, supportedFormats, context),
         
         viewFactory:separator { fill_horizontal = 1 },
         
@@ -511,7 +437,7 @@ local function createMainDialog(viewFactory, bind, supportedFormats, context)
                     -- Reset to default settings
                     local Config = require 'Config'
                     for key, defaultValue in pairs(Config.DEFAULT_SETTINGS) do
-                        bind[key] = defaultValue
+                        dialogProps[key] = defaultValue
                     end
                     
                     logger:info('Settings reset to defaults')
