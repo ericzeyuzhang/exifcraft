@@ -65,50 +65,37 @@ local function createConfigJson(settings, tempDir)
         return tags
     end
     
-    -- Add enabled tasks from dynamic task list
-    if settings.taskList then
-        for _, task in ipairs(settings.taskList) do
-            if Config.toBoolean(task.enabled) then
-                table.insert(config.tasks, {
-                    name = task.name,
-                    prompt = task.prompt,
-                    tags = createTagConfigs(table.concat(task.tags, ','), 'true'), -- Default to allow overwrite
-                })
-            end
-        end
-    else
-        -- Fallback to old static tasks for backward compatibility
-        if Config.toBoolean(settings.taskTitleEnabled) then
-            table.insert(config.tasks, {
-                name = settings.taskTitleName,
-                prompt = settings.taskTitlePrompt,
-                tags = createTagConfigs(settings.taskTitleTags, settings.taskTitleAllowOverwrite),
-            })
-        end
-        
-        if Config.toBoolean(settings.taskDescriptionEnabled) then
-            table.insert(config.tasks, {
-                name = settings.taskDescriptionName,
-                prompt = settings.taskDescriptionPrompt,
-                tags = createTagConfigs(settings.taskDescriptionTags, settings.taskDescriptionAllowOverwrite),
-            })
-        end
-        
-        if Config.toBoolean(settings.taskKeywordsEnabled) then
-            table.insert(config.tasks, {
-                name = settings.taskKeywordsName,
-                prompt = settings.taskKeywordsPrompt,
-                tags = createTagConfigs(settings.taskKeywordsTags, settings.taskKeywordsAllowOverwrite),
-            })
-        end
-        
-        if Config.toBoolean(settings.taskCustomEnabled) then
-            table.insert(config.tasks, {
-                name = settings.taskCustomName,
-                prompt = settings.taskCustomPrompt,
-                tags = createTagConfigs(settings.taskCustomTags, settings.taskCustomAllowOverwrite),
-            })
-        end
+    -- Add enabled tasks from static configuration
+    if Config.toBoolean(settings.taskTitleEnabled) then
+        table.insert(config.tasks, {
+            name = settings.taskTitleName,
+            prompt = settings.taskTitlePrompt,
+            tags = createTagConfigs(settings.taskTitleTags, settings.taskTitleAllowOverwrite),
+        })
+    end
+    
+    if Config.toBoolean(settings.taskDescriptionEnabled) then
+        table.insert(config.tasks, {
+            name = settings.taskDescriptionName,
+            prompt = settings.taskDescriptionPrompt,
+            tags = createTagConfigs(settings.taskDescriptionTags, settings.taskDescriptionAllowOverwrite),
+        })
+    end
+    
+    if Config.toBoolean(settings.taskKeywordsEnabled) then
+        table.insert(config.tasks, {
+            name = settings.taskKeywordsName,
+            prompt = settings.taskKeywordsPrompt,
+            tags = createTagConfigs(settings.taskKeywordsTags, settings.taskKeywordsAllowOverwrite),
+        })
+    end
+    
+    if Config.toBoolean(settings.taskCustomEnabled) then
+        table.insert(config.tasks, {
+            name = settings.taskCustomName,
+            prompt = settings.taskCustomPrompt,
+            tags = createTagConfigs(settings.taskCustomTags, settings.taskCustomAllowOverwrite),
+        })
     end
     
     local configPath = LrPathUtils.child(tempDir, 'exifcraft_config.json')

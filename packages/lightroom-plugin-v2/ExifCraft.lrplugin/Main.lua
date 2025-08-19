@@ -42,16 +42,10 @@ local function showUnifiedDialog()
             bind[key] = value
         end
         
-        -- Initialize task list if not exists
-        if not bind.taskList then
-            bind.taskList = Config.getDefaultTaskList()
-        end
-        
-        -- Initialize task list with proper tag format
-        bind.taskList = Config.initializeTaskList(bind.taskList)
+
         
         -- Create the main dialog UI
-        local ui = ViewBuilder.createMainDialog(f, bind, Config.SUPPORTED_FORMATS)
+        local ui = ViewBuilder.createMainDialog(f, bind, Config.SUPPORTED_FORMATS, context)
         
         local result = LrDialogs.presentModalDialog {
             title = 'ExifCraft v2 - Configure & Process',
