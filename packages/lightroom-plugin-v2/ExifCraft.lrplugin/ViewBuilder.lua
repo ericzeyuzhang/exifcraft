@@ -145,40 +145,36 @@ local function createAIModelSection(viewFactory, dialogProps)
     }
 end
 
--- Helper function to create task UI for a single task
-local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
+
+
+-- Create individual task UI component
+local function createTaskItemUI(viewFactory, dialogProps, taskIndex, taskProp)
     return viewFactory:group_box {
-        title = "",
+        title = taskProp.name,
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
-        bind_to_object = task,
+        bind_to_object = taskProp,
         
+        -- Task description
+        viewFactory:static_text {
+            title = taskProp.description,
+            font = '<system/10>',
+            fill_horizontal = 1,
+        },
+        
+        -- Enable/disable checkbox
         viewFactory:row {
             spacing = viewFactory:label_spacing(),
             fill_horizontal = 1,
-
-            viewFactory:static_text {
-                title = "Name:",
-                width = 60,
-            },
             
-            viewFactory:edit_field {
-                value = LrView.bind('name'),
-                immediate = true,
-                -- width_in_chars = 50,
-                height_in_lines = 1,
+            viewFactory:checkbox {
+                title = "Enable this task",
+                value = LrView.bind('enabled'),
                 fill_horizontal = 1,
             },
-
-            viewFactory:push_button {
-                title = "Delete",
-                width = 80,
-                action = function()
-                    table.remove(dialogProps.tasks, taskIndex)
-                end,
-            },
         },
-
+        
+        -- Prompt editing
         viewFactory:row {
             spacing = viewFactory:label_spacing(),
             fill_horizontal = 1,
@@ -195,7 +191,8 @@ local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
                 fill_horizontal = 1,
             },
         },
-
+        
+        -- Tags display (read-only)
         viewFactory:row {
             spacing = viewFactory:label_spacing(),
             fill_horizontal = 1,
@@ -204,11 +201,18 @@ local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
                 title = "Tags:",
                 width = 60,
             },
-
-            viewFactory:edit_field {
-                value = LrView.bind('name'),
-                immediate = true,
-                height_in_lines = 1,
+            
+            viewFactory:static_text {
+                title = function()
+                    local tagNames = {}
+                    if taskProp.tags then
+                        for _, tag in ipairs(taskProp.tags) do
+                            table.insert(tagNames, tag.name)
+                        end
+                    end
+                    return table.concat(tagNames, ', ')
+                end,
+                font = '<system/10>',
                 fill_horizontal = 1,
             },
         },
@@ -216,23 +220,37 @@ local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
 end
 
 -- Create Task Configuration UI
-local function createTaskSection(viewFactory, dialogProps)
+local function createTaskSection(viewFactory, dialogProps, context)
     -- Initialize tasks if not present
     if not dialogProps.tasks then
-        dialogProps.tasks = Config.DEFAULT_SETTINGS.tasks
+        dialogProps.tasks = {}
+        for i, task in ipairs(Config.PRESET_TASK_TEMPLATES) do
+            -- Create individual property table for each task
+            local taskProps = LrBinding.makePropertyTable(context)
+            taskProps.id = task.id
+            taskProps.name = task.name
+            taskProps.description = task.description
+            taskProps.prompt = task.prompt
+            taskProps.tags = task.tags
+            taskProps.enabled = task.enabled
+            taskProps.isCustom = task.isCustom
+            
+            dialogProps.tasks[i] = taskProps
+        end
     end
 
     local taskUIs = {}
     
     -- Create UI for each task
-    for i, task in ipairs(dialogProps.tasks or {}) do
-        logger:info('Creating task UI for task ' .. i, 'with name ' .. task.name)
-        table.insert(taskUIs, createTaskUI(viewFactory, dialogProps, i, task))
+    for i, taskProp in ipairs(dialogProps.tasks) do
+        logger:info('Creating task UI for task ' .. i .. ' with name ' .. taskProp.name)
+        table.insert(taskUIs, createTaskItemUI(viewFactory, dialogProps, i, taskProp))
     end
     
     return viewFactory:column {
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
+        bind_to_object = dialogProps,
         
         -- Section header
         viewFactory:static_text {
@@ -240,11 +258,18 @@ local function createTaskSection(viewFactory, dialogProps)
             font = '<system/bold/14>',
             fill_horizontal = 1,
         },
+        
+        -- Instructions
+        viewFactory:static_text {
+            title = "Select which tasks to enable and customize their prompts. You can edit the prompts for each enabled task.",
+            font = '<system/10>',
+            fill_horizontal = 1,
+        },
 
         -- Task list
         viewFactory:scrolled_view {
             fill_horizontal = 1,
-            height = 300, 
+            height = 550, 
             horizontal_scrolling = false,
             vertical_scrolling = true,
             content = viewFactory:column {
@@ -252,17 +277,6 @@ local function createTaskSection(viewFactory, dialogProps)
                 fill_horizontal = 1,
                 unpackFn(taskUIs),
             },
-        },
-
-        viewFactory:push_button {
-            title = "Add Task",
-            action = function()
-                table.insert(dialogProps.tasks, {
-                    name = 'New Task',
-                    prompt = 'Enter prompt here...',
-                    tags = 'Enter tags here...',
-                })
-            end,
         },
     }
 end
@@ -629,18 +643,58 @@ end
 
 -- Create the main dialog UI
 local function createMainDialog(viewFactory, dialogProps, supportedFormats, context)
+    -- Left column: AI Model Configuration and General Configuration
+    local leftColumn = viewFactory:column {
+        spacing = viewFactory:control_spacing(),
+        fill_horizontal = 1,
+        fill_vertical = 1,
+        
+        createAIModelSection(viewFactory, dialogProps),
+        createGeneralSection(viewFactory, dialogProps, supportedFormats, context),
+    }
+    
+    -- Right column: Task Configuration
+    local rightColumn = viewFactory:column {
+        spacing = viewFactory:control_spacing(),
+        fill_horizontal = 1,
+        fill_vertical = 1,
+        
+        createTaskSection(viewFactory, dialogProps, context),
+    }
+    
+    -- Main content with two columns
     local content = viewFactory:column {
         bind_to_object = dialogProps,
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
         fill_vertical = 1,
         
-        createAIModelSection(viewFactory, dialogProps),
-        createTaskSection(viewFactory, dialogProps),
-        createGeneralSection(viewFactory, dialogProps, supportedFormats, context),
+        -- Two column layout
+        viewFactory:row {
+            spacing = viewFactory:control_spacing(),
+            fill_horizontal = 1,
+            fill_vertical = 1,
+            
+            -- Left column (50% width)
+            viewFactory:column {
+                spacing = viewFactory:control_spacing(),
+                fill_horizontal = 0.5,
+                fill_vertical = 1,
+                leftColumn,
+            },
+            
+            -- Right column (50% width)
+            viewFactory:column {
+                spacing = viewFactory:control_spacing(),
+                fill_horizontal = 0.5,
+                fill_vertical = 1,
+                rightColumn,
+            },
+        },
         
         viewFactory:separator { fill_horizontal = 1 },
         
+        -- Bottom buttons row
         viewFactory:row {
             spacing = viewFactory:control_spacing(),
             fill_horizontal = 1,
@@ -670,7 +724,7 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
         },
     }
     
-    -- Return static layout without any scrollable container
+    -- Return the layout
     return viewFactory:column {
         fill = 1,
         fill_horizontal = 1,

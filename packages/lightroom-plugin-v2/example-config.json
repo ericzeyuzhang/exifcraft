@@ -11,17 +11,17 @@
   },
   "tasks": [
     {
-      "name": "title",
+      "name": "Image Title",
       "prompt": "Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
-      "tags": ["ImageTitle", "ImageDescription", "XPTitle", "ObjectName", "Title"]
+      "tags": ["ImageTitle", "XPTitle", "ObjectName", "Title"]
     },
     {
-      "name": "description",
+      "name": "Image Description",
       "prompt": "Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
       "tags": ["ImageDescription", "Description", "Caption-Abstract"]
     },
     {
-      "name": "keywords",
+      "name": "Keywords",
       "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
       "tags": ["Keywords"]
     }

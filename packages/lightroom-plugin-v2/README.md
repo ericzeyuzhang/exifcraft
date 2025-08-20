@@ -56,11 +56,24 @@ After processing, you can view the AI-generated metadata in Lightroom's Metadata
 - **Max Tokens**: Maximum response length
 
 ### Task Configuration
-- **Title Task**: Generate concise image titles (50 characters max)
-- **Description Task**: Create detailed image descriptions (200 characters max)
-- **Keywords Task**: Extract relevant keywords/tags
-- **Custom Task**: Define your own metadata generation task
-- Each task can be enabled/disabled and customized with specific prompts and tag configurations
+The plugin provides 10 preset task templates that you can enable/disable and customize:
+
+**Core Tasks** (enabled by default):
+- **Image Title**: Generate concise image titles (50 characters max)
+- **Image Description**: Create detailed image descriptions (200 characters max)  
+- **Keywords**: Extract relevant keywords/tags
+
+**Additional Tasks** (disabled by default):
+- **Location**: Identify and describe the location in the image
+- **Subject**: Identify the main subject or subjects in the image
+- **Photography Style**: Identify the photography style or genre
+- **Mood/Atmosphere**: Describe the mood or atmosphere of the image
+- **Technical Details**: Analyze technical aspects of the photograph
+
+**Custom Tasks**:
+- **Custom Task 1 & 2**: Define your own metadata generation tasks
+
+Each task can be enabled/disabled with a checkbox and customized by editing the prompt text. The tags for each task are predefined and cannot be modified in the UI.
 
 ### General Options
 - **Base Prompt**: Template prompt sent to the AI model

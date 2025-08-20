@@ -56,17 +56,39 @@ local function showUnifiedDialog()
             contents = ui,
             actionVerb = 'Process',
             cancelVerb = 'Cancel',
-            width = 600,
-            height = 800,
+            width = 1000,
+            height = 700,
             resizable = true,
         }
         
         if result == 'ok' then
+            -- Convert property tables back to regular tables for saving
+            local configToSave = {}
+            for key, value in pairs(dialogProps) do
+                if key == 'tasks' then
+                    -- Convert task property tables to regular tables
+                    configToSave.tasks = {}
+                    for i, taskProp in ipairs(dialogProps.tasks) do
+                        configToSave.tasks[i] = {
+                            id = taskProp.id,
+                            name = taskProp.name,
+                            description = taskProp.description,
+                            prompt = taskProp.prompt,
+                            tags = taskProp.tags,
+                            enabled = taskProp.enabled,
+                            isCustom = taskProp.isCustom
+                        }
+                    end
+                else
+                    configToSave[key] = value
+                end
+            end
+            
             -- Save configuration
-            Config.saveConfiguration(dialogProps)
+            Config.saveConfiguration(configToSave)
             
             -- Start processing with the settings
-            PhotoProcessor.processPhotosWithSettings(dialogProps)
+            PhotoProcessor.processPhotosWithSettings(configToSave)
         else
             logger:info('Processing cancelled by user')
         end

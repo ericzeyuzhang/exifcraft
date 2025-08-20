@@ -114,9 +114,16 @@ local function writeMetadataToLightroom(photo, metadata, settings)
             
             -- Map task names to Lightroom metadata fields
             local fieldMap = {
-                title = 'title',
-                description = 'caption',
-                keywords = 'keywords',
+                ['Image Title'] = 'title',
+                ['Image Description'] = 'caption',
+                ['Keywords'] = 'keywords',
+                ['Location'] = 'location',
+                ['Subject'] = 'subject',
+                ['Photography Style'] = 'style',
+                ['Mood/Atmosphere'] = 'mood',
+                ['Technical Details'] = 'technicalNotes',
+                ['Custom Task 1'] = 'custom1',
+                ['Custom Task 2'] = 'custom2',
             }
             
             local fieldName = fieldMap[taskName]
