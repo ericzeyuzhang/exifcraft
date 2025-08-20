@@ -58,7 +58,10 @@ local function showUnifiedDialog()
             cancelVerb = 'Cancel',
             width = 1000,
             height = 700,
+            minimum_width = 1000,
+            minimum_height = 700,
             resizable = true,
+            windowStyle = 'palette',
         }
         
         if result == 'ok' then
@@ -72,7 +75,6 @@ local function showUnifiedDialog()
                         configToSave.tasks[i] = {
                             id = taskProp.id,
                             name = taskProp.name,
-                            description = taskProp.description,
                             prompt = taskProp.prompt,
                             tags = taskProp.tags,
                             enabled = taskProp.enabled,

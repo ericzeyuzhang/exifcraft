@@ -9,6 +9,7 @@ and configuration validation.
 ------------------------------------------------------------------------------]]
 
 local LrPrefs = import 'LrPrefs'
+
 local dkjson = require 'Dkjson'
 
 -- Use global logger
@@ -44,9 +45,7 @@ local FORMAT_DEFINITIONS = {
 -- Preset task templates
 local PRESET_TASK_TEMPLATES = {
     {
-        id = 'title',
         name = 'Image Title',
-        description = 'Generate a concise title for the image',
         prompt = 'Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ',
         tags = {
             { name = 'ImageTitle', allowOverwrite = true },
@@ -57,9 +56,7 @@ local PRESET_TASK_TEMPLATES = {
         enabled = true
     },
     {
-        id = 'description',
         name = 'Image Description',
-        description = 'Generate a detailed description of the image',
         prompt = 'Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ',
         tags = {
             { name = 'ImageDescription', allowOverwrite = true },
@@ -69,9 +66,7 @@ local PRESET_TASK_TEMPLATES = {
         enabled = true
     },
     {
-        id = 'keywords',
         name = 'Keywords',
-        description = 'Generate relevant keywords for the image',
         prompt = 'Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ',
         tags = {
             { name = 'Keywords', allowOverwrite = true }
@@ -79,9 +74,7 @@ local PRESET_TASK_TEMPLATES = {
         enabled = true
     },
     {
-        id = 'location',
         name = 'Location',
-        description = 'Identify and describe the location in the image',
         prompt = 'Identify the location, place, or setting shown in this image. If it\'s a recognizable landmark, city, or specific location, please provide the name. If it\'s a generic location, describe the type of place (e.g., "mountain landscape", "urban street", "beach"). ',
         tags = {
             { name = 'Location', allowOverwrite = true },
@@ -93,9 +86,7 @@ local PRESET_TASK_TEMPLATES = {
         enabled = false
     },
     {
-        id = 'subject',
         name = 'Subject',
-        description = 'Identify the main subject or subjects in the image',
         prompt = 'Identify the main subject(s) in this image. This could be people, animals, objects, or scenes. Describe who or what is the primary focus of the photograph. ',
         tags = {
             { name = 'Subject', allowOverwrite = true },
@@ -103,61 +94,6 @@ local PRESET_TASK_TEMPLATES = {
         },
         enabled = false
     },
-    {
-        id = 'style',
-        name = 'Photography Style',
-        description = 'Identify the photography style or genre',
-        prompt = 'Identify the photography style, genre, or technique used in this image. Consider aspects like composition, lighting, color treatment, and artistic approach (e.g., "portrait", "landscape", "street photography", "macro", "black and white", "vintage", "minimalist"). ',
-        tags = {
-            { name = 'Style', allowOverwrite = true },
-            { name = 'Keywords', allowOverwrite = true }
-        },
-        enabled = false
-    },
-    {
-        id = 'mood',
-        name = 'Mood/Atmosphere',
-        description = 'Describe the mood or atmosphere of the image',
-        prompt = 'Describe the mood, atmosphere, or emotional tone conveyed by this image. Consider elements like lighting, colors, composition, and subject matter that contribute to the overall feeling (e.g., "peaceful", "dramatic", "nostalgic", "energetic", "mysterious"). ',
-        tags = {
-            { name = 'Mood', allowOverwrite = true },
-            { name = 'Keywords', allowOverwrite = true }
-        },
-        enabled = false
-    },
-    {
-        id = 'technical',
-        name = 'Technical Details',
-        description = 'Analyze technical aspects of the photograph',
-        prompt = 'Analyze the technical aspects of this photograph. Consider elements like depth of field, shutter speed effects, lighting technique, composition rules, and any notable technical characteristics that make this image distinctive. ',
-        tags = {
-            { name = 'TechnicalNotes', allowOverwrite = true },
-            { name = 'Keywords', allowOverwrite = true }
-        },
-        enabled = false
-    },
-    {
-        id = 'custom1',
-        name = 'Custom Task 1',
-        description = 'Custom task for specific needs',
-        prompt = 'Enter your custom prompt here...',
-        tags = {
-            { name = 'Custom1', allowOverwrite = true }
-        },
-        enabled = false,
-        isCustom = true
-    },
-    {
-        id = 'custom2',
-        name = 'Custom Task 2',
-        description = 'Custom task for specific needs',
-        prompt = 'Enter your custom prompt here...',
-        tags = {
-            { name = 'Custom2', allowOverwrite = true }
-        },
-        enabled = false,
-        isCustom = true
-    }
 }
 
 -- Default settings
@@ -172,8 +108,6 @@ local DEFAULT_SETTINGS = {
     
     -- Task Configuration (using preset templates)
     tasks = PRESET_TASK_TEMPLATES,
-    
-
     
     -- General Configuration
     basePrompt = 'As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n',
@@ -195,6 +129,29 @@ local DEFAULT_SETTINGS = {
     formatRaw = true,
     formatTiff = true,
     formatTif = true,
+}
+
+local LAYOUT_SETTINGS = {
+    L1Title = {
+        font = '<system/bold>',
+        color = 'black',
+    },
+    L2Title = {
+        font = '<system/regular>',
+        color = 'black',
+    },
+    L3Title = {
+        font = '<system/regular>',
+        color = 'black',
+    },
+    FieldTitle = { 
+        font = '<system/regular>',
+        color = 'black',
+    },
+    SubTitle = {
+        font = '<system/small>',
+        color = 'grey',
+    },
 }
 
 -- Helper function to normalize boolean values
@@ -235,7 +192,21 @@ local function serializeTasks(tasks)
     if not tasks or #tasks == 0 then
         return dkjson.encode(PRESET_TASK_TEMPLATES)
     end
-    return dkjson.encode(tasks)
+    
+    -- Ensure all tasks have unique IDs before serializing
+    local tasksToSerialize = {}
+    for i, task in ipairs(tasks) do
+        local taskCopy = {}
+        for k, v in pairs(task) do
+            taskCopy[k] = v
+        end
+        if not taskCopy.id then
+            taskCopy.id = tostring(i)
+        end
+        table.insert(tasksToSerialize, taskCopy)
+    end
+    
+    return dkjson.encode(tasksToSerialize)
 end
 
 -- Deserialize tasks from JSON string
@@ -248,6 +219,13 @@ local function deserializeTasks(tasksJson)
     if not success or type(tasks) ~= 'table' then
         logger:warning('Failed to parse tasks JSON, using default tasks')
         return PRESET_TASK_TEMPLATES
+    end
+    
+    -- Ensure all tasks have unique IDs
+    for i, task in ipairs(tasks) do
+        if not task.id then
+            task.id = tostring(i)
+        end
     end
     
     return tasks
@@ -269,6 +247,13 @@ local function loadConfiguration()
         config.tasks = deserializeTasks(tasksJson)
     else
         config.tasks = PRESET_TASK_TEMPLATES
+    end
+    
+    -- Ensure all tasks have unique IDs
+    for i, task in ipairs(config.tasks) do
+        if not task.id then
+            task.id = tostring(i)
+        end
     end
     
     -- Set default imageFormats if not exists
@@ -308,6 +293,7 @@ return {
     DEFAULT_SETTINGS = DEFAULT_SETTINGS,
     FORMAT_DEFINITIONS = FORMAT_DEFINITIONS,
     PRESET_TASK_TEMPLATES = PRESET_TASK_TEMPLATES,
+    LAYOUT_SETTINGS = LAYOUT_SETTINGS,
     toBoolean = toBoolean,
     serializeTasks = serializeTasks,
     deserializeTasks = deserializeTasks,

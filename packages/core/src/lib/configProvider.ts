@@ -72,11 +72,6 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
       throw new Error(`Invalid image formats: ${invalid.join(', ')}. Must be non-empty strings`);
     }
   }
-  
-  // Validate preserveOriginal
-  if (config.preserveOriginal !== undefined && typeof config.preserveOriginal !== 'boolean') {
-    throw new Error('preserveOriginal must be boolean');
-  }
 }
 
 

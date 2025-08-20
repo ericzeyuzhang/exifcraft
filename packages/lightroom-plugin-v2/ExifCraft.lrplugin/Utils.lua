@@ -102,4 +102,13 @@ function Utils.logProcessingStats(totalPhotos, successCount, failureCount, start
     end
 end
 
+function Utils.split(input, sep)
+    local result = {}
+    sep = sep or "%s"  -- 默认用空白符分割
+    for str in string.gmatch(input, "([^" .. sep .. "]+)") do
+        table.insert(result, str)
+    end
+    return result
+end
+
 return Utils
