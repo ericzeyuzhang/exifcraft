@@ -1,115 +1,94 @@
-# ExifCraft
+# ExifCraft - AI-powered EXIF Metadata Crafting Tool
 
-AI-powered EXIF metadata crafting tool for images
+A monorepo containing the core functionality and CLI interface for AI-powered EXIF metadata crafting.
 
-## Features
+## Project Structure
 
-- AI-powered image analysis and metadata generation
-- Support for multiple image formats:
-  - **Standard formats**: JPG, JPEG, TIFF
-  - **RAW formats**: NEF (Nikon), RAF (Fujifilm), CR2 (Canon), ARW (Sony), DNG (Adobe), RAW, ORF (Olympus), RW2 (Panasonic), PEF (Pentax), SRW (Samsung)
-- Configurable AI models (Ollama, OpenAI, Gemini)
-- Batch processing capabilities
-- Dry-run mode for preview
-- Preserve original files option
-- **allowOverwrite control** - Prevent overwriting existing non-empty EXIF tags
-- **Large file handling** - Automatic size checks and warnings for RAW files
+This project is organized as a monorepo with the following packages:
+
+### `packages/core` - Core Functionality
+- **Purpose**: Contains all the core business logic for image processing, AI integration, and EXIF operations
+- **Exports**: All core functions, types, and utilities
+- **Dependencies**: External libraries for AI, EXIF processing, and image conversion
+- **Usage**: Can be imported by other packages (CLI, GUI, plugins, etc.)
+
+### `packages/cli` - Command Line Interface
+- **Purpose**: Provides a command-line interface for the core functionality
+- **Dependencies**: `exifcraft-core` + CLI-specific libraries (commander, chalk)
+- **Usage**: Global npm package for command-line usage
 
 ## Installation
 
+### Development Setup
+
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd exifcraft
+
+# Install dependencies
 npm install
+
+# Build all packages
+npm run build
+
+# Run CLI in development mode
+npm run dev:cli -- --help
 ```
 
-## Usage
-
-### Basic Usage
+### Using the CLI
 
 ```bash
-# Process all images in a directory
-npm run dev -d /path/to/images -c config.ts
+# Install globally (after building)
+npm install -g ./packages/cli
 
-# Process specific files
-npm run dev -f image1.jpg image2.jpeg -c config.ts
-
-# Dry run mode (preview without modifying files)
-npm run dev -d /path/to/images -c config.ts --dry-run
-
-# Verbose output
-npm run dev -d /path/to/images -c config.ts --verbose
+# Or run directly
+npm run dev:cli -- -d /path/to/images -c config.ts
 ```
-
-### Configuration
-
-Create a `config.ts` file with your settings. This provides full TypeScript type checking and autocomplete for EXIF tags:
-
-```typescript
-import type { ExifCraftConfig } from './src/models/types';
-
-const config: ExifCraftConfig = {
-  tasks: [
-    {
-      name: "title",
-      prompt: "Generate a title for this image",
-      tags: [
-        {
-          name: "ImageTitle", // TypeScript provides autocomplete for all available EXIF tags
-          allowOverwrite: true  // Will overwrite existing non-empty values
-        }
-      ]
-    },
-    {
-      name: "description", 
-      prompt: "Describe this image",
-      tags: [
-        {
-          name: "ImageDescription", // TypeScript provides autocomplete for all available EXIF tags
-          allowOverwrite: false  // Will NOT overwrite existing non-empty values
-        }
-      ]
-    }
-  ],
-  aiModel: {
-    provider: "ollama",
-    endpoint: "http://localhost:11434/api/generate",
-    model: "llava",
-    options: {
-      temperature: 0,
-      max_tokens: 500
-    }
-  },
-  imageFormats: [".jpg", ".jpeg", ".nef", ".raf", ".cr2", ".arw", ".dng", ".raw", ".tiff", ".tif"],
-  preserveOriginal: false,
-  basePrompt: "You are a helpful assistant."
-};
-
-export default config;
-```
-
-### allowOverwrite Feature
-
-The `allowOverwrite` field controls whether existing non-empty EXIF tags should be overwritten:
-
-- **`allowOverwrite: true`** - Always overwrite the tag, even if it already has a non-empty value
-- **`allowOverwrite: false`** - Only write to the tag if it's currently empty or doesn't exist
-
-This is useful for:
-- Preserving manually added metadata while filling in missing fields
-- Preventing accidental overwrites of important existing EXIF data
-- Selective updates where you only want to fill gaps in metadata
-
-**Example behavior:**
-- If `ImageTitle` already contains "My Photo" and `allowOverwrite: false`, the new AI-generated title will be skipped
-- If `ImageTitle` is empty and `allowOverwrite: false`, the new AI-generated title will be written
-- If `allowOverwrite: true`, the new AI-generated title will always overwrite the existing value
 
 ## Development
 
-### Building
+### Building Individual Packages
 
 ```bash
+# Build core package only
+npm run build:core
+
+# Build CLI package only
+npm run build:cli
+
+# Build all packages
 npm run build
 ```
+
+### Testing
+
+```bash
+# Run tests for all packages
+npm run test
+
+# Run tests for specific package
+cd packages/cli && npm run test
+```
+
+## Architecture Benefits
+
+1. **Separation of Concerns**: Core logic is separated from interface code
+2. **Reusability**: Core package can be used by multiple interfaces (CLI, GUI, plugins)
+3. **Maintainability**: Each package has a clear responsibility
+4. **Scalability**: Easy to add new interfaces (Electron GUI, Lightroom plugin, etc.)
+
+## Future Extensions
+
+This architecture supports future development of:
+- **Electron Desktop App**: Using the core package with a GUI
+- **Lightroom Plugin**: Integrating with Adobe Lightroom
+- **Web Interface**: Browser-based interface
+- **API Server**: REST API for the core functionality
+
+## Configuration
+
+The CLI package includes a sample configuration file (`config.ts`) that demonstrates how to configure the AI model and EXIF tag generation.
 
 ## License
 

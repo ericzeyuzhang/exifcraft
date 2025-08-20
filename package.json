@@ -1,43 +1,29 @@
 {
-  "name": "exifcraft",
+  "name": "exifcraft-monorepo",
   "version": "1.0.0",
-  "description": "AI-powered EXIF metadata crafting tool for images",
-  "main": "dist/index.js",
-  "bin": {
-    "exifcraft": "./dist/bin/cli.js"
-  },
+  "description": "AI-powered EXIF metadata crafting tool - Monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/bin/cli.js",
-    "dev": "ts-node src/bin/cli.ts",
-    "clean": "rm -rf dist",
-    "demo": "./scripts/demo.sh",
-    "demo-dry": "./scripts/demo.sh --dry-run",
-    "test": "vitest run --config vitest.e2e.config.ts"
+    "build": "npm run build --ws",
+    "clean": "npm run clean --ws",
+    "test": "npm run test --ws",
+    "dev": "npm run dev -w exifcraft-cli",
+    "package:cli": "npm run package -w exifcraft-cli",
+    "package:plugin": "bash packages/lightroom-plugin/package-plugin.sh"
   },
   "keywords": [
     "exif",
     "metadata",
     "ai",
     "image",
-    "cli"
+    "cli",
+    "monorepo"
   ],
   "author": "",
   "license": "MIT",
-  "dependencies": {
-    "axios": "^1.6.0",
-    "chalk": "^5.5.0",
-    "commander": "^14.0.0",
-    "exiftool-vendored": "^30.3.0",
-    "heic-convert": "^2.1.0"
-  },
-  "devDependencies": {
-    "@types/node": "^24.2.1",
-    "@vitest/ui": "^3.2.4",
-    "ts-node": "^10.9.0",
-    "typescript": "^5.3.0",
-    "vitest": "^3.2.4"
-  },
   "engines": {
     "node": ">=14.0.0"
   }

@@ -14,7 +14,7 @@ describe('EXIF Verification E2E Tests', () => {
     
     // Run the actual processing command
     const output = execSync(
-      `node --no-warnings dist/bin/cli.js -d ${demoDir} -c ${configPath} --verbose`,
+      `node --no-warnings dist/cli.js -d ${demoDir} -c ${configPath} --verbose`,
       { 
         encoding: 'utf8',
         stdio: 'pipe'
@@ -84,7 +84,7 @@ describe('EXIF Verification E2E Tests', () => {
     
     // Run processing
     execSync(
-      `node --no-warnings dist/bin/cli.js -d ${demoDir} -c ${configPath} --verbose`,
+      `node --no-warnings dist/cli.js -d ${demoDir} -c ${configPath} --verbose`,
       { stdio: 'pipe' }
     );
     

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { exiftool } from 'exiftool-vendored';
-import { writeExifData, readExifData } from '../../src/lib/exifWriter';
+import { writeExifData, readExifData } from 'exifcraft-core';
 
 describe('allowOverwrite functionality', () => {
   const originalImagePath = path.join(__dirname, '../images/original/DSCF3752.JPG');

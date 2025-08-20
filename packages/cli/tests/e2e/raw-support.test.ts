@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { promises as fs } from 'fs';
 import * as path from 'path';
-import { getFileSizeMB } from '../../src/lib/imageUtils';
+import { getFileSizeMB } from 'exifcraft-core';
 
 describe('RAW Format Support', () => {
   const testDir = path.join(__dirname, 'test-raw-files');

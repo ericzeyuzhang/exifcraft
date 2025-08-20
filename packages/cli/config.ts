@@ -1,5 +1,5 @@
 // TypeScript configuration with runtime validation
-import type { ExifCraftConfig } from './src/models/types';
+import type { ExifCraftConfig } from 'exifcraft-core';
 import { TagNames } from 'exiftool-vendored/dist/Tags.js';
 
 const config: ExifCraftConfig = {

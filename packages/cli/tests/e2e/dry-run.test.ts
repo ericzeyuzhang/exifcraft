@@ -22,7 +22,7 @@ describe('Dry Run E2E Tests', () => {
     
     // Run dry run command
     const output = execSync(
-      `node --no-warnings dist/bin/cli.js -d ${demoDir} -c ${configPath} --dry-run --verbose`,
+      `node --no-warnings dist/cli.js -d ${demoDir} -c ${configPath} --dry-run --verbose`,
       { 
         encoding: 'utf8',
         stdio: 'pipe'
