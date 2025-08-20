@@ -55,7 +55,6 @@ local DEFAULT_SETTINGS = {
     tasks = {
         {
             name = 'title',
-            enabled = true,
             prompt = 'Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ',
             tags = {
                 { name = 'ImageTitle', allowOverwrite = true },
@@ -67,7 +66,6 @@ local DEFAULT_SETTINGS = {
         },
         {
             name = 'description',
-            enabled = true,
             prompt = 'Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ',
             tags = {
                 { name = 'ImageDescription', allowOverwrite = true },
@@ -77,7 +75,6 @@ local DEFAULT_SETTINGS = {
         },
         {
             name = 'keywords',
-            enabled = true,
             prompt = 'Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ',
             tags = {
                 { name = 'Keywords', allowOverwrite = true }

@@ -13,6 +13,7 @@ local unpackFn = table.unpack or unpack
 
 -- Import Config module
 local Config = require 'Config'
+local dkjson = require 'Dkjson'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -147,37 +148,37 @@ end
 -- Helper function to create task UI for a single task
 local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
     return viewFactory:group_box {
-        title = task.name or ("Task " .. taskIndex),
+        title = "",
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
+        bind_to_object = task,
         
         viewFactory:row {
             spacing = viewFactory:label_spacing(),
             fill_horizontal = 1,
+
+            viewFactory:static_text {
+                title = "Name:",
+                width = 60,
+            },
             
-            viewFactory:checkbox {
-                title = "Enabled",
-                value = LrView.bind {
-                    key = 'tasks',
-                    transform = function(value, fromTable)
-                        if fromTable then
-                            if value and value[taskIndex] then
-                                return value[taskIndex].enabled
-                            end
-                            return false
-                        else
-                            if dialogProps.tasks and dialogProps.tasks[taskIndex] then
-                                dialogProps.tasks[taskIndex].enabled = value
-                            end
-                            return LrBinding.kUnsupportedDirection
-                        end
-                    end,
-                },
-                checked_value = true,
-                unchecked_value = false,
+            viewFactory:edit_field {
+                value = LrView.bind('name'),
+                immediate = true,
+                -- width_in_chars = 50,
+                height_in_lines = 1,
+                fill_horizontal = 1,
+            },
+
+            viewFactory:push_button {
+                title = "Delete",
+                width = 80,
+                action = function()
+                    table.remove(dialogProps.tasks, taskIndex)
+                end,
             },
         },
-        
+
         viewFactory:row {
             spacing = viewFactory:label_spacing(),
             fill_horizontal = 1,
@@ -188,24 +189,26 @@ local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
             },
             
             viewFactory:edit_field {
-                value = LrView.bind {
-                    key = 'tasks',
-                    transform = function(value, fromTable)
-                        if fromTable then
-                            if value and value[taskIndex] then
-                                return value[taskIndex].prompt or ''
-                            end
-                            return ''
-                        else
-                            if dialogProps.tasks and dialogProps.tasks[taskIndex] then
-                                dialogProps.tasks[taskIndex].prompt = value
-                            end
-                            return LrBinding.kUnsupportedDirection
-                        end
-                    end,
-                },
+                value = LrView.bind('prompt'),
                 immediate = true,
                 height_in_lines = 2,
+                fill_horizontal = 1,
+            },
+        },
+
+        viewFactory:row {
+            spacing = viewFactory:label_spacing(),
+            fill_horizontal = 1,
+            
+            viewFactory:static_text {
+                title = "Tags:",
+                width = 60,
+            },
+
+            viewFactory:edit_field {
+                value = LrView.bind('name'),
+                immediate = true,
+                height_in_lines = 1,
                 fill_horizontal = 1,
             },
         },
@@ -213,16 +216,17 @@ local function createTaskUI(viewFactory, dialogProps, taskIndex, task)
 end
 
 -- Create Task Configuration UI
-local function createTaskSection(viewFactory, dialogProps, context)
+local function createTaskSection(viewFactory, dialogProps)
     -- Initialize tasks if not present
     if not dialogProps.tasks then
         dialogProps.tasks = Config.DEFAULT_SETTINGS.tasks
     end
-    
+
     local taskUIs = {}
     
     -- Create UI for each task
     for i, task in ipairs(dialogProps.tasks or {}) do
+        logger:info('Creating task UI for task ' .. i, 'with name ' .. task.name)
         table.insert(taskUIs, createTaskUI(viewFactory, dialogProps, i, task))
     end
     
@@ -236,56 +240,29 @@ local function createTaskSection(viewFactory, dialogProps, context)
             font = '<system/bold/14>',
             fill_horizontal = 1,
         },
-        
-        viewFactory:group_box {
-            title = "",
-            spacing = viewFactory:control_spacing(),
+
+        -- Task list
+        viewFactory:scrolled_view {
             fill_horizontal = 1,
-            
-            -- Task list
-            viewFactory:column {
+            height = 300, 
+            horizontal_scrolling = false,
+            vertical_scrolling = true,
+            content = viewFactory:column {
                 spacing = viewFactory:control_spacing(),
                 fill_horizontal = 1,
                 unpackFn(taskUIs),
             },
-            
-            viewFactory:separator { fill_horizontal = 1 },
-            
-            -- Task management buttons
-            viewFactory:row {
-                spacing = viewFactory:control_spacing(),
-                fill_horizontal = 1,
-                
-                viewFactory:push_button {
-                    title = "Add Custom Task",
-                    action = function()
-                        -- Add a new custom task
-                        local newTask = {
-                            name = 'custom_' .. tostring(os.time()),
-                            enabled = true,
-                            prompt = 'Enter your custom prompt here...',
-                            tags = {
-                                { name = 'Keywords', allowOverwrite = true }
-                            }
-                        }
-                        
-                        if not dialogProps.tasks then
-                            dialogProps.tasks = {}
-                        end
-                        
-                        table.insert(dialogProps.tasks, newTask)
-                        logger:info('Added new custom task: ' .. newTask.name)
-                    end,
-                },
-                
-                viewFactory:push_button {
-                    title = "Reset Tasks to Default",
-                    action = function()
-                        dialogProps.tasks = Config.DEFAULT_SETTINGS.tasks
-                        logger:info('Tasks reset to defaults')
-                    end,
-                },
-            },
+        },
+
+        viewFactory:push_button {
+            title = "Add Task",
+            action = function()
+                table.insert(dialogProps.tasks, {
+                    name = 'New Task',
+                    prompt = 'Enter prompt here...',
+                    tags = 'Enter tags here...',
+                })
+            end,
         },
     }
 end
@@ -659,7 +636,7 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
         fill_vertical = 1,
         
         createAIModelSection(viewFactory, dialogProps),
-        createTaskSection(viewFactory, dialogProps, context),
+        createTaskSection(viewFactory, dialogProps),
         createGeneralSection(viewFactory, dialogProps, supportedFormats, context),
         
         viewFactory:separator { fill_horizontal = 1 },

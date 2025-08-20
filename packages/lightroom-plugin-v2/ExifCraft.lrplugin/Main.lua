@@ -42,8 +42,6 @@ local function showUnifiedDialog()
             dialogProps[key] = value
         end
         
-
-        
         -- Create the main dialog UI  
         local supportedFormats = {}
         for _, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
