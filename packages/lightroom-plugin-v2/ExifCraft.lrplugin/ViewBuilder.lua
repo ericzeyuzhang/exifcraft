@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 
 ViewBuilder.lua
-User interface components for ExifCraft v2
+User interface components for ExifCraft
 
 This module contains all UI creation functions for the configuration dialog.
 
@@ -9,12 +9,16 @@ This module contains all UI creation functions for the configuration dialog.
 
 local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
+local LrDialogs = import 'LrDialogs'
 local unpackFn = table.unpack or unpack
 
 -- Import Config module
-local Config = require 'Config'
-local dkjson = require 'Dkjson'
-local Utils = require 'Utils'
+local ConfigManager = require 'ConfigManager'
+local TaskSerializer = require 'TaskSerializer'
+local Utils = require 'utils.SystemUtils'
+local ViewUtils = require 'utils.ViewUtils'
+local UIFormatConstants = require 'constants.ui.UIFormatConstants'
+local UIStyleConstants = require 'constants.ui.UIStyleConstants'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -22,19 +26,112 @@ if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
 end
 
+local ViewBuilder = {}
+
+-- Adapt unified configuration format to UI dialog properties format
+function ViewBuilder.buildDialogProps(config)
+    return ConfigManager.transformToPropertyTables(config)
+end
+
 -- Create AI Model Configuration UI
 local function createAIModelSection(viewFactory, dialogProps)
+    
+    -- Build rows as children arrays and expand via unpackFn to reduce boilerplate
+    local providerRowChildren = {
+        viewFactory:static_text {
+            title = "Provider:",
+            width = 80,
+        },
+        viewFactory:popup_menu {
+            value = LrView.bind('aiProvider'),
+            items = {
+                { title = "Ollama", value = "ollama" },
+                { title = "OpenAI", value = "openai" },
+                { title = "Gemini", value = "gemini" },
+                { title = "Mock (Testing)", value = "mock" },
+            },
+            -- width_in_chars = 15,
+            fill_horizontal = 1,
+        },
+    }
+
+    local endpointRowChildren = {
+        viewFactory:static_text {
+            title = "Endpoint/API:",
+            width = 80,
+        },
+        viewFactory:edit_field {
+            value = LrView.bind('aiEndpoint'),
+            immediate = true,
+            -- width_in_chars = 35,
+            fill_horizontal = 1,
+        },
+    }
+
+    local modelRowChildren = {
+        viewFactory:static_text {
+            title = "Model:",
+            width = 80,
+        },
+        viewFactory:edit_field {
+            value = LrView.bind('aiModel'),
+            immediate = true,
+            -- width_in_chars = 25,
+            fill_horizontal = 1,
+        },
+    }
+
+    local apiKeyRowChildren = {
+        viewFactory:static_text {
+            title = "API Key:",
+            width = 80,
+        },
+        viewFactory:edit_field {
+            value = LrView.bind('aiApiKey'),
+            immediate = true,
+            -- width_in_chars = 30,
+            fill_horizontal = 1,
+            password = true,
+        },
+    }
+
+    local tempTokensRowChildren = {
+        viewFactory:static_text {
+            title = "Temperature:",
+            width = 80,
+        },
+        viewFactory:edit_field {
+            value = LrView.bind('aiTemperature'),
+            immediate = false,
+            width_in_chars = 8,
+            min = 0.0,
+            max = 1.0,
+            precision = 2,
+            increment = 0.1,
+        },
+        viewFactory:static_text {
+            title = "Max Tokens:",
+            width = 80,
+        },
+        viewFactory:edit_field {
+            value = LrView.bind('aiMaxTokens'),
+            immediate = false,
+            width_in_chars = 8,
+            min = 1,
+            max = 10000,
+            increment = 100,
+        },
+    }
+
     return viewFactory:column {
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
-        
-        -- Section header with prominent styling
-        viewFactory:static_text {
-            title = "AI Model Configuration",
-            font = Config.LAYOUT_SETTINGS.L1Title.font,
-            fill_horizontal = 1,
-        },
-        
+
+        ViewUtils.createSectionHeader(
+            viewFactory, 
+            "AI Model Configuration", 
+            "Configure the AI provider, endpoint, and model parameters."),
+
         viewFactory:group_box {
             title = "",
             spacing = viewFactory:control_spacing(),
@@ -43,109 +140,31 @@ local function createAIModelSection(viewFactory, dialogProps)
             viewFactory:row {
                 spacing = viewFactory:label_spacing(),
                 fill_horizontal = 1,
-                
-                viewFactory:static_text {
-                    title = "Provider:",
-                    width = 80,
-                },
-                
-                viewFactory:popup_menu {
-                    value = LrView.bind('aiProvider'),
-                    items = {
-                        { title = "Ollama", value = "ollama" },
-                        { title = "OpenAI", value = "openai" },
-                        { title = "Gemini", value = "gemini" },
-                        { title = "Mock (Testing)", value = "mock" },
-                    },
-                    -- width_in_chars = 15,
-                    fill_horizontal = 1,
-                },
+                unpackFn(providerRowChildren),
             },
             
             viewFactory:row {
                 spacing = viewFactory:label_spacing(),
                 fill_horizontal = 1,
-
-                viewFactory:static_text {
-                    title = "Endpoint/API:",
-                    width = 80,
-                },
-                
-                viewFactory:edit_field {
-                    value = LrView.bind('aiEndpoint'),
-                    immediate = true,
-                    -- width_in_chars = 35,
-                    fill_horizontal = 1,
-                },
+                unpackFn(endpointRowChildren),
             },
             
             viewFactory:row {
                 spacing = viewFactory:label_spacing(),
                 fill_horizontal = 1,
-
-                viewFactory:static_text {
-                    title = "Model:",
-                    width = 80,
-                },
-                
-                viewFactory:edit_field {
-                    value = LrView.bind('aiModel'),
-                    immediate = true,
-                    -- width_in_chars = 25,
-                    fill_horizontal = 1,
-                },
+                unpackFn(modelRowChildren),
             },
             
             viewFactory:row {
                 spacing = viewFactory:label_spacing(),
                 fill_horizontal = 1,
-
-                viewFactory:static_text {
-                    title = "API Key:",
-                    width = 80,
-                },
-                
-                viewFactory:edit_field {
-                    value = LrView.bind('aiApiKey'),
-                    immediate = true,
-                    -- width_in_chars = 30,
-                    fill_horizontal = 1,
-                    password = true,
-                },
+                unpackFn(apiKeyRowChildren),
             },
             
             viewFactory:row {
                 spacing = viewFactory:label_spacing(),
                 fill_horizontal = 1,
-
-                viewFactory:static_text {
-                    title = "Temperature:",
-                    width = 80,
-                },
-                
-                viewFactory:edit_field {
-                    value = LrView.bind('aiTemperature'),
-                    immediate = false,
-                    width_in_chars = 8,
-                    min = 0.0,
-                    max = 1.0,
-                    precision = 2,
-                    increment = 0.1,
-                },
-                
-                viewFactory:static_text {
-                    title = "Max Tokens:",
-                    width = 80,
-                },
-                
-                viewFactory:edit_field {
-                    value = LrView.bind('aiMaxTokens'),
-                    immediate = false,
-                    width_in_chars = 8,
-                    min = 1,
-                    max = 10000,
-                    increment = 100,
-                },
+                unpackFn(tempTokensRowChildren),
             },
         },
     }
@@ -153,117 +172,127 @@ end
 
 -- Create individual task UI component
 local function createTaskItemUI(viewFactory, dialogProps, taskIndex, taskProp, context)
+    -- Build children arrays for each row to reduce duplication
+    local headerRowChildren = {
+        viewFactory:checkbox {
+            title = "Enable",
+            value = LrView.bind {
+                key = 'enabled',
+                transform = function(value, fromTable)
+                    if fromTable then
+                        logger:info('Task ' .. taskProp.name .. ' checkbox enabled state: ' .. tostring(value))
+                        return value
+                    else
+                        logger:info('Task ' .. taskProp.name .. ' checkbox changed to: ' .. tostring(value))
+                        return value
+                    end
+                end,
+            },
+            checked_value = true,
+            unchecked_value = false,
+        },
+
+        viewFactory:edit_field {
+            value = LrView.bind('name'),
+            immediate = false,
+            fill_horizontal = 1,
+            enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
+            validate = function(value)
+                if value == '' then
+                    return false, 'Enter task name...', 'Name is required'
+                end
+                return true, value, nil
+            end,
+        },
+    }
+
+    local promptRowChildren = {
+        viewFactory:static_text {
+            title = "Prompt:",
+            width = 60, -- Reduced width
+        },
+        viewFactory:edit_field {
+            value = LrView.bind('prompt'),
+            immediate = false,
+            height_in_lines = 3,
+            fill_horizontal = 1,
+            enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
+            validate = function(value)
+                if value == '' then
+                    return false, 'Enter task prompt...', 'Prompt is required'
+                end
+                return true, value, nil
+            end,
+        },
+    }
+
+    local tagsRowChildren = {
+        viewFactory:static_text {
+            title = "Tags:",
+            width = 60, -- Reduced width
+        },
+        viewFactory:edit_field {
+            value = LrView.bind {
+                key = 'tags',
+                transform = function(value, fromTable)
+                    if fromTable then
+                        -- concat tags into a string
+                        local tagNames = {}
+                        for _, tag in ipairs(value) do
+                            table.insert(tagNames, tag.name)
+                        end
+                        return table.concat(tagNames, ',')
+                    else
+                        -- separate tags by commas
+                        local tags = {}
+                        for _, tag in ipairs(Utils.split(value, ',')) do
+                            table.insert(tags, 
+                            { name = tag, allowOverwrite = true })
+                        end
+                        taskProp.tags = tags
+                        return value
+                    end
+                end,
+            },
+            immediate = false,
+            height_in_lines = 1,
+            font = UIStyleConstants.UI_STYLE_CONSTANTS.FieldTitle.font,
+            tooltip = "Comma-separated tag names.",
+            fill_horizontal = 1,
+            enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
+            validate = function(value)
+                if value == '' then
+                    return false, 'Enter task tags...', 'Tags are required'
+                end
+                return true, value, nil
+            end,
+        },
+    }
 
     local groupBox = viewFactory:group_box {
         spacing = 2, -- Reduced spacing between elements within task
         fill_horizontal = 1,
-        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
+        font = UIStyleConstants.UI_STYLE_CONSTANTS.FieldTitle.font,
+        tooltip = "Task settings for this task.",
         bind_to_object = taskProp,
 
         viewFactory:row {
             spacing = 4,
-            viewFactory:checkbox {
-                title = "Enabled",
-                value = LrView.bind {
-                    key = 'enabled',
-                    transform = function(value, fromTable)
-                        if fromTable then
-                            logger:info('Task ' .. taskProp.name .. ' checkbox enabled state: ' .. tostring(value))
-                            return value
-                        else
-                            logger:info('Task ' .. taskProp.name .. ' checkbox changed to: ' .. tostring(value))
-                            return value
-                        end
-                    end,
-                },
-                checked_value = true,
-                unchecked_value = false,
-            },
-
-            viewFactory:edit_field {
-                value = LrView.bind('name'),
-                immediate = false,
-                fill_horizontal = 1,
-                enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
-                validate = function(value)
-                    if value == '' then
-                        return false, 'Enter task name...', 'Name is required'
-                    end
-                    return true, value, nil
-                end,
-            },
+            unpackFn(headerRowChildren),
         },
 
         -- Prompt editing
         viewFactory:row {
             spacing = 4, -- Reduced spacing between label and input
             fill_horizontal = 1,
-            
-            viewFactory:static_text {
-                title = "Prompt:",
-                width = 60, -- Reduced width
-            },
-            
-            viewFactory:edit_field {
-                value = LrView.bind('prompt'),
-                immediate = false,
-                height_in_lines = 3,
-                fill_horizontal = 1,
-                enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
-                validate = function(value)
-                    if value == '' then
-                        return false, 'Enter task prompt...', 'Prompt is required'
-                    end
-                    return true, value, nil
-                end,
-            },
+            unpackFn(promptRowChildren),
         },
         
         -- Tags display (read-only)
         viewFactory:row {
             spacing = 4, -- Reduced spacing between label and input
             fill_horizontal = 1,
-            
-            viewFactory:static_text {
-                title = "Tags:",
-                width = 60, -- Reduced width
-            },
-            
-            viewFactory:edit_field {
-                value = LrView.bind {
-                    key = 'tags',
-                    transform = function(value, fromTable)
-                        if fromTable then
-                            -- concat tags into a string
-                            local tagNames = {}
-                            for _, tag in ipairs(value) do
-                                table.insert(tagNames, tag.name)
-                            end
-                            return table.concat(tagNames, ',')
-                        else
-                            -- separate tags by commas
-                            local tags = {}
-                            for _, tag in ipairs(Utils.split(value, ',')) do
-                                table.insert(tags, 
-                                { name = tag, allowOverwrite = true })
-                            end
-                            taskProp.tags = tags
-                            return value
-                        end
-                    end,
-                },
-                immediate = false,
-                height_in_lines = 1,
-                font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                fill_horizontal = 1,
-                enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
-                validate = function(value)
-                    if value == '' then
-                        return false, 'Enter task tags...', 'Tags are required'
-                    end
-                    return true, value, nil
-                end,
-            },
+            unpackFn(tagsRowChildren),
         }
     }
     
@@ -273,20 +302,7 @@ end
 
 -- Create Task Configuration UI
 local function createTaskSection(viewFactory, dialogProps, context)
-    -- Normalize tasks into property tables to ensure bindings work
-    local sourceTasks = dialogProps.tasks or Config.PRESET_TASK_TEMPLATES
-    local normalizedTasks = {}
-    for i, task in ipairs(sourceTasks) do
-        local taskProps = LrBinding.makePropertyTable(context)
-        taskProps.id = (task and task.id) or tostring(i)
-        taskProps.name = task and task.name or ''
-        taskProps.prompt = task and task.prompt or ''
-        taskProps.tags = task and task.tags or {}
-        taskProps.enabled = task and task.enabled or false
-        taskProps.isCustom = task and task.isCustom or false
-        normalizedTasks[i] = taskProps
-    end
-    dialogProps.tasks = normalizedTasks
+    dialogProps.tasks = ConfigManager.transformToDialogProps(dialogProps.tasks, context)
 
     local taskUIs = {}
     
@@ -300,20 +316,11 @@ local function createTaskSection(viewFactory, dialogProps, context)
         spacing = 4, -- Reduced spacing between tasks
         fill_horizontal = 1,
         bind_to_object = dialogProps,
-        
-        -- Section header
-        viewFactory:static_text {
-            title = "Task Configuration",
-            font = Config.LAYOUT_SETTINGS.L1Title.font,
-            fill_horizontal = 1,
-        },
-        
-        -- Instructions
-        viewFactory:static_text {
-            title = "Select which tasks to enable and customize their prompts. You can edit the prompts for each enabled task.",
-            font = Config.LAYOUT_SETTINGS.SubTitle.font,
-            fill_horizontal = 1,
-        },
+
+        ViewUtils.createSectionHeader(
+            viewFactory, 
+            "Task Configuration", 
+            "Select which tasks to enable and customize their prompts. You can edit the prompts for each enabled task."),
 
         viewFactory:column {
             spacing = 4, -- Reduced spacing between tasks
@@ -324,9 +331,9 @@ local function createTaskSection(viewFactory, dialogProps, context)
 end
 
 -- Create General Configuration UI
-local function createGeneralSection(viewFactory, dialogProps, supportedFormats, context)
+local function createGeneralSection(viewFactory, dialogProps)
     -- Initialize format properties only if not already set from loaded config
-    for _, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
+    for _, formatDefs in pairs(UIFormatConstants.UI_FORMAT_CONSTANTS) do
         for _, formatDef in ipairs(formatDefs) do
             if dialogProps[formatDef.property] == nil then
                 dialogProps[formatDef.property] = true
@@ -339,26 +346,60 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
     local rawFormats = {}
     local tiffFormats = {}
     
-    for _, formatDef in ipairs(Config.FORMAT_DEFINITIONS.Standard) do
+    for _, formatDef in ipairs(UIFormatConstants.UI_FORMAT_CONSTANTS.Standard) do
         table.insert(standardFormats, formatDef.property)
     end
-    for _, formatDef in ipairs(Config.FORMAT_DEFINITIONS.Raw) do
+    for _, formatDef in ipairs(UIFormatConstants.UI_FORMAT_CONSTANTS.Raw) do
         table.insert(rawFormats, formatDef.property)
     end
-    for _, formatDef in ipairs(Config.FORMAT_DEFINITIONS.Tiff) do
+    for _, formatDef in ipairs(UIFormatConstants.UI_FORMAT_CONSTANTS.Tiff) do
         table.insert(tiffFormats, formatDef.property)
     end
     
+    -- Build children arrays for Base Prompt and Other Settings
+    local basePromptChildren = {
+        viewFactory:static_text {
+            title = "Base Prompt:",
+            font = UIStyleConstants.UI_STYLE_CONSTANTS.L2Title.font,
+            width = 80,
+        },
+        viewFactory:edit_field {
+            value = LrView.bind('basePrompt'),
+            immediate = true,
+            height_in_lines = 5,
+            fill_horizontal = 1,
+        },
+    }
+
+    local otherSettingsChildren = {
+        viewFactory:checkbox {
+            title = "Preserve Original Files",
+            value = LrView.bind('preserveOriginal'),
+            checked_value = true,
+            unchecked_value = false,
+        },
+        viewFactory:checkbox {
+            title = "Verbose Logging",
+            value = LrView.bind('verbose'),
+            checked_value = true,
+            unchecked_value = false,
+        },
+        viewFactory:checkbox {
+            title = "Dry Run (Preview Only)",
+            value = LrView.bind('dryRun'),
+            checked_value = true,
+            unchecked_value = false,
+        },
+    }
+
     return viewFactory:column {
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
-        
-        -- Section header with prominent styling
-        viewFactory:static_text {
-            title = "General Configuration",
-            font = Config.LAYOUT_SETTINGS.L1Title.font,
-            fill_horizontal = 1,
-        },
+
+        ViewUtils.createSectionHeader(
+            viewFactory, 
+            "General Configuration", 
+            "Set base prompts, supported formats, and other options."),
         
         viewFactory:row {
             spacing = viewFactory:label_spacing(),
@@ -367,20 +408,7 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
             viewFactory:column {
                 spacing = viewFactory:control_spacing(),
                 fill_horizontal = 1,
-
-                viewFactory:static_text {
-                    title = "Base Prompt:",
-                    font = Config.LAYOUT_SETTINGS.L2Title.font,
-                    width = 80,
-                },
-
-                viewFactory:edit_field {
-                    value = LrView.bind('basePrompt'),
-                    immediate = true,
-                    -- width_in_chars = 50,
-                    height_in_lines = 5,
-                    fill_horizontal = 1,
-                },
+                unpackFn(basePromptChildren),
             },
         },
         
@@ -390,7 +418,7 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
 
             viewFactory:static_text {
                 title = "Image Formats:",
-                font = Config.LAYOUT_SETTINGS.L2Title.font,
+                font = UIStyleConstants.UI_STYLE_CONSTANTS.L2Title.font,
                 fill_horizontal = 1,
             },
 
@@ -404,7 +432,8 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
 
                     viewFactory:checkbox {
                         title = "Standard: ",
-                        font = Config.LAYOUT_SETTINGS.L3Title.font,
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.L3Title.font,
+                        tooltip = "Toggle selection of all standard formats.",
                         value = LrView.bind {
                             keys = standardFormats, 
                             operation = function(_, values, fromTable)
@@ -446,42 +475,30 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
                     },
                 },
 
-                viewFactory:row {
-                    spacing = viewFactory:control_spacing(),
-                    fill_horizontal = 1,
-
-                    viewFactory:checkbox {
-                        title = "jpg",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatJpg'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                    
-                    viewFactory:checkbox {
-                        title = "jpeg",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatJpeg'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                    
-                    viewFactory:checkbox {
-                        title = "heic",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatHeic'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                    
-                    viewFactory:checkbox {
-                        title = "heif",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatHeif'),
-                        checked_value = true,
-                        unchecked_value = false,
+                (function()
+                    local defs = {
+                        { title = "jpg",  bind = 'formatJpg',  tooltip = "Enable processing for JPG files." },
+                        { title = "jpeg", bind = 'formatJpeg', tooltip = "Enable processing for JPEG files." },
+                        { title = "heic", bind = 'formatHeic', tooltip = "Enable processing for HEIC files." },
+                        { title = "heif", bind = 'formatHeif', tooltip = "Enable processing for HEIF files." },
                     }
-                }, 
+                    local children = {}
+                    for _, def in ipairs(defs) do
+                        table.insert(children, viewFactory:checkbox {
+                            title = def.title,
+                            font = UIStyleConstants.UI_STYLE_CONSTANTS.FieldTitle.font,
+                            tooltip = def.tooltip,
+                            value = LrView.bind(def.bind),
+                            checked_value = true,
+                            unchecked_value = false,
+                        })
+                    end
+                    return viewFactory:row {
+                        spacing = viewFactory:control_spacing(),
+                        fill_horizontal = 1,
+                        unpackFn(children),
+                    }
+                end)(), 
 
                 viewFactory:separator { fill_horizontal = 1 },
 
@@ -492,7 +509,8 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
 
                     viewFactory:checkbox {
                         title = "Raw: ",
-                        font = Config.LAYOUT_SETTINGS.L3Title.font,
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.L3Title.font,
+                        tooltip = "Toggle selection of all RAW formats.",
                         value = LrView.bind {
                             keys = rawFormats,
                             operation = function(_, values, fromTable)
@@ -535,66 +553,33 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
                     },
                 },
 
-                viewFactory:row {
-                    spacing = viewFactory:control_spacing(),
-                    fill_horizontal = 1,
-
-                    viewFactory:checkbox {
-                        title = "dng",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatDng'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-
-                    viewFactory:checkbox {
-                        title = "arw",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatArw'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                    
-                    viewFactory:checkbox {
-                        title = "nef",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatNef'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-
-                    viewFactory:checkbox {
-                        title = "cr2",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatCr2'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-
-                    viewFactory:checkbox {
-                        title = "cr3",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatCr3'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-
-                    viewFactory:checkbox {
-                        title = "raw",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatRaw'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-
-                    viewFactory:checkbox {
-                        title = "raf",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatRaf'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                },
+                (function()
+                    local defs = {
+                        { title = "dng", bind = 'formatDng', tooltip = "Enable processing for DNG files." },
+                        { title = "arw", bind = 'formatArw', tooltip = "Enable processing for ARW files." },
+                        { title = "nef", bind = 'formatNef', tooltip = "Enable processing for NEF files." },
+                        { title = "cr2", bind = 'formatCr2', tooltip = "Enable processing for CR2 files." },
+                        { title = "cr3", bind = 'formatCr3', tooltip = "Enable processing for CR3 files." },
+                        { title = "raw", bind = 'formatRaw', tooltip = "Enable processing for RAW files." },
+                        { title = "raf", bind = 'formatRaf', tooltip = "Enable processing for RAF files." },
+                    }
+                    local children = {}
+                    for _, def in ipairs(defs) do
+                        table.insert(children, viewFactory:checkbox {
+                            title = def.title,
+                            font = UIStyleConstants.UI_STYLE_CONSTANTS.FieldTitle.font,
+                            tooltip = def.tooltip,
+                            value = LrView.bind(def.bind),
+                            checked_value = true,
+                            unchecked_value = false,
+                        })
+                    end
+                    return viewFactory:row {
+                        spacing = viewFactory:control_spacing(),
+                        fill_horizontal = 1,
+                        unpackFn(children),
+                    }
+                end)(),
             
                 viewFactory:separator { fill_horizontal = 1 },
 
@@ -605,7 +590,8 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
 
                     viewFactory:checkbox {
                         title = "Tiff: ",
-                        font = Config.LAYOUT_SETTINGS.L3Title.font,
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.L3Title.font,
+                        tooltip = "Toggle selection of all TIFF formats.",
                         value = LrView.bind {
                             keys = tiffFormats,
                             operation = function(_, values, fromTable)
@@ -646,26 +632,28 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
                         unchecked_value = false,
                     },
                 },
-                viewFactory:row {
-                    spacing = viewFactory:control_spacing(),
-                    fill_horizontal = 1,
-
-                    viewFactory:checkbox {
-                        title = "tiff",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatTiff'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-
-                    viewFactory:checkbox {
-                        title = "tif",
-                        font = Config.LAYOUT_SETTINGS.FieldTitle.font,
-                        value = LrView.bind('formatTif'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                },
+                (function()
+                    local defs = {
+                        { title = "tiff", bind = 'formatTiff', tooltip = "Enable processing for TIFF files." },
+                        { title = "tif",  bind = 'formatTif',  tooltip = "Enable processing for TIF files." },
+                    }
+                    local children = {}
+                    for _, def in ipairs(defs) do
+                        table.insert(children, viewFactory:checkbox {
+                            title = def.title,
+                            font = UIStyleConstants.UI_STYLE_CONSTANTS.FieldTitle.font,
+                            tooltip = def.tooltip,
+                            value = LrView.bind(def.bind),
+                            checked_value = true,
+                            unchecked_value = false,
+                        })
+                    end
+                    return viewFactory:row {
+                        spacing = viewFactory:control_spacing(),
+                        fill_horizontal = 1,
+                        unpackFn(children),
+                    }
+                end)(),
             },
             
             viewFactory:column {
@@ -674,34 +662,14 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
 
                 viewFactory:static_text {
                     title = "Others Settings: ",
-                    font = Config.LAYOUT_SETTINGS.L2Title.font,
+                    font = UIStyleConstants.UI_STYLE_CONSTANTS.L2Title.font,
                     fill_horizontal = 1,
                 },
 
                 viewFactory:row {
                     spacing = viewFactory:label_spacing(),
                     fill_horizontal = 1,
-
-                    viewFactory:checkbox {
-                        title = "Preserve Original Files",
-                        value = LrView.bind('preserveOriginal'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                    
-                    viewFactory:checkbox {
-                        title = "Verbose Logging",
-                        value = LrView.bind('verbose'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
-                    
-                    viewFactory:checkbox {
-                        title = "Dry Run (Preview Only)",
-                        value = LrView.bind('dryRun'),
-                        checked_value = true,
-                        unchecked_value = false,
-                    },
+                    unpackFn(otherSettingsChildren),
                 },
             },
         },
@@ -709,24 +677,29 @@ local function createGeneralSection(viewFactory, dialogProps, supportedFormats, 
 end
 
 -- Create the main dialog UI
-local function createMainDialog(viewFactory, dialogProps, supportedFormats, context)
-    -- Left column: AI Model Configuration and General Configuration
+function ViewBuilder.createMainDialog(viewFactory, dialogProps, context)
+    -- Left and Right columns built via arrays then expanded
+    local leftColumnChildren = {
+        createAIModelSection(viewFactory, dialogProps),
+        createGeneralSection(viewFactory, dialogProps),
+    }
+
     local leftColumn = viewFactory:column {
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
         fill_vertical = 1,
-        
-        createAIModelSection(viewFactory, dialogProps),
-        createGeneralSection(viewFactory, dialogProps, supportedFormats, context),
+        unpackFn(leftColumnChildren),
     }
     
-    -- Right column: Task Configuration
+    local rightColumnChildren = {
+        createTaskSection(viewFactory, dialogProps, context),
+    }
+
     local rightColumn = viewFactory:column {
         spacing = viewFactory:control_spacing(),
         fill_horizontal = 1,
         fill_vertical = 1,
-        
-        createTaskSection(viewFactory, dialogProps, context),
+        unpackFn(rightColumnChildren),
     }
     
     -- Main content with two columns
@@ -737,90 +710,102 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
         fill_vertical = 1,
         
         -- Two column layout
-        viewFactory:row {
-            spacing = viewFactory:control_spacing(),
-            fill_horizontal = 1,
-            fill_vertical = 1,
-            
-            -- Left column (50% width)
-            viewFactory:column {
+        (function()
+            local layoutChildren = {
+                -- Left column (40% width)
+                viewFactory:column {
+                    spacing = viewFactory:control_spacing(),
+                    fill_horizontal = 0.4,
+                    fill_vertical = 1,
+                    leftColumn,
+                },
+                -- Right column (60% width)
+                viewFactory:column {
+                    spacing = viewFactory:control_spacing(),
+                    fill_horizontal = 0.6,
+                    fill_vertical = 1,
+                    rightColumn,
+                },
+            }
+            return viewFactory:row {
                 spacing = viewFactory:control_spacing(),
-                fill_horizontal = 0.5,
+                fill_horizontal = 1,
                 fill_vertical = 1,
-                leftColumn,
-            },
-            
-            -- Right column (50% width)
-            viewFactory:column {
-                spacing = viewFactory:control_spacing(),
-                fill_horizontal = 0.5,
-                fill_vertical = 1,
-                rightColumn,
-            },
-        },
+                unpackFn(layoutChildren),
+            }
+        end)(),
         
         viewFactory:separator { fill_horizontal = 1 },
         
-        -- Bottom buttons row
-        viewFactory:row {
-            spacing = viewFactory:control_spacing(),
-            fill_horizontal = 1,
+        -- Bottom buttons row (children array + unpackFn)
+        (function()
+            local buttons = {}
 
-            viewFactory:push_button {
+            table.insert(buttons, viewFactory:push_button {
                 title = "Reset to Defaults",
                 action = function()
-                    -- Reset to default settings (except tasks)
-                    for key, defaultValue in pairs(Config.DEFAULT_SETTINGS) do
-                        if key ~= 'tasks' then
-                            dialogProps[key] = defaultValue
-                        end
-                    end
+                    local confirmChildren = {
+                        viewFactory:static_text {
+                            title = "This will reset all settings and tasks to defaults.",
+                            fill_horizontal = 1,
+                        },
+                        viewFactory:static_text {
+                            title = "Are you sure you want to continue?",
+                            fill_horizontal = 1,
+                        },
+                    }
 
-                    -- Rebuild tasks as property tables to keep bindings alive
-                    local rebuiltTasks = {}
-                    for i, task in ipairs(Config.PRESET_TASK_TEMPLATES) do
-                        local taskProps = LrBinding.makePropertyTable(context)
-                        taskProps.id = task.id or tostring(i)
-                        taskProps.name = task.name
-                        taskProps.prompt = task.prompt
-                        taskProps.tags = task.tags
-                        taskProps.enabled = task.enabled
-                        taskProps.isCustom = task.isCustom
-                        rebuiltTasks[i] = taskProps
-                    end
-                    dialogProps.tasks = rebuiltTasks
+                    local confirmContents = viewFactory:column {
+                        spacing = viewFactory:control_spacing(),
+                        fill_horizontal = 1,
+                        unpackFn(confirmChildren),
+                    }
 
-                    logger:info('Settings and tasks reset to defaults (bindings rebuilt)')
-                end,
-            },
-            
-            viewFactory:push_button {
-                title = "Validate & Save Config",
-                action = function()
-                    -- Build persistable config from dialog props
-                    local configToSave = Config.buildPersistentConfigFromDialogProps(dialogProps)
-                    
-                    -- Validate
-                    local ok, err = Config.validateConfig(configToSave)
-                    if not ok then
-                        import('LrDialogs').showError('Configuration Error', err)
+                    local confirmResult = LrDialogs.presentModalDialog {
+                        title = 'Confirm Reset',
+                        contents = confirmContents,
+                        actionVerb = 'Reset',
+                        cancelVerb = 'Cancel',
+                        width = 420,
+                        height = 120,
+                        resizable = false,
+                        windowStyle = 'modal',
+                    }
+                    if confirmResult == 'cancel' then
                         return
                     end
-
-                    -- Save
-                    Config.saveConfiguration(configToSave)
-                    import('LrDialogs').showBezel('Configuration saved')
+                    local newProps = ConfigManager.resetToDefaults(context)
+                    for k, v in pairs(newProps) do
+                        dialogProps[k] = v
+                    end
+                    logger:info('Settings and tasks reset to defaults via ConfigManager.resetToDefaults')
                 end,
-            },
-            
-            viewFactory:push_button {
+            })
+
+            table.insert(buttons, viewFactory:push_button {
+                title = "Validate & Save Config",
+                action = function()
+                    -- Build, validate and save configuration in one operation
+                    local config = ConfigManager.buildFromDialogProps(dialogProps)
+                    ConfigManager.saveToPrefs(config)
+                    LrDialogs.showBezel('Configuration saved')
+                end,
+            })
+
+            table.insert(buttons, viewFactory:push_button {
                 title = "Test Connection",
                 action = function()
                     logger:info('Testing AI connection...')
                     -- This will be implemented later
                 end,
-            },
-        },
+            })
+
+            return viewFactory:row {
+                spacing = viewFactory:control_spacing(),
+                fill_horizontal = 1,
+                unpackFn(buttons),
+            }
+        end)(),
     }
     
     -- Return the layout
@@ -832,107 +817,5 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
     }
 end
 
--- Example function showing how to create a resizable dialog with equal-width columns
-local function createResizableTwoColumnDialog(viewFactory, dialogProps, context)
-    -- Left column content
-    local leftColumn = viewFactory:column {
-        spacing = viewFactory:control_spacing(),
-        fill_horizontal = 1,
-        fill_vertical = 1,
-        
-        viewFactory:static_text {
-            title = "Left Column",
-            fill_horizontal = 1,
-        },
-        
-        viewFactory:edit_field {
-            value = LrView.bind('leftColumnText'),
-            immediate = true,
-            height_in_lines = 10,
-            fill_horizontal = 1,
-        },
-    }
-    
-    -- Right column content
-    local rightColumn = viewFactory:column {
-        spacing = viewFactory:control_spacing(),
-        fill_horizontal = 1,
-        fill_vertical = 1,
-        
-        viewFactory:static_text {
-            title = "Right Column",
-            fill_horizontal = 1,
-        },
-        
-        viewFactory:edit_field {
-            value = LrView.bind('rightColumnText'),
-            immediate = true,
-            height_in_lines = 10,
-            fill_horizontal = 1,
-        },
-    }
-    
-    -- Main content with resizable two-column layout
-    local content = viewFactory:column {
-        bind_to_object = dialogProps,
-        spacing = viewFactory:control_spacing(),
-        fill_horizontal = 1,
-        fill_vertical = 1,
-        
-        -- Resizable two column layout
-        viewFactory:row {
-            spacing = viewFactory:control_spacing(),
-            fill_horizontal = 1,
-            fill_vertical = 1,
-            
-            -- Left column (always 50% width)
-            viewFactory:column {
-                spacing = viewFactory:control_spacing(),
-                fill_horizontal = 0.5,  -- This ensures equal width distribution
-                fill_vertical = 1,
-                leftColumn,
-            },
-            
-            -- Right column (always 50% width)
-            viewFactory:column {
-                spacing = viewFactory:control_spacing(),
-                fill_horizontal = 0.5,  -- This ensures equal width distribution
-                fill_vertical = 1,
-                rightColumn,
-            },
-        },
-        
-        -- Bottom buttons
-        viewFactory:row {
-            spacing = viewFactory:control_spacing(),
-            fill_horizontal = 1,
-            
-            viewFactory:push_button {
-                title = "OK",
-                action = function()
-                    -- Handle OK action
-                end,
-            },
-            
-            viewFactory:push_button {
-                title = "Cancel",
-                action = function()
-                    -- Handle Cancel action
-                end,
-            },
-        },
-    }
-    
-    return viewFactory:column {
-        fill = 1,
-        fill_horizontal = 1,
-        fill_vertical = 1,
-        content,
-    }
-end
-
 -- Export module
-return {
-    createMainDialog = createMainDialog,
-    createResizableTwoColumnDialog = createResizableTwoColumnDialog,
-}
+return ViewBuilder

@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 
 Main.lua
-Main entry point for ExifCraft v2
+Main entry point for ExifCraft
 
 This script handles the AI-powered EXIF metadata generation for selected photos
 in the Lightroom library, with integrated settings configuration.
@@ -14,7 +14,7 @@ local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
 
 -- Import local modules
-local Config = require 'Config'
+local ConfigManager = require 'ConfigManager'
 local ViewBuilder = require 'ViewBuilder'
 local PhotoProcessor = require 'PhotoProcessor'
 
@@ -31,28 +31,18 @@ local function showUnifiedDialog()
     logger:info('Showing unified settings and processing dialog')
     
     LrFunctionContext.callWithContext("showUnifiedDialog", function(context)
-        local f = LrView.osFactory()
-        local dialogProps = LrBinding.makePropertyTable(context)
+        local viewFactory = LrView.osFactory()
         
-        -- Load configuration
-        local settings = Config.loadConfiguration()
-        
-        -- Initialize bindings with loaded settings
-        for key, value in pairs(settings) do
-            dialogProps[key] = value
-        end
-        
-        -- Create the main dialog UI  
-        local supportedFormats = {}
-        for _, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
-            for _, formatDef in ipairs(formatDefs) do
-                table.insert(supportedFormats, formatDef.format)
-            end
-        end
-        local ui = ViewBuilder.createMainDialog(f, dialogProps, supportedFormats, context)
+        -- Load unified configuration and adapt it for UI
+        local config = ConfigManager.loadFromPrefs()
+        local adaptedConfig = ViewBuilder.buildDialogProps(config)
+        local dialogProps = LrBinding.makePropertyTable(context, adaptedConfig)
+
+        -- Create the main dialog UI
+        local ui = ViewBuilder.createMainDialog(viewFactory, dialogProps, context)
         
         local result = LrDialogs.presentModalDialog {
-            title = 'ExifCraft v2 - Configure & Process',
+            title = 'ExifCraft - Configure & Process',
             contents = ui,
             actionVerb = 'Process',
             cancelVerb = 'Cancel',
@@ -65,16 +55,11 @@ local function showUnifiedDialog()
         }
         
         if result == 'ok' then
-            -- Centralized conversion from dialog props to persistable config
-            local configToSave = Config.buildPersistentConfigFromDialogProps(dialogProps)
+            -- Build and save configuration from dialog properties
+            local config = ConfigManager.buildFromDialogProps(dialogProps)
+            ConfigManager.saveToPrefs(config)
 
-            -- Save configuration
-            Config.saveConfiguration(configToSave)
-
-            -- Start processing with the settings
-            PhotoProcessor.processPhotosWithSettings(configToSave)
-        else
-            logger:info('Processing cancelled by user')
+            PhotoProcessor.process(config)
         end
     end)
 end

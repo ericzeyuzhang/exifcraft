@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 
 Processor.lua
-Core processing logic for ExifCraft v2
+Core processing logic for ExifCraft
 
 This module handles the main photo processing workflow, CLI integration,
 and metadata writing to Lightroom.
@@ -16,9 +16,8 @@ local LrPathUtils = import 'LrPathUtils'
 local LrFileUtils = import 'LrFileUtils'
 
 -- Import local modules
-local Utils = require 'Utils'
-local Config = require 'Config'
-local dkjson = require 'Dkjson'
+local Utils = require 'utils.SystemUtils'
+local Json = require 'utils.Json'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -27,50 +26,18 @@ if not logger then
 end
 
 -- Create configuration JSON for CLI
-local function createConfigJson(settings, tempDir)
-    logger:info('Creating configuration JSON')
+local function createConfigJsonForCLI(settings, tempDir)
+    logger:info('Creating configuration JSON for CLI')
     
-    -- Convert imageFormats string to array
-    local imageFormatsArray = {}
-    for format in settings.imageFormats:gmatch('[^,]+') do
-        table.insert(imageFormatsArray, format:match('^%s*(.-)%s*$')) -- trim whitespace
-    end
-    
-    local config = {
-        tasks = {},
-        aiModel = {
-            provider = settings.aiProvider,
-            endpoint = settings.aiEndpoint,
-            model = settings.aiModel,
-            key = settings.aiApiKey ~= '' and settings.aiApiKey or nil,
-            options = {
-                temperature = tonumber(settings.aiTemperature) or 0,
-                max_tokens = tonumber(settings.aiMaxTokens) or 500,
-            }
-        },
-        imageFormats = imageFormatsArray,
-        preserveOriginal = Config.toBoolean(settings.preserveOriginal),
-        basePrompt = settings.basePrompt,
-    }
-    
-    -- Add enabled tasks from dynamic configuration
-    local enabledTasks = Config.getEnabledTasks(settings.tasks or {})
-    for _, task in ipairs(enabledTasks) do
-        table.insert(config.tasks, {
-            name = task.name,
-            prompt = task.prompt,
-            tags = task.tags -- Already in correct format from Config.lua
-        })
-    end
-    
+    -- Settings is already in unified format, no conversion needed
     local configPath = LrPathUtils.child(tempDir, 'exifcraft_config.json')
-    local configJson = dkjson.encode(config, { indent = true })
+    local configJson = Json.encode(settings, { indent = true })
     
     local file = io.open(configPath, 'w')
     if file then
         file:write(configJson)
         file:close()
-        logger:info('Configuration written to: ' .. configPath)
+        logger:info('CLI configuration written to: ' .. configPath)
         return configPath
     else
         error('Failed to write config file: ' .. tostring(configPath))
@@ -86,7 +53,7 @@ local function parseCliOutput(output)
         return {}
     end
     
-    local success, result = pcall(dkjson.decode, output)
+    local success, result = pcall(Json.decode, output)
     if not success then
         logger:error('Failed to parse CLI output as JSON: ' .. tostring(result))
         return {}
@@ -149,8 +116,8 @@ local function writeMetadataToLightroom(photo, metadata, settings)
 end
 
 -- Process photos with given settings
-local function processPhotosWithSettings(settings)
-    logger:info('=== Starting ExifCraft v2 Processing ===')
+local function process(config)
+    logger:info('=== Starting ExifCraft Processing ===')
     
     -- Get selected photos
     local catalog = LrApp.activeCatalog()
@@ -170,7 +137,7 @@ local function processPhotosWithSettings(settings)
     end
     
     -- Basic validation
-    if not settings.aiEndpoint or settings.aiEndpoint == '' then
+    if not config.aiModel.endpoint or config.aiModel.endpoint == '' then
         LrDialogs.showError('Configuration Error', 'AI endpoint is required')
         return
     end
@@ -185,12 +152,12 @@ local function processPhotosWithSettings(settings)
         local startTime = os.time()
         
         local progressScope = LrProgressScope({
-            title = 'ExifCraft v2 AI Processing',
+            title = 'ExifCraft AI Processing',
         })
         
         local success, errorMessage = pcall(function()
             -- Create config file
-            local configPath = createConfigJson(settings, tempDir)
+            local configPath = createConfigJsonForCLI(config, tempDir)
             local cliPath = Utils.findCliExecutable()
             
             logger:info('Processing ' .. totalPhotos .. ' photos')
@@ -208,14 +175,11 @@ local function processPhotosWithSettings(settings)
                     failureCount = failureCount + 1
                 else
                     -- Check file format
-                    local fileExt = LrPathUtils.extension(photoPath):lower()
+                    local fileExt = LrPathUtils.extension(photoPath):lower():gsub('^%.*', '')
                     local supportedFormats = {}
-                    for format in settings.imageFormats:lower():gmatch('[^,]+') do
-                        local trimmedFormat = format:match('^%s*(.-)%s*$') -- trim whitespace
-                        -- Ensure format starts with dot for comparison with fileExt
-                        if not trimmedFormat:match('^%.') then
-                            trimmedFormat = '.' .. trimmedFormat
-                        end
+                    for format in config.imageFormats:lower():gmatch('[^,]+') do
+                        local trimmedFormat = format:match('^%s*(.-)%s*$')
+                        trimmedFormat = trimmedFormat:gsub('^%.*', '')
                         table.insert(supportedFormats, trimmedFormat)
                     end
                     local isSupported = false
@@ -235,11 +199,11 @@ local function processPhotosWithSettings(settings)
                         local command = string.format('"%s" -f "%s" -c "%s" --output "%s"', 
                             cliPath, photoPath, configPath, outputFile)
                         
-                        if Config.toBoolean(settings.verbose) then
+                        if config.verbose then
                             command = command .. ' -v'
                         end
                         
-                        if Config.toBoolean(settings.dryRun) then
+                        if config.dryRun then
                             command = command .. ' --dry-run'
                         end
                         
@@ -261,7 +225,7 @@ local function processPhotosWithSettings(settings)
                                     -- Parse output and write to Lightroom
                                     local metadata = parseCliOutput(output)
                                     if metadata and next(metadata) then
-                                        local writeSuccess = writeMetadataToLightroom(photo, metadata, settings)
+                                        local writeSuccess = writeMetadataToLightroom(photo, metadata, config)
                                         if writeSuccess then
                                             logger:info('Metadata successfully written to Lightroom')
                                         else
@@ -314,21 +278,20 @@ local function processPhotosWithSettings(settings)
                     'Check the plugin logs for detailed information.',
                     successCount, totalPhotos, failureCount
                 )
-                LrDialogs.showInfo('ExifCraft v2 Processing Summary', message)
+                LrDialogs.showInfo('ExifCraft Processing Summary', message)
             else
-                LrDialogs.showInfo('ExifCraft v2 Processing Complete', 
+                LrDialogs.showInfo('ExifCraft Processing Complete', 
                     string.format('Successfully processed %d image(s)!', successCount))
             end
         end
         
-        logger:info('=== ExifCraft v2 Processing Completed ===')
+        logger:info('=== ExifCraft Processing Completed ===')
     end)
 end
 
 -- Export module
 return {
-    processPhotosWithSettings = processPhotosWithSettings,
-    createConfigJson = createConfigJson,
+    process = process,
     parseCliOutput = parseCliOutput,
     writeMetadataToLightroom = writeMetadataToLightroom,
 }

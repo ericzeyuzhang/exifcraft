@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Package ExifCraft v2 Lightroom Plugin
+# Package ExifCraft Lightroom Plugin
 # This script creates a distributable package of the plugin
 
 set -e
@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$SCRIPT_DIR/ExifCraft.lrplugin"
 DIST_DIR="$SCRIPT_DIR/dist"
 
-echo "=== Packaging ExifCraft v2 Lightroom Plugin ==="
+echo "=== Packaging ExifCraft Lightroom Plugin ==="
 echo "Plugin directory: $PLUGIN_DIR"
 echo "Distribution directory: $DIST_DIR"
 
@@ -19,7 +19,7 @@ REQUIRED_FILES=(
     "Info.lua"
     "Init.lua"
     "Main.lua"
-    "Config.lua"
+    "ConfigManager.lua"
     "ViewBuilder.lua"
     "PhotoProcessor.lua"
     "Utils.lua"
@@ -42,7 +42,7 @@ LUA_FILES=(
     "Info.lua"
     "Init.lua"
     "Main.lua"
-    "Config.lua"
+    "ConfigManager.lua"
     "ViewBuilder.lua"
     "PhotoProcessor.lua"
     "Utils.lua"
@@ -133,7 +133,7 @@ fi
 # Create archive with version info
 cd "$DIST_DIR"
 CURRENT_BUILD=$(grep -o 'build = [0-9]*' ExifCraft.lrplugin/Info.lua | grep -o '[0-9]*')
-ARCHIVE_NAME="ExifCraft-v2.0.0-build${CURRENT_BUILD}-$(date +%Y%m%d).zip"
+ARCHIVE_NAME="ExifCraft-0.0.1-build${CURRENT_BUILD}-$(date +%Y%m%d).zip"
 zip -r "$ARCHIVE_NAME" ExifCraft.lrplugin/
 
 echo "Plugin packaged successfully!"

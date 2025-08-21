@@ -1,7 +1,7 @@
 --[[----------------------------------------------------------------------------
 
 Init.lua
-Initialization script for ExifCraft v2 plugin
+Initialization script for ExifCraft plugin
 
 This script runs when the plugin is loaded and sets up global variables
 and logging infrastructure.
@@ -11,11 +11,11 @@ and logging infrastructure.
 local LrLogger = import 'LrLogger'
 
 -- Create and configure the main logger
-local logger = LrLogger('ExifCraftV2')
+local logger = LrLogger('ExifCraft')
 logger:enable("logfile")
 
 -- Log plugin initialization
-logger:info('=== ExifCraft v2 Plugin Initialization ===')
+logger:info('=== ExifCraft Plugin Initialization ===')
 logger:info('Plugin path: ' .. _PLUGIN.path)
 logger:info('Plugin ID: ' .. _PLUGIN.id)
 logger:info('Main entry point: Main.lua')
