@@ -1,0 +1,77 @@
+{
+  "tasks": [
+    {
+      "id": "1",
+      "name": "Image Title",
+      "prompt": "Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
+      "tags": [
+        { "name": "ImageTitle", "allowOverwrite": true },
+        { "name": "XPTitle", "allowOverwrite": true },
+        { "name": "ObjectName", "allowOverwrite": true },
+        { "name": "Title", "allowOverwrite": true }
+      ],
+      "enabled": true,
+      "isCustom": false
+    },
+    {
+      "id": "2",
+      "name": "Image Description",
+      "prompt": "Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
+      "tags": [
+        { "name": "ImageDescription", "allowOverwrite": true },
+        { "name": "Description", "allowOverwrite": true },
+        { "name": "Caption-Abstract", "allowOverwrite": true }
+      ],
+      "enabled": true,
+      "isCustom": false
+    },
+    {
+      "id": "3",
+      "name": "Keywords",
+      "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
+      "tags": [
+        { "name": "Keywords", "allowOverwrite": true }
+      ],
+      "enabled": true,
+      "isCustom": false
+    },
+    {
+      "id": "4",
+      "name": "Location",
+      "prompt": "Identify the location, place, or setting shown in this image. If it's a recognizable landmark, city, or specific location, please provide the name. If it's a generic location, describe the type of place (e.g., \"mountain landscape\", \"urban street\", \"beach\"). ",
+      "tags": [
+        { "name": "Location", "allowOverwrite": true },
+        { "name": "SubLocation", "allowOverwrite": true },
+        { "name": "City", "allowOverwrite": true },
+        { "name": "State", "allowOverwrite": true },
+        { "name": "Country", "allowOverwrite": true }
+      ],
+      "enabled": false,
+      "isCustom": false
+    },
+    {
+      "id": "5",
+      "name": "Subject",
+      "prompt": "Identify the main subject(s) in this image. This could be people, animals, objects, or scenes. Describe who or what is the primary focus of the photograph. ",
+      "tags": [
+        { "name": "Subject", "allowOverwrite": true },
+        { "name": "ObjectName", "allowOverwrite": true }
+      ],
+      "enabled": false,
+      "isCustom": false
+    }
+  ],
+  "aiModel": {
+    "provider": "ollama",
+    "endpoint": "http://erics-mac-mini.local:11434/api/generate",
+    "model": "llava",
+    "key": null,
+    "options": {
+      "temperature": 0,
+      "max_tokens": 500
+    }
+  },
+  "imageFormats": ["jpg", "jpeg", "heic", "heif", "nef", "raf", "cr2", "cr3", "arw", "dng", "raw", "tiff", "tif"],
+  "preserveOriginal": false,
+  "basePrompt": "As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n"
+}
