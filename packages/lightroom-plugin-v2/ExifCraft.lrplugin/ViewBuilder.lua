@@ -325,10 +325,12 @@ end
 
 -- Create General Configuration UI
 local function createGeneralSection(viewFactory, dialogProps, supportedFormats, context)
-    -- Initialize format properties with defaults
+    -- Initialize format properties only if not already set from loaded config
     for _, formatDefs in pairs(Config.FORMAT_DEFINITIONS) do
         for _, formatDef in ipairs(formatDefs) do
-            dialogProps[formatDef.property] = true
+            if dialogProps[formatDef.property] == nil then
+                dialogProps[formatDef.property] = true
+            end
         end
     end
     
@@ -789,6 +791,25 @@ local function createMainDialog(viewFactory, dialogProps, supportedFormats, cont
                     dialogProps.tasks = rebuiltTasks
 
                     logger:info('Settings and tasks reset to defaults (bindings rebuilt)')
+                end,
+            },
+            
+            viewFactory:push_button {
+                title = "Validate & Save Config",
+                action = function()
+                    -- Build persistable config from dialog props
+                    local configToSave = Config.buildPersistentConfigFromDialogProps(dialogProps)
+                    
+                    -- Validate
+                    local ok, err = Config.validateConfig(configToSave)
+                    if not ok then
+                        import('LrDialogs').showError('Configuration Error', err)
+                        return
+                    end
+
+                    -- Save
+                    Config.saveConfiguration(configToSave)
+                    import('LrDialogs').showBezel('Configuration saved')
                 end,
             },
             

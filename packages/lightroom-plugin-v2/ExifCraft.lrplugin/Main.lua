@@ -65,30 +65,12 @@ local function showUnifiedDialog()
         }
         
         if result == 'ok' then
-            -- Convert property tables back to regular tables for saving
-            local configToSave = {}
-            for key, value in pairs(dialogProps) do
-                if key == 'tasks' then
-                    -- Convert task property tables to regular tables
-                    configToSave.tasks = {}
-                    for i, taskProp in ipairs(dialogProps.tasks) do
-                        configToSave.tasks[i] = {
-                            id = taskProp.id,
-                            name = taskProp.name,
-                            prompt = taskProp.prompt,
-                            tags = taskProp.tags,
-                            enabled = taskProp.enabled,
-                            isCustom = taskProp.isCustom
-                        }
-                    end
-                else
-                    configToSave[key] = value
-                end
-            end
-            
+            -- Centralized conversion from dialog props to persistable config
+            local configToSave = Config.buildPersistentConfigFromDialogProps(dialogProps)
+
             -- Save configuration
             Config.saveConfiguration(configToSave)
-            
+
             -- Start processing with the settings
             PhotoProcessor.processPhotosWithSettings(configToSave)
         else
