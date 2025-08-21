@@ -101,6 +101,14 @@ async function processImage(
   const allowOverwriteMap: Record<string, boolean> = {};
   
   for (const taskConfig of config.tasks) {
+    // Skip disabled tasks (Lightroom plugin integration)
+    if (taskConfig.enabled === false) {
+      if (verbose) {
+        console.log(`-- Skipping disabled task [${taskConfig.name}]`);
+      }
+      continue;
+    }
+    
     if (verbose) {
       console.log(`-- Processing [${taskConfig.name}] task...`);
     }

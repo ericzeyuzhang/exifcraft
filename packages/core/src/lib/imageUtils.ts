@@ -10,9 +10,15 @@ const heicConvert = require('heic-convert');
  * Filter array of file paths to only include supported formats
  */
 export function filterSupportedFiles(filePaths: string[], supportedFormats: string[]): string[] {
+  const normalized = new Set(
+    (supportedFormats || []).map(f => {
+      const s = String(f).trim().toLowerCase();
+      return s.startsWith('.') ? s : `.${s}`;
+    })
+  );
   return filePaths.filter(filePath => {
     const ext = path.extname(filePath).toLowerCase();
-    return supportedFormats.includes(ext);
+    return normalized.has(ext);
   });
 }
 
@@ -37,7 +43,13 @@ export async function getImageFiles(directory: string, supportedFormats: string[
       
       if (stat.isFile()) {
         const ext = path.extname(file).toLowerCase();
-        if (supportedFormats.includes(ext)) {
+        const normalized = new Set(
+          (supportedFormats || []).map(f => {
+            const s = String(f).trim().toLowerCase();
+            return s.startsWith('.') ? s : `.${s}`;
+          })
+        );
+        if (normalized.has(ext)) {
           imageFiles.push(filePath);
         }
       }

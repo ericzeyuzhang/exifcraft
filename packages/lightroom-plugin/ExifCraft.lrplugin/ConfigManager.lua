@@ -14,8 +14,8 @@ local LrBinding = import 'LrBinding'
 -- Import configuration modules
 local Json = require 'utils.Json'
 local DefaultConfigProvider = require 'DefaultConfigProvider'
-local UIFormatConstants = require 'constants.ui.UIFormatConstants'
-local SystemUtils = require 'utils.SystemUtils'
+local UIFormatConstants = require 'UIFormatConstants'
+local SystemUtils = require 'SystemUtils'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -43,19 +43,15 @@ local function buildTasksConfig(taskProps)
         end
 
         tasksConfig[i] = {
-            id = taskProp.id or tostring(i),
             name = taskProp.name or '',
             prompt = taskProp.prompt or '',
             tags = tags,
             enabled = taskProp.enabled and true or false,
-            isCustom = taskProp.isCustom and true or false,
         }
     end
 
     return tasksConfig
 end
-
-local toBoolean = SystemUtils.toBoolean
 
 -- Parse persistent configuration JSON back to unified config format (internal)
 local function parseFromJson(configJson)
@@ -136,15 +132,15 @@ function ConfigManager.buildFromDialogProps(dialogProps)
         key = dialogProps.aiApiKey ~= '' and dialogProps.aiApiKey or nil,
         options = {
             temperature = tonumber(dialogProps.aiTemperature) or 0,
-            max_tokens = tonumber(dialogProps.aiMaxTokens) or 500,
+            maxTokens = tonumber(dialogProps.aiMaxTokens) or 500,
         }
     }
 
     -- General settings (flattened structure)
     config.basePrompt = dialogProps.basePrompt
-    config.preserveOriginal = toBoolean(dialogProps.preserveOriginal)
-    config.verbose = toBoolean(dialogProps.verbose)
-    config.dryRun = toBoolean(dialogProps.dryRun)
+    config.preserveOriginal = SystemUtils.toBoolean(dialogProps.preserveOriginal)
+    config.verbose = SystemUtils.toBoolean(dialogProps.verbose)
+    config.dryRun = SystemUtils.toBoolean(dialogProps.dryRun)
 
     -- Image formats as array
     local selectedFormats = {}
@@ -180,7 +176,7 @@ function ConfigManager.transformToDialogProps(config, context)
         
         if config.aiModel.options then
             dialogProps.aiTemperature = config.aiModel.options.temperature or 0
-            dialogProps.aiMaxTokens = config.aiModel.options.max_tokens or 500
+            dialogProps.aiMaxTokens = config.aiModel.options.maxTokens or 500
         else
             dialogProps.aiTemperature = 0
             dialogProps.aiMaxTokens = 500

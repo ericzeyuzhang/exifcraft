@@ -8,43 +8,43 @@ Provides font and layout constants used by the plugin UI.
 ------------------------------------------------------------------------------]]
 
 local UI_STYLE_CONSTANTS = {
-    L1Title = {
+    l1_title = {
         font = '<system/bold>',
         color = 'black',
     },
-    L2Title = {
+    l2_title = {
         font = '<system/small/bold>',
         color = 'black',
     },
-    L3Title = {
+    l3_title = {
         font = '<system/regular>',
         color = 'black',
     },
-    FieldTitle = {
+    field_title = {
         font = '<system/regular>',
         color = 'black',
     },
-    SubTitle = {
+    sub_title = {
         font = '<system/small>',
         color = 'grey',
     },
-    Spacing = {
-        titleToSubtitle = 2,
-        Tight = 2,
-        Compact = 4,
+    spacing = {
+        title_to_subtitle = 2,
+        tight = 2,
+        compact = 4,
     },
-    Dimensions = {
-        LabelWidthDefault = 80,
-        LabelWidthNarrow = 60,
-        NumericFieldWidthChars = 8,
-        ConfirmDialog = { width = 420, height = 120 },
+    dimensions = {
+        label_width_default = 80,
+        label_width_narrow = 60,
+        numeric_field_width_chars = 8,
+        confirm_dialog = { width = 420, height = 120 },
     },
-    Layout = {
-        SplitLeftRatio = 0.4,
-        Lines = {
-            BasePrompt = 5,
-            TaskPrompt = 3,
-            Tags = 1,
+    layout = {
+        split_left_ratio = 0.4,
+        lines = {
+            base_prompt = 5,
+            task_prompt = 3,
+            tags = 1,
         },
     },
 }

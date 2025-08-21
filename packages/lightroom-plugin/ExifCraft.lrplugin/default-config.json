@@ -68,7 +68,7 @@
     "key": null,
     "options": {
       "temperature": 0,
-      "max_tokens": 500
+      "maxTokens": 500
     }
   },
   "imageFormats": ["jpg", "jpeg", "heic", "heif", "nef", "raf", "cr2", "cr3", "arw", "dng", "raw", "tiff", "tif"],

@@ -13,6 +13,7 @@ export interface TaskConfig {
   name: string;
   tags: TagConfig[];
   prompt: string;
+  enabled?: boolean;
 }
 
 export interface AIModelConfig {
@@ -33,6 +34,10 @@ export interface ExifCraftConfig {
   imageFormats: string[];
   preserveOriginal: boolean;
   basePrompt?: string;
+  // For Lightroom plugin only
+  verbose?: boolean;
+  // For Lightroom plugin only
+  dryRun?: boolean;
 }
 
 

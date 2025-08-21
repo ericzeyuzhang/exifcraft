@@ -68,7 +68,7 @@ const config: ExifCraftConfig = {
       max_tokens: 500
     }
   },
-  imageFormats: [".jpg", ".jpeg"],
+  imageFormats: ["jpg", "jpeg"],
   preserveOriginal: false,
   basePrompt: "As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n"
 };

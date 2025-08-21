@@ -10,13 +10,13 @@ and metadata writing to Lightroom.
 
 local LrDialogs = import 'LrDialogs'
 local LrTasks = import 'LrTasks'
-local LrApp = import 'LrApplication'
+local LrApplication = import 'LrApplication'
 local LrProgressScope = import 'LrProgressScope'
 local LrPathUtils = import 'LrPathUtils'
 local LrFileUtils = import 'LrFileUtils'
 
 -- Import local modules
-local Utils = require 'utils.SystemUtils'
+local SystemUtils = require 'utils.SystemUtils'
 local Json = require 'utils.Json'
 
 -- Use global logger
@@ -70,7 +70,7 @@ end
 
 -- Write metadata to Lightroom photo
 local function writeMetadataToLightroom(photo, metadata, settings)
-    logger:info('Writing metadata to Lightroom photo: ' .. tostring(photo:getRawMetadata('fileName')))
+    logger:info('Writing metadata to Lightroom photo: ' .. tostring(photo:get_raw_metadata('file_name')))
     
     local success = true
     
@@ -120,10 +120,10 @@ local function process(config)
     logger:info('=== Starting ExifCraft Processing ===')
     
     -- Get selected photos
-    local catalog = LrApp.activeCatalog()
+    local catalog = LrApplication.activeCatalog()
     if not catalog then
         logger:error('Failed to get active catalog')
-        LrDialogs.showError('Error', 'Failed to get active catalog')
+        LrDialogs.show_error('Error', 'Failed to get active catalog')
         return
     end
     
@@ -132,19 +132,19 @@ local function process(config)
     
     if #photos == 0 then
         logger:warn('No photos selected')
-        LrDialogs.showWarning('No Photos Selected', 'Please select one or more photos to process.')
+        LrDialogs.show_warning('No Photos Selected', 'Please select one or more photos to process.')
         return
     end
     
     -- Basic validation
     if not config.aiModel.endpoint or config.aiModel.endpoint == '' then
-        LrDialogs.showError('Configuration Error', 'AI endpoint is required')
+        LrDialogs.show_error('Configuration Error', 'AI endpoint is required')
         return
     end
     
     -- Start processing
     LrTasks.startAsyncTask(function()
-        local tempDir = Utils.createTempDirectory('ExifCraft')
+        local tempDir = SystemUtils.createTempDirectory('ExifCraft')
         
         local totalPhotos = #photos
         local successCount = 0
@@ -158,7 +158,7 @@ local function process(config)
         local success, errorMessage = pcall(function()
             -- Create config file
             local configPath = createConfigJsonForCLI(config, tempDir)
-            local cliPath = Utils.findCliExecutable()
+            local cliPath = SystemUtils.findCliExecutable()
             
             logger:info('Processing ' .. totalPhotos .. ' photos')
             progressScope:setPortionComplete(0, totalPhotos)
@@ -177,10 +177,12 @@ local function process(config)
                     -- Check file format
                     local fileExt = LrPathUtils.extension(photoPath):lower():gsub('^%.*', '')
                     local supportedFormats = {}
-                    for format in config.imageFormats:lower():gmatch('[^,]+') do
-                        local trimmedFormat = format:match('^%s*(.-)%s*$')
-                        trimmedFormat = trimmedFormat:gsub('^%.*', '')
-                        table.insert(supportedFormats, trimmedFormat)
+                    if type(config.imageFormats) == 'table' then
+                        for _, format in ipairs(config.imageFormats) do
+                            local trimmedFormat = format:lower():match('^%s*(.-)%s*$')
+                            trimmedFormat = trimmedFormat:gsub('^%.*', '')
+                            table.insert(supportedFormats, trimmedFormat)
+                        end
                     end
                     local isSupported = false
                     for _, format in ipairs(supportedFormats) do
@@ -257,10 +259,10 @@ local function process(config)
         end)
         
         -- Cleanup
-        Utils.cleanupTempDirectory(tempDir)
+        SystemUtils.cleanupTempDirectory(tempDir)
         
         -- Log processing statistics
-        Utils.logProcessingStats(totalPhotos, successCount, failureCount, startTime)
+        SystemUtils.logProcessingStats(totalPhotos, successCount, failureCount, startTime)
         
         progressScope:done()
         
@@ -292,6 +294,6 @@ end
 -- Export module
 return {
     process = process,
-    parseCliOutput = parseCliOutput,
-    writeMetadataToLightroom = writeMetadataToLightroom,
+    parse_cli_output = parseCliOutput,
+    write_metadata_to_lightroom = writeMetadataToLightroom,
 }

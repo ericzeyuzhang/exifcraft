@@ -31,27 +31,27 @@ local function showUnifiedDialog()
     logger:info('Showing unified settings and processing dialog')
     
     LrFunctionContext.callWithContext("showUnifiedDialog", function(context)
-        local viewFactory = LrView.osFactory()
+        local f = LrView.osFactory()
         
         -- Load unified configuration and adapt it for UI
         local config = ConfigManager.loadFromPrefs()
-        local adaptedConfig = ViewBuilder.buildDialogProps(config)
+        local adaptedConfig = ConfigManager.transformToDialogProps(config, context)
         local dialogProps = LrBinding.makePropertyTable(context, adaptedConfig)
 
         -- Create the main dialog UI
-        local ui = ViewBuilder.createMainDialog(viewFactory, dialogProps, context)
+        local ui = ViewBuilder.createMainDialog(f, dialogProps, context)
         
         local result = LrDialogs.presentModalDialog {
             title = 'ExifCraft - Configure & Process',
             contents = ui,
-            actionVerb = 'Process',
-            cancelVerb = 'Cancel',
+            action_verb = 'Process',
+            cancel_verb = 'Cancel',
             width = 1000,
             height = 700,
             minimum_width = 1000,
             minimum_height = 700,
             resizable = true,
-            windowStyle = 'palette',
+            window_style = 'palette',
         }
         
         if result == 'ok' then

@@ -20,10 +20,15 @@ REQUIRED_FILES=(
     "Init.lua"
     "Main.lua"
     "ConfigManager.lua"
+    "DefaultConfigProvider.lua"
     "ViewBuilder.lua"
     "PhotoProcessor.lua"
-    "Utils.lua"
-    "Dkjson.lua"
+    "default-config.json"
+    "utils/Json.lua"
+    "utils/SystemUtils.lua"
+    "utils/ViewUtils.lua"
+    "constants/ui/UIFormatConstants.lua"
+    "constants/ui/UIStyleConstants.lua"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -36,30 +41,19 @@ done
 
 echo "Plugin structure validation passed!"
 
-# Validate Lua syntax
+# Validate Lua syntax (recursively)
 echo "Validating Lua syntax..."
-LUA_FILES=(
-    "Info.lua"
-    "Init.lua"
-    "Main.lua"
-    "ConfigManager.lua"
-    "ViewBuilder.lua"
-    "PhotoProcessor.lua"
-    "Utils.lua"
-    "Dkjson.lua"
-)
-
-for file in "${LUA_FILES[@]}"; do
-    echo "Checking syntax: $file"
-    # Use a more comprehensive syntax check
-    if lua -c "$PLUGIN_DIR/$file" 2>&1 | grep -q "syntax error\|unexpected symbol\|missing symbol"; then
-        echo "ERROR: Syntax error in $file"
-        lua -c "$PLUGIN_DIR/$file" 2>&1
+while IFS= read -r -d '' file; do
+    rel="${file#$PLUGIN_DIR/}"
+    echo "Checking syntax: $rel"
+    if lua -c "$file" 2>&1 | grep -q "syntax error\|unexpected symbol\|missing symbol"; then
+        echo "ERROR: Syntax error in $rel"
+        lua -c "$file" 2>&1
         exit 1
     else
-        echo "✓ Syntax OK: $file"
+        echo "✓ Syntax OK: $rel"
     fi
-done
+done < <(find "$PLUGIN_DIR" -type f -name "*.lua" -print0)
 
 echo "Lua syntax validation passed!"
 

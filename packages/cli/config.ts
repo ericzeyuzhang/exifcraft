@@ -68,9 +68,11 @@ const config: ExifCraftConfig = {
       max_tokens: 500
     }
   },
-  imageFormats: [".jpg", ".jpeg", ".nef", ".raf", ".cr2", ".arw", ".dng", ".raw", ".tiff", ".tif", ".heic", ".heif"],
+  imageFormats: ["jpg", "jpeg", "nef", "raf", "cr2", "arw", "dng", "raw", "tiff", "tif", "heic", "heif"],
   preserveOriginal: false,
-  basePrompt: "As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n"
+  basePrompt: "As an assistant of photographer, your job is to generate text to describe a photo given the prompt. Please only return the content of your description without any other text. Here is the prompt: \n",
+  verbose: false,
+  dryRun: false
 };
 
 export default config;

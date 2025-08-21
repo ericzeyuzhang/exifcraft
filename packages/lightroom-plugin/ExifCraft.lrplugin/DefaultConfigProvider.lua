@@ -20,23 +20,23 @@ end
 
 -- Load unified default configuration
 local function loadDefaultConfig()
-    local pluginPath = _PLUGIN.path
-    local configPath = LrPathUtils.child(pluginPath, 'default-config.json')
+    local plugin_path = _PLUGIN.path
+    local config_path = LrPathUtils.child(plugin_path, 'default-config.json')
     
-    logger:info('Loading unified default configuration from: ' .. configPath)
+    logger:info('Loading unified default configuration from: ' .. config_path)
     
-    local jsonContent = LrFileUtils.readFile(configPath)
-    if not jsonContent then
+    local json_content = LrFileUtils.readFile(config_path)
+    if not json_content then
         error('Failed to read default-config.json')
     end
     
-    local ok, config = pcall(Json.decode, jsonContent)
+    local ok, config = pcall(Json.decode, json_content)
     if not ok or type(config) ~= 'table' then
         error('Failed to parse default-config.json: ' .. tostring(config))
     end
     
     logger:info('Successfully loaded unified default configuration')
-    return config, jsonContent
+    return config, json_content
 end
 
 -- Load the unified configuration at module initialization
