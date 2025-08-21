@@ -7,7 +7,9 @@ Provides font and layout constants used by the plugin UI.
 
 ------------------------------------------------------------------------------]]
 
-local UI_STYLE_CONSTANTS = {
+local UIStyleConstants = {}
+
+UIStyleConstants.UI_STYLE_CONSTANTS = {
     l1_title = {
         font = '<system/bold>',
         color = 'black',
@@ -49,8 +51,5 @@ local UI_STYLE_CONSTANTS = {
     },
 }
 
-return {
-    UI_STYLE_CONSTANTS = UI_STYLE_CONSTANTS,
-}
-
+return UIStyleConstants
 

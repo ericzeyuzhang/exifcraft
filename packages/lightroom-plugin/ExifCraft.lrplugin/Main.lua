@@ -14,6 +14,14 @@ local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
 
 -- Import local modules
+do
+    local ok, err = pcall(function() return require('Dkjson') end)
+    if not ok then
+        _G.ExifCraftLogger:error('require Dkjson failed: ' .. tostring(err))
+    else
+        _G.ExifCraftLogger:info('require Dkjson succeeded')
+    end
+end
 local ConfigManager = require 'ConfigManager'
 local ViewBuilder = require 'ViewBuilder'
 local PhotoProcessor = require 'PhotoProcessor'

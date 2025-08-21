@@ -12,7 +12,7 @@ local LrPrefs = import 'LrPrefs'
 local LrBinding = import 'LrBinding'
 
 -- Import configuration modules
-local Json = require 'utils.Json'
+local Dkjson = require 'Dkjson'
 local DefaultConfigProvider = require 'DefaultConfigProvider'
 local UIFormatConstants = require 'UIFormatConstants'
 local SystemUtils = require 'SystemUtils'
@@ -62,7 +62,7 @@ local function parseFromJson(configJson)
     end
     
     local success, config = pcall(function()
-        return Json.decode(configJson)
+        return Dkjson.decode(configJson)
     end)
     
     if not success or type(config) ~= 'table' then
@@ -114,7 +114,7 @@ function ConfigManager.saveToPrefs(config)
     end
     
     -- Create and save JSON configuration (config is already in unified format)
-    local configJson = Json.encode(config, { indent = true })
+    local configJson = Dkjson.encode(config, { indent = true })
     prefs.configJson = configJson
     
     logger:info('Configuration saved to preferences as JSON')

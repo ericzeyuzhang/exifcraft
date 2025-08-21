@@ -8,9 +8,10 @@ It's designed to be safely imported by any module without causing circular depen
 
 ------------------------------------------------------------------------------]]
 
-local Json = require 'utils.Json'
 local LrPathUtils = import 'LrPathUtils'
 local LrFileUtils = import 'LrFileUtils'
+
+local Dkjson = require 'Dkjson'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -30,7 +31,7 @@ local function loadDefaultConfig()
         error('Failed to read default-config.json')
     end
     
-    local ok, config = pcall(Json.decode, json_content)
+    local ok, config = pcall(Dkjson.decode, json_content)
     if not ok or type(config) ~= 'table' then
         error('Failed to parse default-config.json: ' .. tostring(config))
     end

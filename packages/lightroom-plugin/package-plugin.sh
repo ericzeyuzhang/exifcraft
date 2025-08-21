@@ -24,11 +24,11 @@ REQUIRED_FILES=(
     "ViewBuilder.lua"
     "PhotoProcessor.lua"
     "default-config.json"
-    "utils/Json.lua"
-    "utils/SystemUtils.lua"
-    "utils/ViewUtils.lua"
-    "constants/ui/UIFormatConstants.lua"
-    "constants/ui/UIStyleConstants.lua"
+    "Dkjson.lua"
+    "SystemUtils.lua"
+    "ViewUtils.lua"
+    "UIFormatConstants.lua"
+    "UIStyleConstants.lua"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -66,6 +66,10 @@ rm -rf "$DIST_DIR/ExifCraft.lrplugin"
 # Copy plugin files
 echo "Copying plugin files..."
 cp -r "$PLUGIN_DIR" "$DIST_DIR/"
+
+# Remove deprecated directories from dist to avoid Lightroom loading old paths
+rm -rf "$DIST_DIR/ExifCraft.lrplugin/utils" || true
+rm -rf "$DIST_DIR/ExifCraft.lrplugin/constants" || true
 
 # Create CLI binary directory
 mkdir -p "$DIST_DIR/ExifCraft.lrplugin/bin"

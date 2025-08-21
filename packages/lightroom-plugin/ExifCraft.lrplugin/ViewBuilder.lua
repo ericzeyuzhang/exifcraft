@@ -297,6 +297,7 @@ end
 -- Create Task Configuration UI
 local function createTaskSection(f, dialogProps, context)
     local taskUis = {}
+    dialogProps.tasks = dialogProps.tasks or {}
     
     -- Create UI for each task
     for i, taskProp in ipairs(dialogProps.tasks) do

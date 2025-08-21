@@ -16,8 +16,8 @@ local LrPathUtils = import 'LrPathUtils'
 local LrFileUtils = import 'LrFileUtils'
 
 -- Import local modules
-local SystemUtils = require 'utils.SystemUtils'
-local Json = require 'utils.Json'
+local SystemUtils = require 'SystemUtils'
+local Dkjson = require 'Dkjson'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -31,7 +31,7 @@ local function createConfigJsonForCLI(settings, tempDir)
     
     -- Settings is already in unified format, no conversion needed
     local configPath = LrPathUtils.child(tempDir, 'exifcraft_config.json')
-    local configJson = Json.encode(settings, { indent = true })
+    local configJson = Dkjson.encode(settings, { indent = true })
     
     local file = io.open(configPath, 'w')
     if file then
@@ -53,7 +53,7 @@ local function parseCliOutput(output)
         return {}
     end
     
-    local success, result = pcall(Json.decode, output)
+    local success, result = pcall(Dkjson.decode, output)
     if not success then
         logger:error('Failed to parse CLI output as JSON: ' .. tostring(result))
         return {}
