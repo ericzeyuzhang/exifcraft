@@ -34,7 +34,7 @@ function Dkjson.encode(data, state)
     local indent_str = indent:rep(level)
     local next_indent = indent:rep(level + 1)
     
-    if #tbl == 0 then
+    if next(tbl) == nil then
       return '{}'
     end
     

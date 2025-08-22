@@ -66,7 +66,7 @@ local function showUnifiedDialog()
         if result == 'ok' then
             logger:info('Main.lua: user clicked ok')
             -- Save user changes to preferences
-            DialogPropsTransformer.saveDialogProps(dialogProps)
+            DialogPropsTransformer.persistToPrefs(dialogProps)
             
             -- Reload the saved configuration in correct format for processing
             logger:info('Main.lua: loading config')

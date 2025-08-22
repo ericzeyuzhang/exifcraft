@@ -37,9 +37,6 @@ function PrefsManager.loadConfig()
     if config then
         logger:info('Configuration loaded from JSON preferences')
         logger:info('Config Json: ' .. prefs.config_json)
-        logger:info('Config: ' .. ConfigParser.encodeToJson(config))
-        logger:info('Config AI Model: ' .. config.aiModel.provider)
-        logger:info('Config AI Model Key: ' .. config.aiModel.model)
     else
         logger:error('Failed to parse JSON configuration, falling back to defaults')
     end
@@ -61,36 +58,6 @@ function PrefsManager.saveConfig(config)
         return false
     end
     
-    logger:info('PrefsManager: Saving configuration: ' .. config.aiModel.provider .. ' ' .. config.aiModel.model)
-
-    -- Debug: check config structure before encoding
-    logger:info('PrefsManager: Config type: ' .. type(config))
-    logger:info('PrefsManager: Config tasks type: ' .. type(config.tasks))
-    logger:info('PrefsManager: Config imageFormats type: ' .. type(config.imageFormats))
-    logger:info('PrefsManager: Config aiModel type: ' .. type(config.aiModel))
-    
-    -- Debug: check if config contains property objects
-    local function inspectTable(t, name, depth)
-        if not t or type(t) ~= 'table' or (depth and depth > 2) then return end
-        for k, v in pairs(t) do
-            local vtype = type(v)
-            if vtype == 'table' then
-                -- Check if this might be a property object
-                local meta = getmetatable(v)
-                if meta then
-                    logger:info('PrefsManager: ' .. (name or 'config') .. '.' .. tostring(k) .. ' has metatable (possibly property object)')
-                else
-                    logger:info('PrefsManager: ' .. (name or 'config') .. '.' .. tostring(k) .. ' is table')
-                    inspectTable(v, (name or 'config') .. '.' .. tostring(k), (depth or 0) + 1)
-                end
-            else
-                logger:info('PrefsManager: ' .. (name or 'config') .. '.' .. tostring(k) .. ' is ' .. vtype .. ' = ' .. tostring(v))
-            end
-        end
-    end
-    
-    inspectTable(config, 'config', 0)
-
     local prefs = LrPrefs.prefsForPlugin()
     
     -- Create and save JSON configuration

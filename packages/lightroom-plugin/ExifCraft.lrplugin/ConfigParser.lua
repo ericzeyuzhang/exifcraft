@@ -13,7 +13,6 @@ local LrFileUtils = import 'LrFileUtils'
 
 -- Import required modules
 local Dkjson = require 'Dkjson'
-local SystemUtils = require 'SystemUtils'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -77,60 +76,30 @@ function ConfigParser.buildTasksConfig(taskProps)
     -- Normalize property tables to plain tables
     local tasksConfig = {}
     for i, taskProp in ipairs(taskProps or {}) do
-        -- Handle both property objects and plain tables
-        local name = taskProp.name
-        local prompt = taskProp.prompt
-        local taskTags = taskProp.tags
-        local enabled = taskProp.enabled
-        
-        -- Extract values from property objects if needed
-        if type(name) == 'table' and name.value ~= nil then
-            name = name.value
-        end
-        if type(prompt) == 'table' and prompt.value ~= nil then
-            prompt = prompt.value
-        end
-        if type(enabled) == 'table' and enabled.value ~= nil then
-            enabled = enabled.value
-        end
-        
         local tags = {}
-        if type(taskTags) == 'table' then
-            -- Handle property objects in tags array
-            local tagsArray = taskTags.value or taskTags
-            for _, tag in ipairs(tagsArray) do
-                if type(tag) == 'table' then
-                    local tagName = tag.name
-                    local tagOverwrite = tag.allowOverwrite
-                    
-                    -- Extract values from property objects if needed
-                    if type(tagName) == 'table' and tagName.value ~= nil then
-                        tagName = tagName.value
-                    end
-                    if type(tagOverwrite) == 'table' and tagOverwrite.value ~= nil then
-                        tagOverwrite = tagOverwrite.value
-                    end
-                    
-                    if tagName and tagName ~= '' then
-                        table.insert(tags, {
-                            name = tagName,
-                            allowOverwrite = (tagOverwrite ~= false),
-                        })
-                    end
+        if type(taskProp.tags) == 'table' then
+            for _, tag in ipairs(taskProp.tags) do
+                if type(tag) == 'table' and tag.name and tag.name ~= '' then
+                    table.insert(tags, {
+                        name = tag.name,
+                        allowOverwrite = (tag.allowOverwrite ~= false),
+                    })
                 end
             end
         end
 
         tasksConfig[i] = {
-            name = tostring(name or ''),
-            prompt = tostring(prompt or ''),
+            name = taskProp.name or '',
+            prompt = taskProp.prompt or '',
             tags = tags,
-            enabled = enabled and true or false,
+            enabled = taskProp.enabled and true or false,
         }
     end
 
     return tasksConfig
 end
+
+
 
 -- Validate configuration structure
 function ConfigParser.validateConfig(config)
@@ -154,56 +123,15 @@ function ConfigParser.validateConfig(config)
     return true, nil
 end
 
--- Deep clean configuration to remove property objects and ensure JSON serializability
-function ConfigParser.deepCleanConfig(config)
-    if not config or type(config) ~= 'table' then
-        return config
-    end
-    
-    local function cleanValue(value)
-        if type(value) ~= 'table' then
-            return value
-        end
-        
-        -- Check if this is a property object (has metatable)
-        local meta = getmetatable(value)
-        if meta then
-            -- This is likely a property object, extract the value
-            if value.value ~= nil then
-                return cleanValue(value.value)
-            else
-                -- Try to convert property object to plain table
-                local cleaned = {}
-                for k, v in pairs(value) do
-                    -- Skip metatable-related keys and functions
-                    if type(k) == 'string' and type(v) ~= 'function' and k ~= '__index' then
-                        cleaned[k] = cleanValue(v)
-                    end
-                end
-                return cleaned
-            end
-        end
-        
-        -- Clean regular tables recursively
-        local cleaned = {}
-        for k, v in pairs(value) do
-            if type(v) ~= 'function' then
-                cleaned[k] = cleanValue(v)
-            end
-        end
-        return cleaned
-    end
-    
-    return cleanValue(config)
-end
-
 -- Encode configuration to JSON string
 function ConfigParser.encodeToJson(config)
-    -- First deep clean the config to remove property objects
-    local cleanedConfig = ConfigParser.deepCleanConfig(config)
+    logger:info('Encoding configuration to JSON')
+    if config and config.aiModel and config.aiModel.provider and config.aiModel.model then
+        logger:info('Config: ' .. config.aiModel.provider .. ' ' .. config.aiModel.model)
+    end
     
     local success, result = pcall(function()
-        return Dkjson.encode(cleanedConfig, { indent = true })
+        return Dkjson.encode(config, { indent = true })
     end)
     
     if not success then

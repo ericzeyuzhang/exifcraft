@@ -785,7 +785,7 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
                 title = "Validate & Save Config",
                 action = function()
                     logger:info('ViewBuilder: Saving configuration...')
-                    DialogPropsTransformer.saveDialogProps(dialogProps)
+                    DialogPropsTransformer.persistToPrefs(dialogProps)
                     logger:info('ViewBuilder: Configuration saved')
                     LrDialogs.showBezel('Configuration saved')
                 end,
