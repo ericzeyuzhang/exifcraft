@@ -29,6 +29,123 @@ end
 
 local ViewBuilder = {}
 
+-- Helper to create a row of format checkboxes from definitions
+local function createFormatCheckboxRow(f, defs)
+    local children = {}
+    for _, def in ipairs(defs) do
+        table.insert(children, f:checkbox {
+            title = def.title,
+            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+            tooltip = def.tooltip,
+            value = LrView.bind(def.bind),
+            checked_value = true,
+            unchecked_value = false,
+        })
+    end
+    return f:row {
+        spacing = f:control_spacing(),
+        fill_horizontal = 1,
+        unpack_fn(children),
+    }
+end
+
+-- Helper to create the two-column layout row
+local function createTwoColumnLayout(f, leftColumn, rightColumn)
+    local layoutChildren = {
+        -- Left column (40% width)
+        f:column {
+            spacing = f:control_spacing(),
+            fill_horizontal = 0.4,
+            fill_vertical = 1,
+            leftColumn,
+        },
+        -- Right column (60% width)
+        f:column {
+            spacing = f:control_spacing(),
+            fill_horizontal = 0.6,
+            fill_vertical = 1,
+            rightColumn,
+        },
+    }
+    return f:row {
+        spacing = f:control_spacing(),
+        fill_horizontal = 1,
+        fill_vertical = 1,
+        unpack_fn(layoutChildren),
+    }
+end
+
+-- Helper to create the bottom buttons row
+local function createBottomButtonsRow(f, dialogProps)
+    local buttons = {}
+
+    table.insert(buttons, f:push_button {
+        title = "Reset to Defaults",
+        action = function()
+            local confirmChildren = {
+                f:static_text {
+                    title = "This will reset all settings and tasks to defaults.",
+                    fill_horizontal = 1,
+                },
+                f:static_text {
+                    title = "Are you sure you want to continue?",
+                    fill_horizontal = 1,
+                },
+            }
+
+            local confirmContents = f:column {
+                spacing = f:control_spacing(),
+                fill_horizontal = 1,
+                unpack_fn(confirmChildren),
+            }
+
+            local confirmResult = LrDialogs.presentModalDialog {
+                title = 'Confirm Reset',
+                contents = confirmContents,
+                actionVerb = 'Reset',
+                cancelVerb = 'Cancel',
+                width = 420,
+                height = 120,
+                resizable = false,
+                window_style = 'modal',
+            }
+            if confirmResult == 'cancel' then
+                return
+            end
+
+            local config, _ = ConfigParser.getDefaultConfig()
+            -- Reset to defaults and update dialog props
+            DialogPropsTransformer.fromConfig(config, dialogProps)
+
+            logger:info('Settings and tasks reset to defaults via DialogPropsTransformer.rst')
+        end,
+    })
+
+    table.insert(buttons, f:push_button {
+        title = "Validate & Save Config",
+        action = function()
+            logger:info('ViewBuilder: Saving configuration...')
+            DialogPropsTransformer.persistToPrefs(dialogProps)
+            logger:info('ViewBuilder: Configuration saved')
+            LrDialogs.showBezel('Configuration saved')
+        end,
+    })
+
+    table.insert(buttons, f:push_button {
+        title = "Test Connection",
+        action = function()
+            logger:info('ViewBuilder: Testing AI connection...')
+            -- This will be implemented later
+        end,
+    })
+
+    return f:row {
+        spacing = f:control_spacing(),
+        fill_horizontal = 1,
+        unpack_fn(buttons),
+    }
+end
+
 -- Create AI Model Configuration UI
 local function createAIModelSection(f)
     
@@ -479,30 +596,12 @@ local function createGeneralSection(f, dialogProps)
                     },
                 },
 
-                (function()
-                    local defs = {
-                        { title = "jpg",  bind = 'formatJpg',  tooltip = "Enable processing for JPG files." },
-                        { title = "jpeg", bind = 'formatJpeg', tooltip = "Enable processing for JPEG files." },
-                        { title = "heic", bind = 'formatHeic', tooltip = "Enable processing for HEIC files." },
-                        { title = "heif", bind = 'formatHeif', tooltip = "Enable processing for HEIF files." },
-                    }
-                    local children = {}
-                    for _, def in ipairs(defs) do
-                        table.insert(children, f:checkbox {
-                            title = def.title,
-                            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
-                            tooltip = def.tooltip,
-                            value = LrView.bind(def.bind),
-                            checked_value = true,
-                            unchecked_value = false,
-                        })
-                    end
-                    return f:row {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(children),
-                    }
-                end)(), 
+                createFormatCheckboxRow(f, {
+                    { title = "jpg",  bind = 'formatJpg',  tooltip = "Enable processing for JPG files." },
+                    { title = "jpeg", bind = 'formatJpeg', tooltip = "Enable processing for JPEG files." },
+                    { title = "heic", bind = 'formatHeic', tooltip = "Enable processing for HEIC files." },
+                    { title = "heif", bind = 'formatHeif', tooltip = "Enable processing for HEIF files." },
+                }), 
 
                 f:separator { fill_horizontal = 1 },
 
@@ -559,33 +658,15 @@ local function createGeneralSection(f, dialogProps)
                     },
                 },
 
-                (function()
-                    local defs = {
-                        { title = "dng", bind = 'formatDng', tooltip = "Enable processing for DNG files." },
-                        { title = "arw", bind = 'formatArw', tooltip = "Enable processing for ARW files." },
-                        { title = "nef", bind = 'formatNef', tooltip = "Enable processing for NEF files." },
-                        { title = "cr2", bind = 'formatCr2', tooltip = "Enable processing for CR2 files." },
-                        { title = "cr3", bind = 'formatCr3', tooltip = "Enable processing for CR3 files." },
-                        { title = "raw", bind = 'formatRaw', tooltip = "Enable processing for RAW files." },
-                        { title = "raf", bind = 'formatRaf', tooltip = "Enable processing for RAF files." },
-                    }
-                    local children = {}
-                    for _, def in ipairs(defs) do
-                        table.insert(children, f:checkbox {
-                            title = def.title,
-                            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
-                            tooltip = def.tooltip,
-                            value = LrView.bind(def.bind),
-                            checked_value = true,
-                            unchecked_value = false,
-                        })
-                    end
-                    return f:row {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(children),
-                    }
-                end)(),
+                createFormatCheckboxRow(f, {
+                    { title = "dng", bind = 'formatDng', tooltip = "Enable processing for DNG files." },
+                    { title = "arw", bind = 'formatArw', tooltip = "Enable processing for ARW files." },
+                    { title = "nef", bind = 'formatNef', tooltip = "Enable processing for NEF files." },
+                    { title = "cr2", bind = 'formatCr2', tooltip = "Enable processing for CR2 files." },
+                    { title = "cr3", bind = 'formatCr3', tooltip = "Enable processing for CR3 files." },
+                    { title = "raw", bind = 'formatRaw', tooltip = "Enable processing for RAW files." },
+                    { title = "raf", bind = 'formatRaf', tooltip = "Enable processing for RAF files." },
+                }),
             
                 f:separator { fill_horizontal = 1 },
 
@@ -640,28 +721,10 @@ local function createGeneralSection(f, dialogProps)
                         unchecked_value = false,
                     },
                 },
-                (function()
-                    local defs = {
-                        { title = "tiff", bind = 'formatTiff', tooltip = "Enable processing for TIFF files." },
-                        { title = "tif",  bind = 'formatTif',  tooltip = "Enable processing for TIF files." },
-                    }
-                    local children = {}
-                    for _, def in ipairs(defs) do
-                        table.insert(children, f:checkbox {
-                            title = def.title,
-                            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
-                            tooltip = def.tooltip,
-                            value = LrView.bind(def.bind),
-                            checked_value = true,
-                            unchecked_value = false,
-                        })
-                    end
-                    return f:row {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(children),
-                    }
-                end)(),
+                createFormatCheckboxRow(f, {
+                    { title = "tiff", bind = 'formatTiff', tooltip = "Enable processing for TIFF files." },
+                    { title = "tif",  bind = 'formatTif',  tooltip = "Enable processing for TIF files." },
+                }),
             },
             
             f:column {
@@ -718,103 +781,12 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
         fill_vertical = 1,
         
         -- Two column layout
-        (function()
-            local layoutChildren = {
-                -- Left column (40% width)
-                f:column {
-                    spacing = f:control_spacing(),
-                    fill_horizontal = 0.4,
-                    fill_vertical = 1,
-                    leftColumn,
-                },
-                -- Right column (60% width)
-                f:column {
-                    spacing = f:control_spacing(),
-                    fill_horizontal = 0.6,
-                    fill_vertical = 1,
-                    rightColumn,
-                },
-            }
-            return f:row {
-                spacing = f:control_spacing(),
-                fill_horizontal = 1,
-                fill_vertical = 1,
-                unpack_fn(layoutChildren),
-            }
-        end)(),
+        createTwoColumnLayout(f, leftColumn, rightColumn),
         
         f:separator { fill_horizontal = 1 },
         
         -- Bottom buttons row (children array + unpack_fn)
-        (function()
-            local buttons = {}
-
-            table.insert(buttons, f:push_button {
-                title = "Reset to Defaults",
-                action = function()
-                    local confirmChildren = {
-                        f:static_text {
-                            title = "This will reset all settings and tasks to defaults.",
-                            fill_horizontal = 1,
-                        },
-                        f:static_text {
-                            title = "Are you sure you want to continue?",
-                            fill_horizontal = 1,
-                        },
-                    }
-
-                    local confirmContents = f:column {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(confirmChildren),
-                    }
-
-                    local confirmResult = LrDialogs.presentModalDialog {
-                        title = 'Confirm Reset',
-                        contents = confirmContents,
-                        actionVerb = 'Reset',
-                        cancelVerb = 'Cancel',
-                        width = 420,
-                        height = 120,
-                        resizable = false,
-                        window_style = 'modal',
-                    }
-                    if confirmResult == 'cancel' then
-                        return
-                    end
-                    
-                    local config, _ = ConfigParser.getDefaultConfig()
-                    -- Reset to defaults and update dialog props
-                    DialogPropsTransformer.fromConfig(config, dialogProps)
-                    
-                    logger:info('Settings and tasks reset to defaults via DialogPropsTransformer.rst')
-                end,
-            })
-
-            table.insert(buttons, f:push_button {
-                title = "Validate & Save Config",
-                action = function()
-                    logger:info('ViewBuilder: Saving configuration...')
-                    DialogPropsTransformer.persistToPrefs(dialogProps)
-                    logger:info('ViewBuilder: Configuration saved')
-                    LrDialogs.showBezel('Configuration saved')
-                end,
-            })
-
-            table.insert(buttons, f:push_button {
-                title = "Test Connection",
-                action = function()
-                    logger:info('ViewBuilder: Testing AI connection...')
-                    -- This will be implemented later
-                end,
-            })
-
-            return f:row {
-                spacing = f:control_spacing(),
-                fill_horizontal = 1,
-                unpack_fn(buttons),
-            }
-        end)(),
+        createBottomButtonsRow(f, dialogProps),
     }
     
     -- Return the layout
