@@ -19,6 +19,7 @@ local SystemUtils = require 'SystemUtils'
 local ViewUtils = require 'ViewUtils'
 local UIFormatConstants = require 'UIFormatConstants'
 local UIStyleConstants = require 'UIStyleConstants'
+local Dkjson = require 'Dkjson'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -166,6 +167,141 @@ local function createAIModelSection(f, dialogProps)
 end
 
 -- Create individual task UI component
+-- Create Task Item UI using flattened properties
+local function createTaskItemUIFlat(f, dialogProps, taskIndex, context)
+    local taskNameKey = 'task_' .. taskIndex .. '_name'
+    local taskPromptKey = 'task_' .. taskIndex .. '_prompt'
+    local taskEnabledKey = 'task_' .. taskIndex .. '_enabled'
+    local taskTagsKey = 'task_' .. taskIndex .. '_tags'
+    
+    -- Build children arrays for each row to reduce duplication
+    local headerRowChildren = {
+        f:checkbox {
+            title = "Enable",
+            value = LrView.bind(taskEnabledKey),
+            checked_value = true,
+            unchecked_value = false,
+        },
+
+        f:edit_field {
+            value = LrView.bind(taskNameKey),
+            immediate = false,
+            fill_horizontal = 1,
+            enabled = LrView.bind(taskEnabledKey), -- Enable/disable based on checkbox
+            validate = function(value)
+                if value == '' then
+                    return false, 'Enter task name...', 'Name is required'
+                end
+                return true, value, nil
+            end,
+        },
+    }
+
+    local promptRowChildren = {
+        f:static_text {
+            title = "Prompt:",
+            width = 60, -- Reduced width
+        },
+        f:edit_field {
+            value = LrView.bind(taskPromptKey),
+            immediate = false,
+            height_in_lines = 3,
+            fill_horizontal = 1,
+            enabled = LrView.bind(taskEnabledKey), -- Enable/disable based on checkbox
+            validate = function(value)
+                if value == '' then
+                    return false, 'Enter task prompt...', 'Prompt is required'
+                end
+                return true, value, nil
+            end,
+        },
+    }
+
+    local tagsRowChildren = {
+        f:static_text {
+            title = "Tags:",
+            width = 60, -- Reduced width
+        },
+        f:edit_field {
+            value = LrView.bind {
+                key = taskTagsKey,
+                transform = function(value, fromTable)
+                    if fromTable then
+                        -- Convert JSON string to comma-separated names
+                        local success, tags = pcall(function()
+                            return Dkjson.decode(value or '[]')
+                        end)
+                        if success and type(tags) == 'table' then
+                            local tag_names = {}
+                            for _, tag in ipairs(tags) do
+                                if tag.name then
+                                    table.insert(tag_names, tag.name)
+                                end
+                            end
+                            return table.concat(tag_names, ',')
+                        end
+                        return ''
+                    else
+                        -- Convert comma-separated names to JSON string
+                        local tags = {}
+                        for _, tag_name in ipairs(SystemUtils.split(value, ',')) do
+                            local trimmed = tag_name:gsub("^%s*(.-)%s*$", "%1") -- trim whitespace
+                            if trimmed ~= '' then
+                                table.insert(tags, { name = trimmed, avoidOverwrite = false })
+                            end
+                        end
+                        local success, jsonString = pcall(function()
+                            return Dkjson.encode(tags)
+                        end)
+                        return success and jsonString or '[]'
+                    end
+                end,
+            },
+            immediate = false,
+            height_in_lines = 1,
+            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+            tooltip = "Comma-separated tag names.",
+            fill_horizontal = 1,
+            enabled = LrView.bind(taskEnabledKey), -- Enable/disable based on checkbox
+            validate = function(value)
+                if value == '' then
+                    return false, 'Enter task tags...', 'Tags are required'
+                end
+                return true, value, nil
+            end,
+        },
+    }
+
+    local groupBox = f:group_box {
+        spacing = 2, -- Reduced spacing between elements within task
+        fill_horizontal = 1,
+        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+        tooltip = "Task settings for this task.",
+        bind_to_object = dialogProps,
+
+        f:row {
+            spacing = 4,
+            unpack_fn(headerRowChildren),
+        },
+
+        -- Prompt editing
+        f:row {
+            spacing = 4, -- Reduced spacing between label and input
+            fill_horizontal = 1,
+            unpack_fn(promptRowChildren),
+        },
+        
+        -- Tags display (editable)
+        f:row {
+            spacing = 4, -- Reduced spacing between label and input
+            fill_horizontal = 1,
+            unpack_fn(tagsRowChildren),
+        },
+    }
+    
+    return groupBox
+end
+
 local function createTaskItemUI(f, dialogProps, taskIndex, taskProp, context)
     -- Build children arrays for each row to reduce duplication
     local headerRowChildren = {
@@ -298,12 +434,12 @@ end
 -- Create Task Configuration UI
 local function createTaskSection(f, dialogProps, context)
     local taskUis = {}
-    dialogProps.tasks = dialogProps.tasks or {}
     
-    -- Create UI for each task
-    for i, taskProp in ipairs(dialogProps.tasks) do
-        logger:info('Creating task UI for task ' .. i .. ' with name ' .. taskProp.name)
-        table.insert(taskUis, createTaskItemUI(f, dialogProps, i, taskProp, context))
+    -- Create UI for all 5 tasks using flattened properties
+    for i = 1, 5 do
+        local taskName = dialogProps['task_' .. i .. '_name'] or ''
+        logger:info('Creating task UI for task ' .. i .. ' with name ' .. taskName)
+        table.insert(taskUis, createTaskItemUIFlat(f, dialogProps, i, context))
     end
     
     return f:column {
