@@ -10,23 +10,23 @@ const config: ExifCraftConfig = {
       tags: [
         {
           name: TagNames.ImageTitle,
-          allowOverwrite: true
+          avoidOverwrite: false
         },
         {
           name: TagNames.ImageDescription, 
-          allowOverwrite: true
+          avoidOverwrite: false
         },
         {
           name: TagNames.XPTitle,
-          allowOverwrite: true
+          avoidOverwrite: false
         }, 
         {
           name: TagNames.ObjectName,
-          allowOverwrite: true
+          avoidOverwrite: false
         }, 
         {
           name: TagNames.Title,
-          allowOverwrite: true
+          avoidOverwrite: false
         }
       ]
     },
@@ -36,15 +36,15 @@ const config: ExifCraftConfig = {
       tags: [
         {
           name: TagNames.ImageDescription,
-          allowOverwrite: true
+          avoidOverwrite: false
         }, 
         {
           name: TagNames.Description,
-          allowOverwrite: true
+          avoidOverwrite: false
         }, 
         {
           name: TagNames['Caption-Abstract'],
-          allowOverwrite: true
+          avoidOverwrite: false
         }
       ]
     },
@@ -54,7 +54,7 @@ const config: ExifCraftConfig = {
       tags: [
         {
           name: TagNames.Keywords,
-          allowOverwrite: true
+          avoidOverwrite: false
         }
       ]
     }

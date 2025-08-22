@@ -4,10 +4,10 @@
       "name": "Image Title",
       "prompt": "Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
       "tags": [
-        { "name": "ImageTitle", "allowOverwrite": true },
-        { "name": "XPTitle", "allowOverwrite": true },
-        { "name": "ObjectName", "allowOverwrite": true },
-        { "name": "Title", "allowOverwrite": true }
+        { "name": "ImageTitle", "avoidOverwrite": false },
+        { "name": "XPTitle", "avoidOverwrite": false },
+        { "name": "ObjectName", "avoidOverwrite": false },
+        { "name": "Title", "avoidOverwrite": false }
       ],
       "enabled": true
     },
@@ -15,9 +15,9 @@
       "name": "Image Description",
       "prompt": "Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
       "tags": [
-        { "name": "ImageDescription", "allowOverwrite": true },
-        { "name": "Description", "allowOverwrite": true },
-        { "name": "Caption-Abstract", "allowOverwrite": true }
+        { "name": "ImageDescription", "avoidOverwrite": false },
+        { "name": "Description", "avoidOverwrite": false },
+        { "name": "Caption-Abstract", "avoidOverwrite": false }
       ],
       "enabled": true
     },
@@ -25,7 +25,7 @@
       "name": "Keywords",
       "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
       "tags": [
-        { "name": "Keywords", "allowOverwrite": true }
+        { "name": "Keywords", "avoidOverwrite": false }
       ],
       "enabled": true
     },
@@ -33,11 +33,11 @@
       "name": "Location",
       "prompt": "Identify the location, place, or setting shown in this image. If it's a recognizable landmark, city, or specific location, please provide the name. If it's a generic location, describe the type of place (e.g., \"mountain landscape\", \"urban street\", \"beach\"). ",
       "tags": [
-        { "name": "Location", "allowOverwrite": true },
-        { "name": "SubLocation", "allowOverwrite": true },
-        { "name": "City", "allowOverwrite": true },
-        { "name": "State", "allowOverwrite": true },
-        { "name": "Country", "allowOverwrite": true }
+        { "name": "Location", "avoidOverwrite": false },
+        { "name": "SubLocation", "avoidOverwrite": false },
+        { "name": "City", "avoidOverwrite": false },
+        { "name": "State", "avoidOverwrite": false },
+        { "name": "Country", "avoidOverwrite": false }
       ],
       "enabled": false
     },
@@ -45,8 +45,8 @@
       "name": "Subject",
       "prompt": "Identify the main subject(s) in this image. This could be people, animals, objects, or scenes. Describe who or what is the primary focus of the photograph. ",
       "tags": [
-        { "name": "Subject", "allowOverwrite": true },
-        { "name": "ObjectName", "allowOverwrite": true }
+        { "name": "Subject", "avoidOverwrite": false },
+        { "name": "ObjectName", "avoidOverwrite": false }
       ],
       "enabled": false
     }

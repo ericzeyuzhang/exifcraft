@@ -242,7 +242,7 @@ local function createTaskItemUI(f, dialogProps, taskIndex, taskProp, context)
                         local tags = {}
                         for _, tag in ipairs(SystemUtils.split(value, ',')) do
                             table.insert(tags, 
-                            { name = tag, allowOverwrite = true })
+                            { name = tag, avoidOverwrite = false })
                         end
                         taskProp.tags = tags
                         return value

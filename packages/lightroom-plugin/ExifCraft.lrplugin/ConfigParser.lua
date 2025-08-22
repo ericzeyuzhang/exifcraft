@@ -82,7 +82,7 @@ function ConfigParser.buildTasksConfig(taskProps)
                 if type(tag) == 'table' and tag.name and tag.name ~= '' then
                     table.insert(tags, {
                         name = tag.name,
-                        allowOverwrite = (tag.allowOverwrite ~= false),
+                        avoidOverwrite = (tag.avoidOverwrite == true),
                     })
                 end
             end

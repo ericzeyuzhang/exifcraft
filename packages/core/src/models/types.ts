@@ -6,7 +6,7 @@ import { TagName } from 'exiftool-vendored/dist/Tags';
 
 export interface TagConfig {
   name: TagName;
-  allowOverwrite: boolean;
+  avoidOverwrite: boolean;
 }
 
 export interface TaskConfig {

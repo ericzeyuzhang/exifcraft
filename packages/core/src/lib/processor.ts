@@ -98,7 +98,7 @@ async function processImage(
   
   // Generate AI response for each prompt and write to EXIF
   const tagsToWrite: Partial<WriteTags> = {};
-  const allowOverwriteMap: Record<string, boolean> = {};
+  const avoidOverwriteMap: Record<string, boolean> = {};
   
   for (const taskConfig of config.tasks) {
     // Skip disabled tasks (Lightroom plugin integration)
@@ -128,7 +128,7 @@ async function processImage(
       // Write response to corresponding EXIF tags
       for (const tagConfig of taskConfig.tags) {
         (tagsToWrite as any)[tagConfig.name] = aiResponse;
-        allowOverwriteMap[tagConfig.name] = tagConfig.allowOverwrite;
+        avoidOverwriteMap[tagConfig.name] = tagConfig.avoidOverwrite;
       }
       
     } catch (error) {
@@ -149,7 +149,7 @@ async function processImage(
 
       }
     } else {
-      await writeExifData(imagePath, tagsToWrite, config.preserveOriginal, verbose, allowOverwriteMap);
+      await writeExifData(imagePath, tagsToWrite, config.preserveOriginal, verbose, avoidOverwriteMap);
     }
   } else {
     console.warn(chalk.yellow(`  Warning: No EXIF data generated`));

@@ -54,8 +54,8 @@ export function validateConfig(config: any): asserts config is ExifCraftConfig {
     
     // Validate tags
     task.tags.forEach((tag: any, j: number) => {
-      if (!tag.name || typeof tag.allowOverwrite !== 'boolean') {
-        throw new Error(`Task[${i}].tag[${j}] must have name and allowOverwrite`);
+      if (!tag.name || typeof tag.avoidOverwrite !== 'boolean') {
+        throw new Error(`Task[${i}].tag[${j}] must have name and avoidOverwrite`);
       }
     });
   });
