@@ -88,7 +88,7 @@ end
 
 
 -- Single Task group UI (flattened keys)
-local function buildTaskItemUIFlat(f, taskIndex)
+local function buildTaskItem(f, taskIndex)
     local taskNameKey = 'task_' .. taskIndex .. '_name'
     local taskPromptKey = 'task_' .. taskIndex .. '_prompt'
     local taskEnabledKey = 'task_' .. taskIndex .. '_enabled'
@@ -101,10 +101,6 @@ local function buildTaskItemUIFlat(f, taskIndex)
             immediate = false,
             fill_horizontal = 1,
             enabled = LrView.bind(taskEnabledKey),
-            validate = function(value)
-                if value == '' then return false, 'Enter task name...', 'Name is required' end
-                return true, value, nil
-            end,
         },
     }
 
@@ -116,10 +112,6 @@ local function buildTaskItemUIFlat(f, taskIndex)
             height_in_lines = 3,
             fill_horizontal = 1,
             enabled = LrView.bind(taskEnabledKey),
-            validate = function(value)
-                if value == '' then return false, 'Enter task prompt...', 'Prompt is required' end
-                return true, value, nil
-            end,
         },
     }
 
@@ -156,10 +148,6 @@ local function buildTaskItemUIFlat(f, taskIndex)
             tooltip = "Comma-separated tag names.",
             fill_horizontal = 1,
             enabled = LrView.bind(taskEnabledKey),
-            validate = function(value)
-                if value == '' then return false, 'Enter task tags...', 'Tags are required' end
-                return true, value, nil
-            end,
         },
     }
 
@@ -179,7 +167,7 @@ function SectionView.buildTaskSection(f)
     local taskUis = {}
     for i = 1, 5 do
         logger:info('Creating task UI for task ' .. i)
-        table.insert(taskUis, buildTaskItemUIFlat(f, i))
+        table.insert(taskUis, buildTaskItem(f, i))
     end
 
     return f:column {
