@@ -12,6 +12,7 @@ local LrDialogs = import 'LrDialogs'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrView = import 'LrView'
 local LrPrefs = import 'LrPrefs'
+local LrBinding = import 'LrBinding'
 
 -- Import local modules
 do
@@ -44,7 +45,11 @@ local function showUnifiedDialog()
         local f = LrView.osFactory()
         
         logger:info('Main.lua: Loading dialog props')
-        local dialogProps = DialogPropsTransformer.loadFromPrefs(context)
+        local loadedProps = DialogPropsTransformer.loadFromPrefs(context)
+        local dialogProps = LrBinding.makePropertyTable(context)
+        for k, v in pairs(loadedProps) do
+            dialogProps[k] = v
+        end
 
         logger:info('Main.lua: starting to build main dialog')
         -- Create the main dialog UI
