@@ -11,7 +11,6 @@ local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
 local LrDialogs = import 'LrDialogs'
 local LrPrefs = import 'LrPrefs'
-local unpack_fn = table.unpack or unpack
 
 -- Import Config modules
 local DialogPropsTransformer = require 'DialogPropsTransformer'
@@ -30,93 +29,6 @@ local ViewBuilder = {}
 
 -- Create AI Model Configuration UI
 local function createAIModelSection(f, dialogProps)
-    
-    -- Build rows as children arrays and expand via unpack_fn to reduce boilerplate
-    local providerRowChildren = {
-        f:static_text {
-            title = "Provider:",
-            width = 80,
-        },
-        f:popup_menu {
-            value = LrView.bind('aiProvider'),
-            items = {
-                { title = "Ollama", value = "ollama" },
-                { title = "OpenAI", value = "openai" },
-                { title = "Gemini", value = "gemini" },
-                { title = "Mock (Testing)", value = "mock" },
-            },
-            -- width_in_chars = 15,
-            fill_horizontal = 1,
-        },
-    }
-
-    local endpointRowChildren = {
-        f:static_text {
-            title = "Endpoint/API:",
-            width = 80,
-        },
-        f:edit_field {
-            value = LrView.bind('aiEndpoint'),
-            immediate = true,
-            -- width_in_chars = 35,
-            fill_horizontal = 1,
-        },
-    }
-
-    local modelRowChildren = {
-        f:static_text {
-            title = "Model:",
-            width = 80,
-        },
-        f:edit_field {
-            value = LrView.bind('aiModel'),
-            immediate = true,
-            -- width_in_chars = 25,
-            fill_horizontal = 1,
-        },
-    }
-
-    local apiKeyRowChildren = {
-        f:static_text {
-            title = "API Key:",
-            width = 80,
-        },
-        f:edit_field {
-            value = LrView.bind('aiApiKey'),
-            immediate = true,
-            -- width_in_chars = 30,
-            fill_horizontal = 1,
-            password = true,
-        },
-    }
-
-    local tempTokensRowChildren = {
-        f:static_text {
-            title = "Temperature:",
-            width = 80,
-        },
-        f:edit_field {
-            value = LrView.bind('aiTemperature'),
-            immediate = false,
-            width_in_chars = 8,
-            min = 0.0,
-            max = 1.0,
-            precision = 2,
-            increment = 0.1,
-        },
-        f:static_text {
-            title = "Max Tokens:",
-            width = 80,
-        },
-        f:edit_field {
-            value = LrView.bind('aiMaxTokens'),
-            immediate = false,
-            width_in_chars = 8,
-            min = 1,
-            max = 10000,
-            increment = 100,
-        },
-    }
 
     return f:column {
         spacing = f:control_spacing(),
@@ -135,31 +47,93 @@ local function createAIModelSection(f, dialogProps)
             f:row {
                 spacing = f:label_spacing(),
                 fill_horizontal = 1,
-                unpack_fn(providerRowChildren),
+                f:static_text {
+                    title = "Provider:",
+                    width = 80,
+                },
+                f:popup_menu {
+                    value = LrView.bind('aiProvider'),
+                    items = {
+                        { title = "Ollama", value = "ollama" },
+                        { title = "OpenAI", value = "openai" },
+                        { title = "Gemini", value = "gemini" },
+                        { title = "Mock (Testing)", value = "mock" },
+                    },
+                    fill_horizontal = 1,
+                },
             },
             
             f:row {
                 spacing = f:label_spacing(),
                 fill_horizontal = 1,
-                unpack_fn(endpointRowChildren),
+                f:static_text {
+                    title = "Endpoint/API:",
+                    width = 80,
+                },
+                f:edit_field {
+                    value = LrView.bind('aiEndpoint'),
+                    immediate = true,
+                    fill_horizontal = 1,
+                },
             },
             
             f:row {
                 spacing = f:label_spacing(),
                 fill_horizontal = 1,
-                unpack_fn(modelRowChildren),
+                f:static_text {
+                    title = "Model:",
+                    width = 80,
+                },
+                f:edit_field {
+                    value = LrView.bind('aiModel'),
+                    immediate = true,
+                    fill_horizontal = 1,
+                },
             },
             
             f:row {
                 spacing = f:label_spacing(),
                 fill_horizontal = 1,
-                unpack_fn(apiKeyRowChildren),
+                f:static_text {
+                    title = "API Key:",
+                    width = 80,
+                },
+                f:edit_field {
+                    value = LrView.bind('aiApiKey'),
+                    immediate = true,
+                    fill_horizontal = 1,
+                    password = true,
+                },
             },
             
             f:row {
                 spacing = f:label_spacing(),
                 fill_horizontal = 1,
-                unpack_fn(tempTokensRowChildren),
+                f:static_text {
+                    title = "Temperature:",
+                    width = 80,
+                },
+                f:edit_field {
+                    value = LrView.bind('aiTemperature'),
+                    immediate = false,
+                    width_in_chars = 8,
+                    min = 0.0,
+                    max = 1.0,
+                    precision = 2,
+                    increment = 0.1,
+                },
+                f:static_text {
+                    title = "Max Tokens:",
+                    width = 80,
+                },
+                f:edit_field {
+                    value = LrView.bind('aiMaxTokens'),
+                    immediate = false,
+                    width_in_chars = 8,
+                    min = 1,
+                    max = 10000,
+                    increment = 100,
+                },
             },
         },
     }
@@ -167,102 +141,6 @@ end
 
 -- Create individual task UI component
 local function createTaskItemUI(f, dialogProps, taskIndex, taskProp, context)
-    -- Build children arrays for each row to reduce duplication
-    local headerRowChildren = {
-        f:checkbox {
-            title = "Enable",
-            value = LrView.bind {
-                key = 'enabled',
-                transform = function(value, fromTable)
-                    if fromTable then
-                        logger:info('Task ' .. taskProp.name .. ' checkbox enabled state: ' .. tostring(value))
-                        return value
-                    else
-                        logger:info('Task ' .. taskProp.name .. ' checkbox changed to: ' .. tostring(value))
-                        return value
-                    end
-                end,
-            },
-            checked_value = true,
-            unchecked_value = false,
-        },
-
-        f:edit_field {
-            value = LrView.bind('name'),
-            immediate = false,
-            fill_horizontal = 1,
-            enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
-            validate = function(value)
-                if value == '' then
-                    return false, 'Enter task name...', 'Name is required'
-                end
-                return true, value, nil
-            end,
-        },
-    }
-
-    local promptRowChildren = {
-        f:static_text {
-            title = "Prompt:",
-            width = 60, -- Reduced width
-        },
-        f:edit_field {
-            value = LrView.bind('prompt'),
-            immediate = false,
-            height_in_lines = 3,
-            fill_horizontal = 1,
-            enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
-            validate = function(value)
-                if value == '' then
-                    return false, 'Enter task prompt...', 'Prompt is required'
-                end
-                return true, value, nil
-            end,
-        },
-    }
-
-    local tagsRowChildren = {
-        f:static_text {
-            title = "Tags:",
-            width = 60, -- Reduced width
-        },
-        f:edit_field {
-            value = LrView.bind {
-                key = 'tags',
-                transform = function(value, fromTable)
-                    if fromTable then
-                        -- concat tags into a string
-                        local tag_names = {}
-                        for _, tag in ipairs(value) do
-                            table.insert(tag_names, tag.name)
-                        end
-                        return table.concat(tag_names, ',')
-                    else
-                        -- separate tags by commas
-                        local tags = {}
-                        for _, tag in ipairs(SystemUtils.split(value, ',')) do
-                            table.insert(tags, 
-                            { name = tag, avoidOverwrite = false })
-                        end
-                        taskProp.tags = tags
-                        return value
-                    end
-                end,
-            },
-            immediate = false,
-            height_in_lines = 1,
-            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
-            tooltip = "Comma-separated tag names.",
-            fill_horizontal = 1,
-            enabled = LrView.bind('enabled'), -- Enable/disable based on checkbox
-            validate = function(value)
-                if value == '' then
-                    return false, 'Enter task tags...', 'Tags are required'
-                end
-                return true, value, nil
-            end,
-        },
-    }
 
     local groupBox = f:group_box {
         spacing = 2, -- Reduced spacing between elements within task
@@ -273,21 +151,104 @@ local function createTaskItemUI(f, dialogProps, taskIndex, taskProp, context)
 
         f:row {
             spacing = 4,
-            unpack_fn(headerRowChildren),
+            f:checkbox {
+                title = "Enable",
+                value = LrView.bind {
+                    key = 'enabled',
+                    transform = function(value, fromTable)
+                        if fromTable then
+                            logger:info('Task ' .. taskProp.name .. ' checkbox enabled state: ' .. tostring(value))
+                            return value
+                        else
+                            logger:info('Task ' .. taskProp.name .. ' checkbox changed to: ' .. tostring(value))
+                            return value
+                        end
+                    end,
+                },
+                checked_value = true,
+                unchecked_value = false,
+            },
+            f:edit_field {
+                value = LrView.bind('name'),
+                immediate = false,
+                fill_horizontal = 1,
+                enabled = LrView.bind('enabled'),
+                validate = function(value)
+                    if value == '' then
+                        return false, 'Enter task name...', 'Name is required'
+                    end
+                    return true, value, nil
+                end,
+            },
         },
 
         -- Prompt editing
         f:row {
-            spacing = 4, -- Reduced spacing between label and input
+            spacing = 4,
             fill_horizontal = 1,
-            unpack_fn(promptRowChildren),
+            f:static_text {
+                title = "Prompt:",
+                width = 60,
+            },
+            f:edit_field {
+                value = LrView.bind('prompt'),
+                immediate = false,
+                height_in_lines = 3,
+                fill_horizontal = 1,
+                enabled = LrView.bind('enabled'),
+                validate = function(value)
+                    if value == '' then
+                        return false, 'Enter task prompt...', 'Prompt is required'
+                    end
+                    return true, value, nil
+                end,
+            },
         },
         
         -- Tags display (read-only)
         f:row {
-            spacing = 4, -- Reduced spacing between label and input
+            spacing = 4,
             fill_horizontal = 1,
-            unpack_fn(tagsRowChildren),
+            f:static_text {
+                title = "Tags:",
+                width = 60,
+            },
+            f:edit_field {
+                value = LrView.bind {
+                    key = 'tags',
+                    transform = function(value, fromTable)
+                        if fromTable then
+                            -- concat tags into a string
+                            local tag_names = {}
+                            for _, tag in ipairs(value) do
+                                table.insert(tag_names, tag.name)
+                            end
+                            return table.concat(tag_names, ',')
+                        else
+                            -- separate tags by commas
+                            local tags = {}
+                            for _, tag in ipairs(SystemUtils.split(value, ',')) do
+                                table.insert(tags, 
+                                { name = tag, avoidOverwrite = false })
+                            end
+                            taskProp.tags = tags
+                            return value
+                        end
+                    end,
+                },
+                immediate = false,
+                height_in_lines = 1,
+                font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                tooltip = "Comma-separated tag names.",
+                fill_horizontal = 1,
+                enabled = LrView.bind('enabled'),
+                validate = function(value)
+                    if value == '' then
+                        return false, 'Enter task tags...', 'Tags are required'
+                    end
+                    return true, value, nil
+                end,
+            },
         }
     }
     
@@ -297,13 +258,13 @@ end
 
 -- Create Task Configuration UI
 local function createTaskSection(f, dialogProps, context)
-    local taskUis = {}
     dialogProps.tasks = dialogProps.tasks or {}
     
-    -- Create UI for each task
+    -- Create static task UI elements
+    local taskElements = {}
     for i, taskProp in ipairs(dialogProps.tasks) do
         logger:info('Creating task UI for task ' .. i .. ' with name ' .. taskProp.name)
-        table.insert(taskUis, createTaskItemUI(f, dialogProps, i, taskProp, context))
+        taskElements[i] = createTaskItemUI(f, dialogProps, i, taskProp, context)
     end
     
     return f:column {
@@ -319,7 +280,12 @@ local function createTaskSection(f, dialogProps, context)
         f:column {
             spacing = 4, -- Reduced spacing between tasks
             fill_horizontal = 1,
-            unpack_fn(taskUis),
+            -- Render tasks statically based on current tasks array
+            taskElements[1], -- First task if it exists
+            taskElements[2], -- Second task if it exists  
+            taskElements[3], -- Third task if it exists
+            taskElements[4], -- Fourth task if it exists
+            taskElements[5], -- Fifth task if it exists
         },
     }
 end
@@ -350,41 +316,7 @@ local function createGeneralSection(f, dialogProps)
         table.insert(tiffFormats, formatDef.property)
     end
     
-    -- Build children arrays for Base Prompt and Other Settings
-    local basePromptChildren = {
-        f:static_text {
-            title = "Base Prompt:",
-            font = UIStyleConstants.UI_STYLE_CONSTANTS.l2_title.font,
-            width = 80,
-        },
-        f:edit_field {
-            value = LrView.bind('basePrompt'),
-            immediate = true,
-            height_in_lines = 5,
-            fill_horizontal = 1,
-        },
-    }
 
-    local otherSettingsChildren = {
-        f:checkbox {
-            title = "Preserve Original Files",
-            value = LrView.bind('preserveOriginal'),
-            checked_value = true,
-            unchecked_value = false,
-        },
-        f:checkbox {
-            title = "Verbose Logging",
-            value = LrView.bind('verbose'),
-            checked_value = true,
-            unchecked_value = false,
-        },
-        f:checkbox {
-            title = "Dry Run (Preview Only)",
-            value = LrView.bind('dryRun'),
-            checked_value = true,
-            unchecked_value = false,
-        },
-    }
 
     return f:column {
         spacing = f:control_spacing(),
@@ -402,7 +334,17 @@ local function createGeneralSection(f, dialogProps)
             f:column {
                 spacing = f:control_spacing(),
                 fill_horizontal = 1,
-                unpack_fn(basePromptChildren),
+                f:static_text {
+                    title = "Base Prompt:",
+                    font = UIStyleConstants.UI_STYLE_CONSTANTS.l2_title.font,
+                    width = 80,
+                },
+                f:edit_field {
+                    value = LrView.bind('basePrompt'),
+                    immediate = true,
+                    height_in_lines = 5,
+                    fill_horizontal = 1,
+                },
             },
         },
         
@@ -469,30 +411,42 @@ local function createGeneralSection(f, dialogProps)
                     },
                 },
 
-                (function()
-                    local defs = {
-                        { title = "jpg",  bind = 'formatJpg',  tooltip = "Enable processing for JPG files." },
-                        { title = "jpeg", bind = 'formatJpeg', tooltip = "Enable processing for JPEG files." },
-                        { title = "heic", bind = 'formatHeic', tooltip = "Enable processing for HEIC files." },
-                        { title = "heif", bind = 'formatHeif', tooltip = "Enable processing for HEIF files." },
-                    }
-                    local children = {}
-                    for _, def in ipairs(defs) do
-                        table.insert(children, f:checkbox {
-                            title = def.title,
-                            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
-                            tooltip = def.tooltip,
-                            value = LrView.bind(def.bind),
-                            checked_value = true,
-                            unchecked_value = false,
-                        })
-                    end
-                    return f:row {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(children),
-                    }
-                end)(), 
+                f:row {
+                    spacing = f:control_spacing(),
+                    fill_horizontal = 1,
+                    f:checkbox {
+                        title = "jpg",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for JPG files.",
+                        value = LrView.bind('formatJpg'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "jpeg",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for JPEG files.",
+                        value = LrView.bind('formatJpeg'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "heic",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for HEIC files.",
+                        value = LrView.bind('formatHeic'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "heif",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for HEIF files.",
+                        value = LrView.bind('formatHeif'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                }, 
 
                 f:separator { fill_horizontal = 1 },
 
@@ -547,33 +501,66 @@ local function createGeneralSection(f, dialogProps)
                     },
                 },
 
-                (function()
-                    local defs = {
-                        { title = "dng", bind = 'formatDng', tooltip = "Enable processing for DNG files." },
-                        { title = "arw", bind = 'formatArw', tooltip = "Enable processing for ARW files." },
-                        { title = "nef", bind = 'formatNef', tooltip = "Enable processing for NEF files." },
-                        { title = "cr2", bind = 'formatCr2', tooltip = "Enable processing for CR2 files." },
-                        { title = "cr3", bind = 'formatCr3', tooltip = "Enable processing for CR3 files." },
-                        { title = "raw", bind = 'formatRaw', tooltip = "Enable processing for RAW files." },
-                        { title = "raf", bind = 'formatRaf', tooltip = "Enable processing for RAF files." },
-                    }
-                    local children = {}
-                    for _, def in ipairs(defs) do
-                        table.insert(children, f:checkbox {
-                            title = def.title,
-                            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
-                            tooltip = def.tooltip,
-                            value = LrView.bind(def.bind),
-                            checked_value = true,
-                            unchecked_value = false,
-                        })
-                    end
-                    return f:row {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(children),
-                    }
-                end)(),
+                f:row {
+                    spacing = f:control_spacing(),
+                    fill_horizontal = 1,
+                    f:checkbox {
+                        title = "dng",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for DNG files.",
+                        value = LrView.bind('formatDng'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "arw",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for ARW files.",
+                        value = LrView.bind('formatArw'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "nef",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for NEF files.",
+                        value = LrView.bind('formatNef'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "cr2",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for CR2 files.",
+                        value = LrView.bind('formatCr2'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "cr3",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for CR3 files.",
+                        value = LrView.bind('formatCr3'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "raw",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for RAW files.",
+                        value = LrView.bind('formatRaw'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "raf",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for RAF files.",
+                        value = LrView.bind('formatRaf'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                },
             
                 f:separator { fill_horizontal = 1 },
 
@@ -626,28 +613,26 @@ local function createGeneralSection(f, dialogProps)
                         unchecked_value = false,
                     },
                 },
-                (function()
-                    local defs = {
-                        { title = "tiff", bind = 'formatTiff', tooltip = "Enable processing for TIFF files." },
-                        { title = "tif",  bind = 'formatTif',  tooltip = "Enable processing for TIF files." },
-                    }
-                    local children = {}
-                    for _, def in ipairs(defs) do
-                        table.insert(children, f:checkbox {
-                            title = def.title,
-                            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
-                            tooltip = def.tooltip,
-                            value = LrView.bind(def.bind),
-                            checked_value = true,
-                            unchecked_value = false,
-                        })
-                    end
-                    return f:row {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(children),
-                    }
-                end)(),
+                f:row {
+                    spacing = f:control_spacing(),
+                    fill_horizontal = 1,
+                    f:checkbox {
+                        title = "tiff",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for TIFF files.",
+                        value = LrView.bind('formatTiff'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "tif",
+                        font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+                        tooltip = "Enable processing for TIF files.",
+                        value = LrView.bind('formatTif'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                },
             },
             
             f:column {
@@ -663,7 +648,24 @@ local function createGeneralSection(f, dialogProps)
                 f:row {
                     spacing = f:label_spacing(),
                     fill_horizontal = 1,
-                    unpack_fn(otherSettingsChildren),
+                    f:checkbox {
+                        title = "Preserve Original Files",
+                        value = LrView.bind('preserveOriginal'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "Verbose Logging",
+                        value = LrView.bind('verbose'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
+                    f:checkbox {
+                        title = "Dry Run (Preview Only)",
+                        value = LrView.bind('dryRun'),
+                        checked_value = true,
+                        unchecked_value = false,
+                    },
                 },
             },
         },
@@ -672,28 +674,19 @@ end
 
 -- Create the main dialog UI
 function ViewBuilder.createMainDialog(f, dialogProps, context)
-    -- Left and Right columns built via arrays then expanded
-    local leftColumnChildren = {
-        createAIModelSection(f, dialogProps),
-        createGeneralSection(f, dialogProps),
-    }
-
     local leftColumn = f:column {
         spacing = f:control_spacing(),
         fill_horizontal = 1,
         fill_vertical = 1,
-        unpack_fn(leftColumnChildren),
+        createAIModelSection(f, dialogProps),
+        createGeneralSection(f, dialogProps),
     }
     
-    local rightColumnChildren = {
-        createTaskSection(f, dialogProps, context),
-    }
-
     local rightColumn = f:column {
         spacing = f:control_spacing(),
         fill_horizontal = 1,
         fill_vertical = 1,
-        unpack_fn(rightColumnChildren),
+        createTaskSection(f, dialogProps, context),
     }
     
     -- Main content with two columns
@@ -704,41 +697,38 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
         fill_vertical = 1,
         
         -- Two column layout
-        (function()
-            local layoutChildren = {
-                -- Left column (40% width)
-                f:column {
-                    spacing = f:control_spacing(),
-                    fill_horizontal = 0.4,
-                    fill_vertical = 1,
-                    leftColumn,
-                },
-                -- Right column (60% width)
-                f:column {
-                    spacing = f:control_spacing(),
-                    fill_horizontal = 0.6,
-                    fill_vertical = 1,
-                    rightColumn,
-                },
-            }
-            return f:row {
+        f:row {
+            spacing = f:control_spacing(),
+            fill_horizontal = 1,
+            fill_vertical = 1,
+            -- Left column (40% width)
+            f:column {
                 spacing = f:control_spacing(),
-                fill_horizontal = 1,
+                fill_horizontal = 0.4,
                 fill_vertical = 1,
-                unpack_fn(layoutChildren),
-            }
-        end)(),
+                leftColumn,
+            },
+            -- Right column (60% width)
+            f:column {
+                spacing = f:control_spacing(),
+                fill_horizontal = 0.6,
+                fill_vertical = 1,
+                rightColumn,
+            },
+        },
         
         f:separator { fill_horizontal = 1 },
         
-        -- Bottom buttons row (children array + unpack_fn)
-        (function()
-            local buttons = {}
-
-            table.insert(buttons, f:push_button {
+        -- Bottom buttons row
+        f:row {
+            spacing = f:control_spacing(),
+            fill_horizontal = 1,
+            f:push_button {
                 title = "Reset to Defaults",
                 action = function()
-                    local confirmChildren = {
+                    local confirmContents = f:column {
+                        spacing = f:control_spacing(),
+                        fill_horizontal = 1,
                         f:static_text {
                             title = "This will reset all settings and tasks to defaults.",
                             fill_horizontal = 1,
@@ -747,12 +737,6 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
                             title = "Are you sure you want to continue?",
                             fill_horizontal = 1,
                         },
-                    }
-
-                    local confirmContents = f:column {
-                        spacing = f:control_spacing(),
-                        fill_horizontal = 1,
-                        unpack_fn(confirmChildren),
                     }
 
                     local confirmResult = LrDialogs.presentModalDialog {
@@ -771,17 +755,23 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
                     
                     -- Reset to defaults and update dialog props
                     local newDialogProps = DialogPropsTransformer.resetToDefaults(context)
-                    
                     -- Update existing dialog props with reset values
+                    
+                    -- Clear old values
+                    for key, _ in pairs(dialogProps) do
+                        dialogProps[key] = nil
+                    end
+
                     for key, value in pairs(newDialogProps) do
+                        logger:info("Old: " .. key .. " | " .. tostring(dialogProps[key]))
                         dialogProps[key] = value
+                        logger:info("New: " .. key .. " | " .. tostring(value))
                     end
                     
                     logger:info('Settings and tasks reset to defaults via DialogPropsTransformer.resetToDefaults')
                 end,
-            })
-
-            table.insert(buttons, f:push_button {
+            },
+            f:push_button {
                 title = "Validate & Save Config",
                 action = function()
                     logger:info('ViewBuilder: Saving configuration...')
@@ -789,22 +779,15 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
                     logger:info('ViewBuilder: Configuration saved')
                     LrDialogs.showBezel('Configuration saved')
                 end,
-            })
-
-            table.insert(buttons, f:push_button {
+            },
+            f:push_button {
                 title = "Test Connection",
                 action = function()
                     logger:info('ViewBuilder: Testing AI connection...')
                     -- This will be implemented later
                 end,
-            })
-
-            return f:row {
-                spacing = f:control_spacing(),
-                fill_horizontal = 1,
-                unpack_fn(buttons),
-            }
-        end)(),
+            },
+        },
     }
     
     -- Return the layout
