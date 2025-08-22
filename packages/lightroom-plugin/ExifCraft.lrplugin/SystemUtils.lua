@@ -64,7 +64,7 @@ end
 
 -- Create a safe temporary directory
 function SystemUtils.createTempDirectory(prefix)
-    local temp_base = LrPathUtils.get_standard_file_path('temp')
+    local temp_base = LrPathUtils.getStandardFilePath('temp')
     local temp_name = (prefix or 'ExifCraft') .. '_' .. os.time() .. '_' .. math.random(1000, 9999)
     local temp_dir = LrPathUtils.child(temp_base, temp_name)
 

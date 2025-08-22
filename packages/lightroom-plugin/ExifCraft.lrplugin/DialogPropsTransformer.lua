@@ -26,12 +26,37 @@ end
 
 local DialogPropsTransformer = {}
 
--- Transform unified configuration to dialog properties
-function DialogPropsTransformer.configToDialogProps(config, context)
-    if not config then
+
+
+
+-- Load dialog properties directly from preferences (optimized)
+function DialogPropsTransformer.loadFromPrefs(context)
+    logger:info('DialogPropsTransformer: Loading dialog props directly from preferences')
+    
+    local prefs = LrPrefs.prefsForPlugin()
+    
+    -- Handle cold start - initialize with defaults
+    if not prefs.config_json or prefs.config_json == '' then
+        logger:info('DialogPropsTransformer: Cold start detected, loading default configuration')
+        prefs.config_json = ConfigParser.getDefaultConfigJson()
+    end
+    
+    -- Parse JSON configuration directly
+    local success, config = pcall(function()
+        return Dkjson.decode(prefs.config_json)
+    end)
+    
+    if not success or type(config) ~= 'table' then
+        logger:error('Failed to parse configuration JSON, returning empty dialog props: ' .. tostring(config))
         return {}
     end
     
+    -- Ensure required fields exist with defaults
+    config.tasks = config.tasks or {}
+    config.imageFormats = config.imageFormats or {}
+    config.aiModel = config.aiModel or {}
+    
+    -- Transform directly to dialog properties (no intermediate config object)
     local dialogProps = {}
     
     -- AI Model Configuration: flatten nested structure
@@ -82,16 +107,8 @@ function DialogPropsTransformer.configToDialogProps(config, context)
         table.insert(dialogProps.tasks, taskProps)
     end
     
+    logger:info('DialogPropsTransformer: Successfully loaded dialog props directly from preferences')
     return dialogProps
-end
-
-
--- Load configuration and transform to dialog properties
-function DialogPropsTransformer.loadDialogProps(context)
-    logger:info('DialogPropsTransformer: Loading dialog props')
-    local config = PrefsManager.loadConfig()
-    logger:info('DialogPropsTransformer: Loaded config: ' .. tostring(config))
-    return DialogPropsTransformer.configToDialogProps(config, context)
 end
 
 -- Persist dialog properties directly to preferences
@@ -163,7 +180,7 @@ end
 function DialogPropsTransformer.resetToDefaults(context)
     local success = PrefsManager.resetToDefaults()
     if success then
-        return DialogPropsTransformer.loadDialogProps(context)
+        return DialogPropsTransformer.loadFromPrefs(context)
     else
         logger:error('Failed to reset to defaults')
         return {}

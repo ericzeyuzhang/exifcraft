@@ -44,7 +44,7 @@ local function showUnifiedDialog()
         local f = LrView.osFactory()
         
         logger:info('Main.lua: Loading dialog props')
-        local dialogProps = DialogPropsTransformer.loadDialogProps(context)
+        local dialogProps = DialogPropsTransformer.loadFromPrefs(context)
 
         logger:info('Main.lua: starting to build main dialog')
         -- Create the main dialog UI
