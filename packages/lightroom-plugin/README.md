@@ -1,4 +1,4 @@
-# ExifCraft v2 - Lightroom Plugin
+# ExifCraft - Lightroom Plugin
 
 AI-powered EXIF metadata generation plugin for Adobe Lightroom, featuring integrated configuration and processing in a single unified interface.
 
@@ -26,7 +26,7 @@ AI-powered EXIF metadata generation plugin for Adobe Lightroom, featuring integr
 ### Process Photos with AI
 
 1. Select your images in Lightroom's Library module
-2. Go to **Library > Process with ExifCraft v2**
+2. Go to **Library > Process with ExifCraft**
 3. Configure all settings in the unified dialog:
    - **AI Model Configuration**: Set provider, endpoint, model, and API parameters
    - **Task Configuration**: Choose which metadata tasks to enable and customize prompts

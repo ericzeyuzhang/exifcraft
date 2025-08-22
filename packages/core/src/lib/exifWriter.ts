@@ -46,14 +46,14 @@ function isTagValueNonEmpty(value: any): boolean {
 }
 
 /**
- * Write EXIF data to image file with allowOverwrite support
+ * Write EXIF data to image file with avoidOverwrite support
  */
 export async function writeExifData(
   imagePath: string,
   tagsToWrite: Partial<WriteTags>,
   preserveOriginal: boolean = false,
   verbose: boolean = false,
-  allowOverwriteMap?: Record<string, boolean>
+  avoidOverwriteMap?: Record<string, boolean>
 ): Promise<void> {
   try {
     if (Object.keys(tagsToWrite).length === 0) {
@@ -63,25 +63,25 @@ export async function writeExifData(
       return;
     }
     
-    // Filter tags based on allowOverwrite settings
+    // Filter tags based on avoidOverwrite settings
     const filteredTags: Partial<WriteTags> = {};
     const tagsToCheck = Object.keys(tagsToWrite);
     
-    if (allowOverwriteMap && Object.keys(allowOverwriteMap).length > 0) {
+    if (avoidOverwriteMap && Object.keys(avoidOverwriteMap).length > 0) {
       // Read existing EXIF data to check for non-empty values
       const existingTags = await readExifData(imagePath, tagsToCheck, false);
       
       for (const [tagName, newValue] of Object.entries(tagsToWrite)) {
-        const allowOverwrite = allowOverwriteMap[tagName];
+        const avoidOverwrite = avoidOverwriteMap[tagName];
         
-        if (allowOverwrite === undefined) {
-          // If allowOverwrite is not specified, default to true
+        if (avoidOverwrite === undefined) {
+          // If avoidOverwrite is not specified, default to false (allow overwrite)
           (filteredTags as any)[tagName] = newValue;
           continue;
         }
         
-        if (allowOverwrite) {
-          // Always overwrite if allowOverwrite is true
+        if (!avoidOverwrite) {
+          // Always overwrite if avoidOverwrite is false
           (filteredTags as any)[tagName] = newValue;
           if (verbose) {
             console.log(`  ✓ Will overwrite ${tagName}`);
@@ -96,13 +96,13 @@ export async function writeExifData(
             }
           } else {
             if (verbose) {
-              console.log(`  ⚠ Skipping ${tagName} (existing value is non-empty and allowOverwrite is false)`);
+              console.log(`  ⚠ Skipping ${tagName} (existing value is non-empty and avoidOverwrite is true)`);
             }
           }
         }
       }
     } else {
-      // No allowOverwrite settings, write all tags
+      // No avoidOverwrite settings, write all tags
       Object.assign(filteredTags, tagsToWrite);
     }
     

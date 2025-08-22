@@ -1,4 +1,4 @@
-# ExifCraft v2 Lightroom Plugin 安装指南
+# ExifCraft Lightroom Plugin 安装指南
 
 ## 更新内容
 
@@ -20,7 +20,7 @@
 ## 安装步骤
 
 ### 方法一：自动安装（推荐）
-1. 下载 `ExifCraft-v2-20250818.zip` 文件
+1. 下载 `ExifCraft-0.0.1-20250818.zip` 文件
 2. 解压缩文件
 3. 双击 `ExifCraft.lrplugin` 文件夹
 4. Lightroom 将自动检测并提示安装插件
@@ -57,7 +57,7 @@
 ### 查看详细日志：
 1. 打开 Lightroom
 2. 转到 `帮助 > 插件附加信息`
-3. 查找 "ExifCraftV2" 相关的日志条目
+3. 查找 "ExifCraft" 相关的日志条目
 
 ### 常见问题：
 - **CLI 找不到**：确保 CLI 二进制文件存在于插件的 `bin` 目录中
@@ -80,6 +80,6 @@
 
 ---
 
-**版本**: v2.0.0  
+**版本**: 0.0.1  
 **构建日期**: 2025-08-18  
 **SDK 版本**: 12.0

@@ -2,9 +2,9 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { promises as fs } from 'fs';
 import * as path from 'path';
 import { exiftool } from 'exiftool-vendored';
-import { writeExifData, readExifData } from 'exifcraft-core';
+import { writeExifData, readExifData } from '../../../core/src/lib/exifWriter';
 
-describe('allowOverwrite functionality', () => {
+describe('avoidOverwrite functionality', () => {
   const originalImagePath = path.join(__dirname, '../images/original/DSCF3752.JPG');
   const testImagePath = path.join(__dirname, '../images/demo/DSCF3752.JPG');
 
@@ -28,7 +28,7 @@ describe('allowOverwrite functionality', () => {
     await exiftool.end();
   });
 
-  it('should overwrite existing tags when allowOverwrite is true', async () => {
+  it('should overwrite existing tags when avoidOverwrite is false', async () => {
     // First, write some initial EXIF data
     const initialTags = {
       ImageTitle: 'Initial Title',
@@ -42,18 +42,18 @@ describe('allowOverwrite functionality', () => {
     expect(initialRead.ImageTitle).toBe('Initial Title');
     expect(initialRead.ImageDescription).toBe('Initial Description');
     
-    // Now try to write new data with allowOverwrite: true
+    // Now try to write new data with avoidOverwrite: false
     const newTags = {
       ImageTitle: 'New Title',
       ImageDescription: 'New Description'
     };
     
-    const allowOverwriteMap = {
-      ImageTitle: true,
-      ImageDescription: true
+    const avoidOverwriteMap = {
+      ImageTitle: false,
+      ImageDescription: false
     };
     
-    await writeExifData(testImagePath, newTags, false, false, allowOverwriteMap);
+    await writeExifData(testImagePath, newTags, false, false, avoidOverwriteMap);
     
     // Verify new data overwrote the old data
     const finalRead = await readExifData(testImagePath, ['ImageTitle', 'ImageDescription'], false);
@@ -61,7 +61,7 @@ describe('allowOverwrite functionality', () => {
     expect(finalRead.ImageDescription).toBe('New Description');
   });
 
-  it('should not overwrite existing non-empty tags when allowOverwrite is false', async () => {
+  it('should not overwrite existing non-empty tags when avoidOverwrite is true', async () => {
     // First, write some initial EXIF data
     const initialTags = {
       ImageTitle: 'Initial Title',
@@ -70,18 +70,18 @@ describe('allowOverwrite functionality', () => {
     
     await writeExifData(testImagePath, initialTags, false, false);
     
-    // Now try to write new data with allowOverwrite: false
+    // Now try to write new data with avoidOverwrite: true
     const newTags = {
       ImageTitle: 'New Title',
       ImageDescription: 'New Description'
     };
     
-    const allowOverwriteMap = {
-      ImageTitle: false,
-      ImageDescription: false
+    const avoidOverwriteMap = {
+      ImageTitle: true,
+      ImageDescription: true
     };
     
-    await writeExifData(testImagePath, newTags, false, false, allowOverwriteMap);
+    await writeExifData(testImagePath, newTags, false, false, avoidOverwriteMap);
     
     // Verify original data was preserved
     const finalRead = await readExifData(testImagePath, ['ImageTitle', 'ImageDescription'], false);
@@ -89,25 +89,25 @@ describe('allowOverwrite functionality', () => {
     expect(finalRead.ImageDescription).toBe('Initial Description');
   });
 
-  it('should write to empty tags even when allowOverwrite is false', async () => {
+  it('should write to empty tags even when avoidOverwrite is true', async () => {
     // First, clear any existing EXIF data
     await writeExifData(testImagePath, {
       ImageTitle: '',
       ImageDescription: ''
     }, false, false);
     
-    // Now try to write new data with allowOverwrite: false
+    // Now try to write new data with avoidOverwrite: true
     const newTags = {
       ImageTitle: 'New Title',
       ImageDescription: 'New Description'
     };
     
-    const allowOverwriteMap = {
-      ImageTitle: false,
-      ImageDescription: false
+    const avoidOverwriteMap = {
+      ImageTitle: true,
+      ImageDescription: true
     };
     
-    await writeExifData(testImagePath, newTags, false, false, allowOverwriteMap);
+    await writeExifData(testImagePath, newTags, false, false, avoidOverwriteMap);
     
     // Verify new data was written to empty tags
     const finalRead = await readExifData(testImagePath, ['ImageTitle', 'ImageDescription'], false);

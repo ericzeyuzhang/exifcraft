@@ -1,0 +1,80 @@
+--[[----------------------------------------------------------------------------
+
+Main.lua
+Main entry point for ExifCraft
+
+This script handles the AI-powered EXIF metadata generation for selected photos
+in the Lightroom library, with integrated settings configuration.
+
+------------------------------------------------------------------------------]]
+
+local LrDialogs = import 'LrDialogs'
+local LrFunctionContext = import 'LrFunctionContext'
+local LrView = import 'LrView'
+local LrBinding = import 'LrBinding'
+
+-- Import local modules
+do
+    local ok, err = pcall(function() return require('Dkjson') end)
+    if not ok then
+        _G.ExifCraftLogger:error('require Dkjson failed: ' .. tostring(err))
+    else
+        _G.ExifCraftLogger:info('require Dkjson succeeded')
+    end
+end
+
+local DialogPropsProvider = require 'DialogPropsProvider'
+local UIStyleConstants = require 'UIStyleConstants'
+local MainView = require 'MainView'
+local PhotoProcessor = require 'PhotoProcessor'
+
+-- Use global logger
+local logger = _G.ExifCraftLogger
+if not logger then
+    error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
+end
+
+logger:info('Main.lua loaded')
+
+-- Show unified settings and processing dialog
+local function showUnifiedDialog()
+    logger:info('Showing unified settings and processing dialog')
+
+    LrFunctionContext.callWithContext("showUnifiedDialog", function(context)
+        local f = LrView.osFactory()
+        
+        logger:info('Main.lua: Loading dialog props')
+
+        local dialogProps = LrBinding.makePropertyTable(context)
+        DialogPropsProvider.fromPrefsOrDefault(dialogProps)
+
+        logger:info('Main.lua: starting to build main dialog')
+        -- Create the main dialog UI
+        local ui = MainView.createMainDialog(f, dialogProps)
+
+        logger:info('Main.lua: presenting main dialog')
+        local result = LrDialogs.presentModalDialog {
+            title = 'ExifCraft - Configure & Process',
+            contents = ui,
+            action_verb = 'Process',
+            cancel_verb = 'Cancel',
+            width = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.width,
+            height = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.height,
+            minimum_width = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.minimum_width,
+            minimum_height = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.minimum_height,
+            resizable = true,
+        }
+        
+        if result == 'ok' then
+            logger:info('Main.lua: user clicked ok')
+            -- Save user changes to preferences
+            DialogPropsProvider.persistToPrefs(dialogProps)
+            PhotoProcessor.process()
+        end
+    end)
+end
+
+-- Main entry point - called by Lightroom when menu item is selected
+showUnifiedDialog()
+
+

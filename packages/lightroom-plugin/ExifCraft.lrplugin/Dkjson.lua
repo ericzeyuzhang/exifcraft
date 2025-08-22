@@ -1,13 +1,11 @@
--- Simple JSON library for Lightroom plugins
--- Based on dkjson library
+-- Simple JSON library for Lightroom plugins (refactored from Dkjson.lua)
 
-local json = {}
+local Dkjson = {}
 
 -- JSON encoding
-function json.encode(data, state)
+function Dkjson.encode(data, state)
   state = state or {}
   local indent = state.indent and "  " or ""
-  local buffer = {}
   local encode_value
   
   local function encode_string(str)
@@ -36,8 +34,7 @@ function json.encode(data, state)
     local indent_str = indent:rep(level)
     local next_indent = indent:rep(level + 1)
     
-    if #tbl == 0 then
-      -- Empty table
+    if next(tbl) == nil then
       return '{}'
     end
     
@@ -50,7 +47,6 @@ function json.encode(data, state)
     end
     
     if is_array then
-      -- Array
       local result = '[\n'
       for i, v in ipairs(tbl) do
         if i > 1 then
@@ -60,7 +56,6 @@ function json.encode(data, state)
       end
       return result .. '\n' .. indent_str .. ']'
     else
-      -- Object
       local result = '{\n'
       local first = true
       for k, v in pairs(tbl) do
@@ -81,7 +76,7 @@ function json.encode(data, state)
     elseif t == "boolean" then
       return val and "true" or "false"
     elseif t == "number" then
-      if val ~= val then -- NaN
+      if val ~= val then
         return "null"
       elseif val >= math.huge then
         return "null"
@@ -103,84 +98,19 @@ function json.encode(data, state)
 end
 
 -- JSON decoding (simplified)
-function json.decode(str)
+function Dkjson.decode(str)
   local i = 1
+  local parse_value
+  local parse_string
   
   local function skip_whitespace()
     while i <= #str and str:sub(i, i):match("%s") do
       i = i + 1
     end
   end
-  
-  local function parse_value()
-    skip_whitespace()
-    local c = str:sub(i, i)
-    
-    if c == '"' then
-      return parse_string()
-    elseif c == '{' then
-      return parse_object()
-    elseif c == '[' then
-      return parse_array()
-    elseif c == 't' and str:sub(i, i + 3) == "true" then
-      i = i + 4
-      return true
-    elseif c == 'f' and str:sub(i, i + 4) == "false" then
-      i = i + 5
-      return false
-    elseif c == 'n' and str:sub(i, i + 3) == "null" then
-      i = i + 4
-      return nil
-    elseif c:match("%d") or c == '-' then
-      return parse_number()
-    else
-      error("Unexpected character: " .. c)
-    end
-  end
-  
-  local function parse_string()
-    i = i + 1 -- skip opening quote
-    local result = ""
-    while i <= #str do
-      local c = str:sub(i, i)
-      if c == '"' then
-        i = i + 1
-        return result
-      elseif c == '\\' then
-        i = i + 1
-        local next_c = str:sub(i, i)
-        if next_c == '"' or next_c == '\\' or next_c == '/' then
-          result = result .. next_c
-        elseif next_c == 'n' then
-          result = result .. '\n'
-        elseif next_c == 'r' then
-          result = result .. '\r'
-        elseif next_c == 't' then
-          result = result .. '\t'
-        end
-      else
-        result = result .. c
-      end
-      i = i + 1
-    end
-    error("Unterminated string")
-  end
-  
-  local function parse_number()
-    local start = i
-    while i <= #str and str:sub(i, i):match("[%d%.%-%+eE]") do
-      i = i + 1
-    end
-    local num_str = str:sub(start, i - 1)
-    local num = tonumber(num_str)
-    if not num then
-      error("Invalid number: " .. num_str)
-    end
-    return num
-  end
-  
+
   local function parse_object()
-    i = i + 1 -- skip opening brace
+    i = i + 1
     local result = {}
     
     skip_whitespace()
@@ -217,9 +147,37 @@ function json.decode(str)
       end
     end
   end
+
+  function parse_string()
+    i = i + 1
+    local result = ""
+    while i <= #str do
+      local c = str:sub(i, i)
+      if c == '"' then
+        i = i + 1
+        return result
+      elseif c == '\\' then
+        i = i + 1
+        local next_c = str:sub(i, i)
+        if next_c == '"' or next_c == '\\' or next_c == '/' then
+          result = result .. next_c
+        elseif next_c == 'n' then
+          result = result .. '\n'
+        elseif next_c == 'r' then
+          result = result .. '\r'
+        elseif next_c == 't' then
+          result = result .. '\t'
+        end
+      else
+        result = result .. c
+      end
+      i = i + 1
+    end
+    error("Unterminated string")
+  end
   
   local function parse_array()
-    i = i + 1 -- skip opening bracket
+    i = i + 1
     local result = {}
     
     skip_whitespace()
@@ -242,8 +200,51 @@ function json.decode(str)
       end
     end
   end
+
+  
+  local function parse_number()
+    local start = i
+    while i <= #str and str:sub(i, i):match("[%d%.%-%+eE]") do
+      i = i + 1
+    end
+    local num_str = str:sub(start, i - 1)
+    local num = tonumber(num_str)
+    if not num then
+      error("Invalid number: " .. num_str)
+    end
+    return num
+  end
+  
+  function parse_value()
+    skip_whitespace()
+    local c = str:sub(i, i)
+    
+    if c == '"' then
+      return parse_string()
+    elseif c == '{' then
+      return parse_object()
+    elseif c == '[' then
+      return parse_array()
+    elseif c == 't' and str:sub(i, i + 3) == "true" then
+      i = i + 4
+      return true
+    elseif c == 'f' and str:sub(i, i + 4) == "false" then
+      i = i + 5
+      return false
+    elseif c == 'n' and str:sub(i, i + 3) == "null" then
+      i = i + 4
+      return nil
+    elseif c:match('%d') or c == '-' then
+      return parse_number()
+    else
+      error("Unexpected character: " .. c)
+    end
+  end
   
   return parse_value()
 end
 
-return json
+return Dkjson
+
+
+

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Package ExifCraft v2 Lightroom Plugin
+# Package ExifCraft Lightroom Plugin
 # This script creates a distributable package of the plugin
 
 set -e
@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLUGIN_DIR="$SCRIPT_DIR/ExifCraft.lrplugin"
 DIST_DIR="$SCRIPT_DIR/dist"
 
-echo "=== Packaging ExifCraft v2 Lightroom Plugin ==="
+echo "=== Packaging ExifCraft Lightroom Plugin ==="
 echo "Plugin directory: $PLUGIN_DIR"
 echo "Distribution directory: $DIST_DIR"
 
@@ -19,11 +19,18 @@ REQUIRED_FILES=(
     "Info.lua"
     "Init.lua"
     "Main.lua"
-    "Config.lua"
-    "ViewBuilder.lua"
+    "ClearPrefs.lua"
+    "ConfigProvider.lua"
+    "DialogPropsProvider.lua"
+    "MainView.lua"
+    "SectionView.lua"
     "PhotoProcessor.lua"
-    "Utils.lua"
+    "default-config.json"
     "Dkjson.lua"
+    "SystemUtils.lua"
+    "ViewUtils.lua"
+    "UIFormatConstants.lua"
+    "UIStyleConstants.lua"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
@@ -36,30 +43,19 @@ done
 
 echo "Plugin structure validation passed!"
 
-# Validate Lua syntax
+# Validate Lua syntax (recursively)
 echo "Validating Lua syntax..."
-LUA_FILES=(
-    "Info.lua"
-    "Init.lua"
-    "Main.lua"
-    "Config.lua"
-    "ViewBuilder.lua"
-    "PhotoProcessor.lua"
-    "Utils.lua"
-    "Dkjson.lua"
-)
-
-for file in "${LUA_FILES[@]}"; do
-    echo "Checking syntax: $file"
-    # Use a more comprehensive syntax check
-    if lua -c "$PLUGIN_DIR/$file" 2>&1 | grep -q "syntax error\|unexpected symbol\|missing symbol"; then
-        echo "ERROR: Syntax error in $file"
-        lua -c "$PLUGIN_DIR/$file" 2>&1
+while IFS= read -r -d '' file; do
+    rel="${file#$PLUGIN_DIR/}"
+    echo "Checking syntax: $rel"
+    if lua -c "$file" 2>&1 | grep -q "syntax error\|unexpected symbol\|missing symbol"; then
+        echo "ERROR: Syntax error in $rel"
+        lua -c "$file" 2>&1
         exit 1
     else
-        echo "✓ Syntax OK: $file"
+        echo "✓ Syntax OK: $rel"
     fi
-done
+done < <(find "$PLUGIN_DIR" -type f -name "*.lua" -print0)
 
 echo "Lua syntax validation passed!"
 
@@ -72,6 +68,7 @@ rm -rf "$DIST_DIR/ExifCraft.lrplugin"
 # Copy plugin files
 echo "Copying plugin files..."
 cp -r "$PLUGIN_DIR" "$DIST_DIR/"
+
 
 # Create CLI binary directory
 mkdir -p "$DIST_DIR/ExifCraft.lrplugin/bin"
@@ -133,7 +130,7 @@ fi
 # Create archive with version info
 cd "$DIST_DIR"
 CURRENT_BUILD=$(grep -o 'build = [0-9]*' ExifCraft.lrplugin/Info.lua | grep -o '[0-9]*')
-ARCHIVE_NAME="ExifCraft-v2.0.0-build${CURRENT_BUILD}-$(date +%Y%m%d).zip"
+ARCHIVE_NAME="ExifCraft-0.0.1-build${CURRENT_BUILD}-$(date +%Y%m%d).zip"
 zip -r "$ARCHIVE_NAME" ExifCraft.lrplugin/
 
 echo "Plugin packaged successfully!"

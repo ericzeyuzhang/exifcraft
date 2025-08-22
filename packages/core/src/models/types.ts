@@ -6,13 +6,14 @@ import { TagName } from 'exiftool-vendored/dist/Tags';
 
 export interface TagConfig {
   name: TagName;
-  allowOverwrite: boolean;
+  avoidOverwrite: boolean;
 }
 
 export interface TaskConfig {
   name: string;
   tags: TagConfig[];
   prompt: string;
+  enabled?: boolean;
 }
 
 export interface AIModelConfig {
@@ -33,6 +34,10 @@ export interface ExifCraftConfig {
   imageFormats: string[];
   preserveOriginal: boolean;
   basePrompt?: string;
+  // For Lightroom plugin only
+  verbose?: boolean;
+  // For Lightroom plugin only
+  dryRun?: boolean;
 }
 
 
