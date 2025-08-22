@@ -93,26 +93,15 @@ function DialogPropsTransformer.loadFromPrefs(context)
         end
     end
     
-    -- Tasks: flatten to individual properties (task_1_name, task_1_prompt, etc.)
-    for i = 1, 5 do
-        local task = config.tasks[i]
-        if task then
-            dialogProps['task_' .. i .. '_name'] = task.name or ''
-            dialogProps['task_' .. i .. '_prompt'] = task.prompt or ''
-            dialogProps['task_' .. i .. '_enabled'] = task.enabled or false
-            
-            -- Serialize tags as JSON string for flat storage
-            local success, tagsJson = pcall(function()
-                return Dkjson.encode(task.tags or {})
-            end)
-            dialogProps['task_' .. i .. '_tags'] = success and tagsJson or '[]'
-        else
-            -- Set empty defaults for unused tasks
-            dialogProps['task_' .. i .. '_name'] = ''
-            dialogProps['task_' .. i .. '_prompt'] = ''
-            dialogProps['task_' .. i .. '_enabled'] = false
-            dialogProps['task_' .. i .. '_tags'] = '[]'
-        end
+    -- Tasks: convert to property tables for UI binding
+    dialogProps.tasks = {}
+    for _, task in ipairs(config.tasks) do
+        local taskProps = LrBinding.makePropertyTable(context)
+        taskProps.name = task and task.name or ''
+        taskProps.prompt = task and task.prompt or ''
+        taskProps.tags = task and task.tags or {}
+        taskProps.enabled = task and task.enabled or false
+        table.insert(dialogProps.tasks, taskProps)
     end
     
     logger:info('DialogPropsTransformer: Successfully loaded dialog props directly from preferences')
@@ -129,8 +118,9 @@ function DialogPropsTransformer.persistToPrefs(dialogProps)
     logger:info('DialogPropsTransformer: Persisting dialog props to preferences')
 
     -- Basic validation before processing
-    if not dialogProps.aiProvider then
-        logger:warn('Dialog properties appear to be incomplete (missing aiProvider), skipping save operation')
+    if not dialogProps.aiProvider or 
+       not dialogProps.tasks or #dialogProps.tasks == 0 then
+        logger:warn('Dialog properties appear to be incomplete, skipping save operation')
         return false
     end
 
@@ -164,33 +154,8 @@ function DialogPropsTransformer.persistToPrefs(dialogProps)
         end
     end
 
-    -- Tasks: build from flattened properties
-    normalizedForJson.tasks = {}
-    for i = 1, 5 do
-        local taskName = dialogProps['task_' .. i .. '_name']
-        local taskPrompt = dialogProps['task_' .. i .. '_prompt']
-        local taskEnabled = dialogProps['task_' .. i .. '_enabled']
-        local taskTagsJson = dialogProps['task_' .. i .. '_tags']
-        
-        if taskName and taskName ~= '' then
-            local taskTags = {}
-            if taskTagsJson and taskTagsJson ~= '[]' then
-                local success, tags = pcall(function()
-                    return Dkjson.decode(taskTagsJson)
-                end)
-                if success and type(tags) == 'table' then
-                    taskTags = tags
-                end
-            end
-            
-            table.insert(normalizedForJson.tasks, {
-                name = taskName,
-                prompt = taskPrompt or '',
-                enabled = SystemUtils.toBoolean(taskEnabled),
-                tags = taskTags
-            })
-        end
-    end
+    -- Tasks: normalize property tables to plain tasks
+    normalizedForJson.tasks = ConfigParser.buildTasksConfig(dialogProps.tasks or {})
     
     -- Encode to JSON and save directly to preferences
     local success, config_json = pcall(function()
