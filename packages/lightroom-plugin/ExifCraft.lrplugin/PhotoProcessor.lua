@@ -19,7 +19,7 @@ local LrPrefs = import 'LrPrefs'
 -- Import local modules
 local SystemUtils = require 'SystemUtils'
 local Dkjson = require 'Dkjson'
-local ConfigParser = require 'ConfigParser'
+local ConfigProvider = require 'ConfigProvider'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -55,7 +55,7 @@ end
 local function process()
     logger:info('=== Starting ExifCraft Processing ===')
     
-    local config, config_json = ConfigParser.getConfigFromPrefs()
+    local config, config_json = ConfigProvider.fromPrefs()
     if not config or not config_json then
         LrDialogs.show_error('Configuration Error', 'No configuration found in preferences')
         return

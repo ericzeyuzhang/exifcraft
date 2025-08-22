@@ -1,6 +1,6 @@
 --[[----------------------------------------------------------------------------
 
-DialogPropsTransformer.lua
+DialogPropsProvider.lua
 Dialog properties transformation for ExifCraft
 
 This module handles the conversion between unified configuration format
@@ -15,7 +15,7 @@ local LrPrefs = import 'LrPrefs'
 local UIFormatConstants = require 'UIFormatConstants'
 local SystemUtils = require 'SystemUtils'
 local Dkjson = require 'Dkjson'
-local ConfigParser = require 'ConfigParser'
+local ConfigProvider = require 'ConfigProvider'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -23,11 +23,11 @@ if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
 end
 
-local DialogPropsTransformer = {}
+local DialogPropsProvider = {}
 
 -- Load dialog properties directly from preferences
-function DialogPropsTransformer.fromConfig(config, dialogProps)
-    logger:info('DialogPropsTransformer: Loading dialog props directly from preferences')
+function DialogPropsProvider.fromConfig(config, dialogProps)
+    logger:info('DialogPropsProvider: Loading dialog props directly from preferences')
 
     if not config then
         logger:error('Failed to load configuration')
@@ -104,21 +104,21 @@ function DialogPropsTransformer.fromConfig(config, dialogProps)
         end
     end
     
-    logger:info('DialogPropsTransformer: Successfully loaded dialog props directly from preferences')
+    logger:info('DialogPropsProvider: Successfully loaded dialog props directly from preferences')
     return nil
 end
 
 -- Load dialog properties from preferences or defaults
-function DialogPropsTransformer.loadFromPrefsOrDefault(dialogProps)
-    logger:info('DialogPropsTransformer: Loading dialog props from preferences or defaults')
+function DialogPropsProvider.fromPrefsOrDefault(dialogProps)
+    logger:info('DialogPropsProvider: Loading dialog props from preferences or defaults')
     
     -- Try to load from preferences first
-    local config, _ = ConfigParser.getConfigFromPrefs()
+    local config, _ = ConfigProvider.fromPrefs()
     
     if not config then
         -- If no config in prefs, load defaults
         logger:info('No config in preferences, loading defaults')
-        config, _ = ConfigParser.getDefaultConfig()
+        config, _ = ConfigProvider.fromDefaultJsonFile()
         
         if not config then
             logger:error('Failed to load default configuration')
@@ -126,17 +126,17 @@ function DialogPropsTransformer.loadFromPrefsOrDefault(dialogProps)
         end
     end
     
-    return DialogPropsTransformer.fromConfig(config, dialogProps)
+    return DialogPropsProvider.fromConfig(config, dialogProps)
 end
 
 -- Persist dialog properties directly to preferences
-function DialogPropsTransformer.persistToPrefs(dialogProps)
+function DialogPropsProvider.persistToPrefs(dialogProps)
     if not dialogProps or not next(dialogProps) then
         logger:warn('Attempting to save empty or nil dialogProps, skipping save operation')
         return false
     end
     
-    logger:info('DialogPropsTransformer: Persisting dialog props to preferences')
+    logger:info('DialogPropsProvider: Persisting dialog props to preferences')
 
     -- Basic validation before processing
     if not dialogProps.aiProvider then
@@ -218,4 +218,6 @@ function DialogPropsTransformer.persistToPrefs(dialogProps)
     return true
 end
 
-return DialogPropsTransformer
+return DialogPropsProvider
+
+

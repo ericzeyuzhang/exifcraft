@@ -8,6 +8,7 @@ Provides small utilities to build consistent view components.
 ------------------------------------------------------------------------------]]
 
 local UIStyleConstants = require 'UIStyleConstants'
+local LrView = import 'LrView'
 
 local unpack_fn = table.unpack or unpack
 
@@ -43,6 +44,32 @@ function ViewUtils.createSectionHeader(f, mainTitle, subTitle)
 
     return f:column {
         spacing = UIStyleConstants.UI_STYLE_CONSTANTS.spacing.tight,
+        fill_horizontal = 1,
+        unpack_fn(children),
+    }
+end
+
+
+-- Create a row of format checkboxes from definitions
+-- defs: array of { title=string, bind=string, tooltip=string }
+function ViewUtils.createFormatCheckboxRow(f, defs)
+    assert(f ~= nil, 'viewFactory is required')
+    assert(type(defs) == 'table', 'defs must be a table')
+
+    local children = {}
+    for _, def in ipairs(defs) do
+        table.insert(children, f:checkbox {
+            title = def.title,
+            font = UIStyleConstants.UI_STYLE_CONSTANTS.field_title.font,
+            tooltip = def.tooltip,
+            value = LrView.bind(def.bind),
+            checked_value = true,
+            unchecked_value = false,
+        })
+    end
+
+    return f:row {
+        spacing = f:control_spacing(),
         fill_horizontal = 1,
         unpack_fn(children),
     }

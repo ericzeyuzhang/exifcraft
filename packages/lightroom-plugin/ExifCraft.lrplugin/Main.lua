@@ -23,9 +23,9 @@ do
     end
 end
 
-local DialogPropsTransformer = require 'DialogPropsTransformer'
+local DialogPropsProvider = require 'DialogPropsProvider'
 local UIStyleConstants = require 'UIStyleConstants'
-local ViewBuilder = require 'ViewBuilder'
+local MainView = require 'MainView'
 local PhotoProcessor = require 'PhotoProcessor'
 
 -- Use global logger
@@ -46,11 +46,11 @@ local function showUnifiedDialog()
         logger:info('Main.lua: Loading dialog props')
 
         local dialogProps = LrBinding.makePropertyTable(context)
-        DialogPropsTransformer.loadFromPrefsOrDefault(dialogProps)
+        DialogPropsProvider.fromPrefsOrDefault(dialogProps)
 
         logger:info('Main.lua: starting to build main dialog')
         -- Create the main dialog UI
-        local ui = ViewBuilder.createMainDialog(f, dialogProps, context)
+        local ui = MainView.createMainDialog(f, dialogProps)
 
         logger:info('Main.lua: presenting main dialog')
         local result = LrDialogs.presentModalDialog {
@@ -68,7 +68,7 @@ local function showUnifiedDialog()
         if result == 'ok' then
             logger:info('Main.lua: user clicked ok')
             -- Save user changes to preferences
-            DialogPropsTransformer.persistToPrefs(dialogProps)
+            DialogPropsProvider.persistToPrefs(dialogProps)
             PhotoProcessor.process()
         end
     end)

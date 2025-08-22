@@ -1,6 +1,6 @@
 --[[----------------------------------------------------------------------------
 
-ConfigParser.lua
+ConfigProvider.lua
 Configuration format parsing and validation for ExifCraft
 
 This module handles JSON configuration parsing, default configuration loading,
@@ -21,10 +21,10 @@ if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
 end
 
-local ConfigParser = {}
+local ConfigProvider = {}
 
 -- Parse persistent configuration JSON back to unified config format
-function ConfigParser.parseFromJson(config_json)
+function ConfigProvider.fromJsonString(config_json)
     logger:info('Parsing persistent configuration JSON')
     
     if not config_json or config_json == '' then
@@ -50,7 +50,7 @@ function ConfigParser.parseFromJson(config_json)
 end
 
 -- Load unified default configuration from file
-function ConfigParser.getDefaultConfig()
+function ConfigProvider.fromDefaultJsonFile()
     local plugin_path = _PLUGIN.path
     local config_path = LrPathUtils.child(plugin_path, 'default-config.json')
 
@@ -61,7 +61,7 @@ function ConfigParser.getDefaultConfig()
         error('Failed to read default-config.json')
     end
 
-    local config = ConfigParser.parseFromJson(config_json)
+    local config = ConfigProvider.fromJsonString(config_json)
 
     if not config then
         logger:error('Failed to parse default-config.json')
@@ -72,10 +72,12 @@ function ConfigParser.getDefaultConfig()
     return config, config_json
 end
 
-function ConfigParser.getConfigFromPrefs()
+function ConfigProvider.fromPrefs()
     local prefs = LrPrefs.prefsForPlugin()
-    local config = ConfigParser.parseFromJson(prefs.config_json)
+    local config = ConfigProvider.fromJsonString(prefs.config_json)
     return config, prefs.config_json
 end
 
-return ConfigParser
+return ConfigProvider
+
+
