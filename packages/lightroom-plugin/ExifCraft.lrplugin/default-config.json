@@ -1,7 +1,6 @@
 {
   "tasks": [
     {
-      "id": "1",
       "name": "Image Title",
       "prompt": "Please generate a title with at most 50 characters for this image, describing the main subject, scene, or content. The title should be a single sentence. ",
       "tags": [
@@ -10,11 +9,9 @@
         { "name": "ObjectName", "allowOverwrite": true },
         { "name": "Title", "allowOverwrite": true }
       ],
-      "enabled": true,
-      "isCustom": false
+      "enabled": true
     },
     {
-      "id": "2",
       "name": "Image Description",
       "prompt": "Please describe this image in a single paragraph with at most 200 characters. The description may include the main objects, scene, colors, composition, atmosphere and other visual elements. ",
       "tags": [
@@ -22,21 +19,17 @@
         { "name": "Description", "allowOverwrite": true },
         { "name": "Caption-Abstract", "allowOverwrite": true }
       ],
-      "enabled": true,
-      "isCustom": false
+      "enabled": true
     },
     {
-      "id": "3",
       "name": "Keywords",
       "prompt": "Generate 5-10 keywords for this image, separated by commas, describing the theme, style, content, etc. ",
       "tags": [
         { "name": "Keywords", "allowOverwrite": true }
       ],
-      "enabled": true,
-      "isCustom": false
+      "enabled": true
     },
     {
-      "id": "4",
       "name": "Location",
       "prompt": "Identify the location, place, or setting shown in this image. If it's a recognizable landmark, city, or specific location, please provide the name. If it's a generic location, describe the type of place (e.g., \"mountain landscape\", \"urban street\", \"beach\"). ",
       "tags": [
@@ -46,19 +39,16 @@
         { "name": "State", "allowOverwrite": true },
         { "name": "Country", "allowOverwrite": true }
       ],
-      "enabled": false,
-      "isCustom": false
+      "enabled": false
     },
     {
-      "id": "5",
       "name": "Subject",
       "prompt": "Identify the main subject(s) in this image. This could be people, animals, objects, or scenes. Describe who or what is the primary focus of the photograph. ",
       "tags": [
         { "name": "Subject", "allowOverwrite": true },
         { "name": "ObjectName", "allowOverwrite": true }
       ],
-      "enabled": false,
-      "isCustom": false
+      "enabled": false
     }
   ],
   "aiModel": {

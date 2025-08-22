@@ -24,11 +24,12 @@ local PrefsManager = {}
 -- Load configuration from Lightroom preferences
 function PrefsManager.loadConfig()
     local prefs = LrPrefs.prefsForPlugin()
-    
+
     -- Handle cold start - initialize with defaults
     if not prefs.config_json or prefs.config_json == '' then
+        logger:info('PrefsManager: Cold start: No configuration found in preferences (config_json: ' .. tostring(prefs.config_json) .. ')')
         prefs.config_json = ConfigParser.getDefaultConfigJson()
-        logger:info('Initialized default configuration as JSON')
+        logger:info('PrefsManager: Cold start: Initialized default configuration as JSON')
     end
     
     -- Load from JSON configuration
@@ -60,16 +61,37 @@ function PrefsManager.saveConfig(config)
         return false
     end
     
-    local prefs = LrPrefs.prefsForPlugin()
+    logger:info('PrefsManager: Saving configuration: ' .. config.aiModel.provider .. ' ' .. config.aiModel.model)
+
+    -- Debug: check config structure before encoding
+    logger:info('PrefsManager: Config type: ' .. type(config))
+    logger:info('PrefsManager: Config tasks type: ' .. type(config.tasks))
+    logger:info('PrefsManager: Config imageFormats type: ' .. type(config.imageFormats))
+    logger:info('PrefsManager: Config aiModel type: ' .. type(config.aiModel))
     
-    -- Ensure all tasks have unique IDs before saving
-    if config.tasks then
-        for i, task in ipairs(config.tasks) do
-            if not task.id then
-                task.id = tostring(i)
+    -- Debug: check if config contains property objects
+    local function inspectTable(t, name, depth)
+        if not t or type(t) ~= 'table' or (depth and depth > 2) then return end
+        for k, v in pairs(t) do
+            local vtype = type(v)
+            if vtype == 'table' then
+                -- Check if this might be a property object
+                local meta = getmetatable(v)
+                if meta then
+                    logger:info('PrefsManager: ' .. (name or 'config') .. '.' .. tostring(k) .. ' has metatable (possibly property object)')
+                else
+                    logger:info('PrefsManager: ' .. (name or 'config') .. '.' .. tostring(k) .. ' is table')
+                    inspectTable(v, (name or 'config') .. '.' .. tostring(k), (depth or 0) + 1)
+                end
+            else
+                logger:info('PrefsManager: ' .. (name or 'config') .. '.' .. tostring(k) .. ' is ' .. vtype .. ' = ' .. tostring(v))
             end
         end
     end
+    
+    inspectTable(config, 'config', 0)
+
+    local prefs = LrPrefs.prefsForPlugin()
     
     -- Create and save JSON configuration
     local config_json = ConfigParser.encodeToJson(config)
@@ -79,7 +101,7 @@ function PrefsManager.saveConfig(config)
     end
     
     prefs.config_json = config_json
-    logger:info('Configuration saved to preferences as JSON')
+    logger:info('Configuration saved to preferences as JSON: ' .. config_json)
     return true
 end
 

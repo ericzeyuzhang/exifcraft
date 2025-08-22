@@ -22,8 +22,9 @@ return {
 
     -- Library module menu (Library > Plug-in Extras)
     LrLibraryMenuItems = {
-        { title = "Process with ExifCraft", file = "Main.lua" },
+        { title = "Process...", file = "Main.lua" },
+        { title = "Reset...", file = "ClearPrefs.lua" },
     },
 
-    VERSION = { major = 0, minor = 0, revision = 1, build = 269 },
+    VERSION = { major = 0, minor = 0, revision = 1, build = 294 },
 }

@@ -784,7 +784,9 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
             table.insert(buttons, f:push_button {
                 title = "Validate & Save Config",
                 action = function()
+                    logger:info('ViewBuilder: Saving configuration...')
                     DialogPropsTransformer.saveDialogProps(dialogProps)
+                    logger:info('ViewBuilder: Configuration saved')
                     LrDialogs.showBezel('Configuration saved')
                 end,
             })
@@ -792,7 +794,7 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
             table.insert(buttons, f:push_button {
                 title = "Test Connection",
                 action = function()
-                    logger:info('Testing AI connection...')
+                    logger:info('ViewBuilder: Testing AI connection...')
                     -- This will be implemented later
                 end,
             })

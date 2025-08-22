@@ -11,7 +11,7 @@ in the Lightroom library, with integrated settings configuration.
 local LrDialogs = import 'LrDialogs'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrView = import 'LrView'
-local LrBinding = import 'LrBinding'
+local LrPrefs = import 'LrPrefs'
 
 -- Import local modules
 do
@@ -39,15 +39,18 @@ logger:info('Main.lua loaded')
 -- Show unified settings and processing dialog
 local function showUnifiedDialog()
     logger:info('Showing unified settings and processing dialog')
-    
+
     LrFunctionContext.callWithContext("showUnifiedDialog", function(context)
         local f = LrView.osFactory()
         
+        logger:info('Main.lua: Loading dialog props')
         local dialogProps = DialogPropsTransformer.loadDialogProps(context)
 
+        logger:info('Main.lua: starting to build main dialog')
         -- Create the main dialog UI
         local ui = ViewBuilder.createMainDialog(f, dialogProps, context)
-        
+
+        logger:info('Main.lua: presenting main dialog')
         local result = LrDialogs.presentModalDialog {
             title = 'ExifCraft - Configure & Process',
             contents = ui,
@@ -61,11 +64,14 @@ local function showUnifiedDialog()
         }
         
         if result == 'ok' then
+            logger:info('Main.lua: user clicked ok')
             -- Save user changes to preferences
             DialogPropsTransformer.saveDialogProps(dialogProps)
             
             -- Reload the saved configuration in correct format for processing
+            logger:info('Main.lua: loading config')
             local processConfig = PrefsManager.loadConfig()
+            logger:info('Main.lua: processing photos')
             PhotoProcessor.process(processConfig)
         end
     end)

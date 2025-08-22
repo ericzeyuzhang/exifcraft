@@ -71,9 +71,8 @@ function DialogPropsTransformer.configToDialogProps(config, context)
     
     -- Tasks: convert to property tables for UI binding
     dialogProps.tasks = {}
-    for i, task in ipairs(config.tasks) do
+    for _, task in ipairs(config.tasks) do
         local taskProps = LrBinding.makePropertyTable(context)
-        taskProps.id = (task and task.id) or tostring(i)
         taskProps.name = task and task.name or ''
         taskProps.prompt = task and task.prompt or ''
         taskProps.tags = task and task.tags or {}
@@ -126,13 +125,29 @@ end
 
 -- Load configuration and transform to dialog properties
 function DialogPropsTransformer.loadDialogProps(context)
+    logger:info('DialogPropsTransformer: Loading dialog props')
     local config = PrefsManager.loadConfig()
+    logger:info('DialogPropsTransformer: Loaded config: ' .. tostring(config))
     return DialogPropsTransformer.configToDialogProps(config, context)
 end
 
 -- Transform dialog properties and save as configuration
 function DialogPropsTransformer.saveDialogProps(dialogProps)
+    if not dialogProps or not next(dialogProps) then
+        logger:warn('Attempting to save empty or nil dialogProps, skipping save operation')
+        return false
+    end
+    
     local config = DialogPropsTransformer.dialogPropsToConfig(dialogProps)
+    logger:info('DialogPropsTransformer: Saving config: ' .. tostring(config))
+
+    -- Additional validation: check if the resulting config is meaningful
+    if not config.aiModel or not config.aiModel.provider or 
+       not config.tasks or #config.tasks == 0 then
+        logger:warn('Resulting configuration appears to be incomplete, skipping save operation')
+        return false
+    end
+    
     return PrefsManager.saveConfig(config)
 end
 

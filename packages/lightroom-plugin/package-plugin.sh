@@ -19,6 +19,7 @@ REQUIRED_FILES=(
     "Info.lua"
     "Init.lua"
     "Main.lua"
+    "ClearPrefs.lua"
     "ConfigParser.lua"
     "PrefsManager.lua"
     "DialogPropsTransformer.lua"
