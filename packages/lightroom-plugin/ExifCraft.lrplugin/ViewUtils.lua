@@ -48,26 +48,6 @@ function ViewUtils.createSectionHeader(f, mainTitle, subTitle)
     }
 end
 
--- Wrap provided content inside a group_box with sensible defaults
--- children: array/table of view items to be placed inside the group box
-function ViewUtils.wrapInGroupBox(f, children)
-    assert(f ~= nil, 'f is required')
-    assert(type(children) == 'table', 'children must be a table (array) of view items')
 
-    local props = {
-        title = '',
-        spacing = f:control_spacing(),
-        fill_horizontal = 1,
-    }
-
-    for i = 1, #children do
-        table.insert(props, children[i])
-    end
-
-    return f:group_box(props)
-end
 
 return ViewUtils
-
- 
-

@@ -21,7 +21,6 @@ REQUIRED_FILES=(
     "Main.lua"
     "ClearPrefs.lua"
     "ConfigParser.lua"
-    "PrefsManager.lua"
     "DialogPropsTransformer.lua"
     "ViewBuilder.lua"
     "PhotoProcessor.lua"

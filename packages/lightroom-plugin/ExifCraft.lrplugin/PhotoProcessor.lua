@@ -14,10 +14,12 @@ local LrApplication = import 'LrApplication'
 local LrProgressScope = import 'LrProgressScope'
 local LrPathUtils = import 'LrPathUtils'
 local LrFileUtils = import 'LrFileUtils'
+local LrPrefs = import 'LrPrefs'
 
 -- Import local modules
 local SystemUtils = require 'SystemUtils'
 local Dkjson = require 'Dkjson'
+local ConfigParser = require 'ConfigParser'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -25,13 +27,15 @@ if not logger then
     error('Global ExifCraftLogger not found. Make sure Init.lua is loaded first.')
 end
 
--- Create configuration JSON for CLI
-local function createConfigJsonForCLI(settings, tempDir)
-    logger:info('Creating configuration JSON for CLI')
+-- Create configuration JSON file for CLI from raw JSON string
+local function createConfigJsonForCLI(config_json, tempDir)
+    logger:info('Creating configuration JSON for CLI from persistent config')
     
-    -- Settings is already in unified format, no conversion needed
+    if not config_json or config_json == '' then
+        error('Configuration JSON string is empty or nil')
+    end
+    
     local config_file_path = LrPathUtils.child(tempDir, 'exifcraft_config.json')
-    local config_json = Dkjson.encode(settings, { indent = true })
     
     local file = io.open(config_file_path, 'w')
     if file then
@@ -44,80 +48,18 @@ local function createConfigJsonForCLI(settings, tempDir)
     end
 end
 
--- Parse CLI output and extract metadata
-local function parseCliOutput(output)
-    logger:info('Parsing CLI output')
-    
-    if not output or output == '' then
-        logger:warning('Empty CLI output')
-        return {}
-    end
-    
-    local success, result = pcall(Dkjson.decode, output)
-    if not success then
-        logger:error('Failed to parse CLI output as JSON: ' .. tostring(result))
-        return {}
-    end
-    
-    if type(result) ~= 'table' then
-        logger:error('CLI output is not a valid JSON object')
-        return {}
-    end
-    
-    logger:info('Successfully parsed CLI output')
-    return result
-end
-
--- Write metadata to Lightroom photo
-local function writeMetadataToLightroom(photo, metadata)
-    logger:info('Writing metadata to Lightroom photo: ' .. tostring(photo:get_raw_metadata('file_name')))
-    
-    local success = true
-    
-    -- Write each task result to the appropriate metadata fields
-    for taskName, taskResult in pairs(metadata) do
-        if type(taskResult) == 'string' and taskResult ~= '' then
-            logger:info('Writing ' .. taskName .. ': ' .. taskResult)
-            
-            -- Map task names to Lightroom metadata fields
-            local fieldMap = {
-                ['Image Title'] = 'title',
-                ['Image Description'] = 'caption',
-                ['Keywords'] = 'keywords',
-                ['Location'] = 'location',
-                ['Subject'] = 'subject',
-                ['Photography Style'] = 'style',
-                ['Mood/Atmosphere'] = 'mood',
-                ['Technical Details'] = 'technicalNotes',
-                ['Custom Task 1'] = 'custom1',
-                ['Custom Task 2'] = 'custom2',
-            }
-            
-            local fieldName = fieldMap[taskName]
-            if fieldName then
-                if fieldName == 'keywords' then
-                    -- Handle keywords as array
-                    local keywords = {}
-                    for keyword in taskResult:gmatch('[^,]+') do
-                        table.insert(keywords, keyword:match('^%s*(.-)%s*$')) -- trim whitespace
-                    end
-                    photo:setRawMetadata(fieldName, keywords)
-                else
-                    photo:setRawMetadata(fieldName, taskResult)
-                end
-                logger:info('Updated ' .. fieldName .. ' for photo')
-            else
-                logger:warning('Unknown task name: ' .. taskName)
-            end
-        end
-    end
-    
-    return success
-end
+-- Note: parseCliOutput function removed as it's not currently used
+-- Will be re-implemented when metadata writing functionality is added
 
 -- Process photos with given settings
-local function process(config)
+local function process()
     logger:info('=== Starting ExifCraft Processing ===')
+    
+    local config, config_json = ConfigParser.getConfigFromPrefs()
+    if not config or not config_json then
+        LrDialogs.show_error('Configuration Error', 'No configuration found in preferences')
+        return
+    end
     
     -- Get selected photos
     local catalog = LrApplication.activeCatalog()
@@ -135,13 +77,7 @@ local function process(config)
         LrDialogs.show_warning('No Photos Selected', 'Please select one or more photos to process.')
         return
     end
-    
-    -- Basic validation
-    if not config.aiModel.endpoint or config.aiModel.endpoint == '' then
-        LrDialogs.show_error('Configuration Error', 'AI endpoint is required')
-        return
-    end
-    
+
     -- Start processing
     LrTasks.startAsyncTask(function()
         local tempDir = SystemUtils.createTempDirectory('ExifCraft')
@@ -156,8 +92,8 @@ local function process(config)
         })
         
         local success, errorMessage = pcall(function()
-            -- Create config file
-            local configPath = createConfigJsonForCLI(config, tempDir)
+            -- Create config file from persistent JSON
+            local configPath = createConfigJsonForCLI(config_json, tempDir)
             local cliPath = SystemUtils.findCliExecutable()
             
             logger:info('Processing ' .. totalPhotos .. ' photos')
@@ -224,18 +160,8 @@ local function process(config)
                                     local output = file:read('*all') or ""
                                     file:close()
                                     
-                                    -- Parse output and write to Lightroom
-                                    local metadata = parseCliOutput(output)
-                                    if metadata and next(metadata) then
-                                        local writeSuccess = writeMetadataToLightroom(photo, metadata)
-                                        if writeSuccess then
-                                            logger:info('Metadata successfully written to Lightroom')
-                                        else
-                                            logger:error('Failed to write metadata to Lightroom')
-                                        end
-                                    else
-                                        logger:warning('No metadata found in CLI output')
-                                    end
+                                    -- TODO: Implement metadata parsing and writing to Lightroom
+                                    -- This feature will be implemented in a future version
                                 else
                                     logger:error('Failed to read CLI output file: ' .. outputFile)
                                 end
@@ -294,6 +220,4 @@ end
 -- Export module
 return {
     process = process,
-    parse_cli_output = parseCliOutput,
-    write_metadata_to_lightroom = writeMetadataToLightroom,
 }

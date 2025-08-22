@@ -11,7 +11,6 @@ in the Lightroom library, with integrated settings configuration.
 local LrDialogs = import 'LrDialogs'
 local LrFunctionContext = import 'LrFunctionContext'
 local LrView = import 'LrView'
-local LrPrefs = import 'LrPrefs'
 local LrBinding = import 'LrBinding'
 
 -- Import local modules
@@ -23,7 +22,7 @@ do
         _G.ExifCraftLogger:info('require Dkjson succeeded')
     end
 end
-local PrefsManager = require 'PrefsManager'
+
 local DialogPropsTransformer = require 'DialogPropsTransformer'
 local UIStyleConstants = require 'UIStyleConstants'
 local ViewBuilder = require 'ViewBuilder'
@@ -45,11 +44,9 @@ local function showUnifiedDialog()
         local f = LrView.osFactory()
         
         logger:info('Main.lua: Loading dialog props')
-        local loadedProps = DialogPropsTransformer.loadFromPrefs(context)
+
         local dialogProps = LrBinding.makePropertyTable(context)
-        for k, v in pairs(loadedProps) do
-            dialogProps[k] = v
-        end
+        DialogPropsTransformer.loadFromPrefsOrDefault(dialogProps)
 
         logger:info('Main.lua: starting to build main dialog')
         -- Create the main dialog UI
@@ -72,12 +69,7 @@ local function showUnifiedDialog()
             logger:info('Main.lua: user clicked ok')
             -- Save user changes to preferences
             DialogPropsTransformer.persistToPrefs(dialogProps)
-            
-            -- Reload the saved configuration in correct format for processing
-            logger:info('Main.lua: loading config')
-            local processConfig = PrefsManager.loadConfig()
-            logger:info('Main.lua: processing photos')
-            PhotoProcessor.process(processConfig)
+            PhotoProcessor.process()
         end
     end)
 end

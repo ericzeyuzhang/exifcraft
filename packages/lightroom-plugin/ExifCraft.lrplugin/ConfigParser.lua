@@ -10,6 +10,7 @@ and configuration format validation.
 
 local LrPathUtils = import 'LrPathUtils'
 local LrFileUtils = import 'LrFileUtils'
+local LrPrefs = import 'LrPrefs'
 
 -- Import required modules
 local Dkjson = require 'Dkjson'
@@ -49,7 +50,7 @@ function ConfigParser.parseFromJson(config_json)
 end
 
 -- Load unified default configuration from file
-function ConfigParser.getDefaultConfigJson()
+function ConfigParser.getDefaultConfig()
     local plugin_path = _PLUGIN.path
     local config_path = LrPathUtils.child(plugin_path, 'default-config.json')
 
@@ -64,82 +65,17 @@ function ConfigParser.getDefaultConfigJson()
 
     if not config then
         logger:error('Failed to parse default-config.json')
-        return nil
+        return nil, nil
     end
 
     logger:info('Successfully loaded unified default configuration')
-    return config_json
+    return config, config_json
 end
 
--- Normalize property tables to plain tasks and serialize them
-function ConfigParser.buildTasksConfig(taskProps)
-    -- Normalize property tables to plain tables
-    local tasksConfig = {}
-    for i, taskProp in ipairs(taskProps or {}) do
-        local tags = {}
-        if type(taskProp.tags) == 'table' then
-            for _, tag in ipairs(taskProp.tags) do
-                if type(tag) == 'table' and tag.name and tag.name ~= '' then
-                    table.insert(tags, {
-                        name = tag.name,
-                        avoidOverwrite = (tag.avoidOverwrite == true),
-                    })
-                end
-            end
-        end
-
-        tasksConfig[i] = {
-            name = taskProp.name or '',
-            prompt = taskProp.prompt or '',
-            tags = tags,
-            enabled = taskProp.enabled and true or false,
-        }
-    end
-
-    return tasksConfig
-end
-
-
-
--- Validate configuration structure
-function ConfigParser.validateConfig(config)
-    if not config or type(config) ~= 'table' then
-        return false, 'Configuration must be a table'
-    end
-    
-    -- Check required top-level fields
-    if not config.tasks or type(config.tasks) ~= 'table' then
-        return false, 'Configuration must have tasks array'
-    end
-    
-    if not config.imageFormats or type(config.imageFormats) ~= 'table' then
-        return false, 'Configuration must have imageFormats array'
-    end
-    
-    if not config.aiModel or type(config.aiModel) ~= 'table' then
-        return false, 'Configuration must have aiModel object'
-    end
-    
-    return true, nil
-end
-
--- Encode configuration to JSON string
-function ConfigParser.encodeToJson(config)
-    logger:info('Encoding configuration to JSON')
-    if config and config.aiModel and config.aiModel.provider and config.aiModel.model then
-        logger:info('Config: ' .. config.aiModel.provider .. ' ' .. config.aiModel.model)
-    end
-    
-    local success, result = pcall(function()
-        return Dkjson.encode(config, { indent = true })
-    end)
-    
-    if not success then
-        logger:error('Failed to encode configuration to JSON: ' .. tostring(result))
-        return nil
-    end
-    
-    return result
+function ConfigParser.getConfigFromPrefs()
+    local prefs = LrPrefs.prefsForPlugin()
+    local config = ConfigParser.parseFromJson(prefs.config_json)
+    return config, prefs.config_json
 end
 
 return ConfigParser

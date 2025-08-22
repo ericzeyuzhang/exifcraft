@@ -8,15 +8,14 @@ and Lightroom dialog properties format, enabling seamless UI interaction.
 
 ------------------------------------------------------------------------------]]
 
-local LrBinding = import 'LrBinding'
 local LrPrefs = import 'LrPrefs'
+-- LrBinding not required in this module
 
 -- Import required modules
 local UIFormatConstants = require 'UIFormatConstants'
 local SystemUtils = require 'SystemUtils'
-local ConfigParser = require 'ConfigParser'
-local PrefsManager = require 'PrefsManager'
 local Dkjson = require 'Dkjson'
+local ConfigParser = require 'ConfigParser'
 
 -- Use global logger
 local logger = _G.ExifCraftLogger
@@ -26,35 +25,25 @@ end
 
 local DialogPropsTransformer = {}
 
--- Load dialog properties directly from preferences (optimized)
-function DialogPropsTransformer.loadFromPrefs(context)
+-- Load dialog properties directly from preferences
+function DialogPropsTransformer.fromConfig(config, dialogProps)
     logger:info('DialogPropsTransformer: Loading dialog props directly from preferences')
-    
-    local prefs = LrPrefs.prefsForPlugin()
-    
-    -- Handle cold start - initialize with defaults
-    if not prefs.config_json or prefs.config_json == '' then
-        logger:info('DialogPropsTransformer: Cold start detected, loading default configuration')
-        prefs.config_json = ConfigParser.getDefaultConfigJson()
+
+    if not config then
+        logger:error('Failed to load configuration')
+        return nil
     end
-    
-    -- Parse JSON configuration directly
-    local success, config = pcall(function()
-        return Dkjson.decode(prefs.config_json)
-    end)
-    
-    if not success or type(config) ~= 'table' then
-        logger:error('Failed to parse configuration JSON, returning empty dialog props: ' .. tostring(config))
-        return {}
+
+    if not dialogProps then
+        logger:error('dialogProps table is required but was nil')
+        return nil
     end
-    
+
     -- Ensure required fields exist with defaults
     config.tasks = config.tasks or {}
     config.imageFormats = config.imageFormats or {}
     config.aiModel = config.aiModel or {}
     
-    -- Transform directly to dialog properties (no intermediate config object)
-    local dialogProps = {}
     
     -- AI Model Configuration: flatten nested structure
     if config.aiModel then
@@ -116,7 +105,28 @@ function DialogPropsTransformer.loadFromPrefs(context)
     end
     
     logger:info('DialogPropsTransformer: Successfully loaded dialog props directly from preferences')
-    return dialogProps
+    return nil
+end
+
+-- Load dialog properties from preferences or defaults
+function DialogPropsTransformer.loadFromPrefsOrDefault(dialogProps)
+    logger:info('DialogPropsTransformer: Loading dialog props from preferences or defaults')
+    
+    -- Try to load from preferences first
+    local config, _ = ConfigParser.getConfigFromPrefs()
+    
+    if not config then
+        -- If no config in prefs, load defaults
+        logger:info('No config in preferences, loading defaults')
+        config, _ = ConfigParser.getDefaultConfig()
+        
+        if not config then
+            logger:error('Failed to load default configuration')
+            return nil
+        end
+    end
+    
+    return DialogPropsTransformer.fromConfig(config, dialogProps)
 end
 
 -- Persist dialog properties directly to preferences
@@ -206,12 +216,6 @@ function DialogPropsTransformer.persistToPrefs(dialogProps)
     prefs.config_json = config_json
     logger:info('Configuration persisted directly to preferences as JSON')
     return true
-end
-
--- Reset to default configuration and return dialog properties
-function DialogPropsTransformer.resetToDefaults(context)
-    PrefsManager.resetToDefaults()
-    return DialogPropsTransformer.loadFromPrefs(context)
 end
 
 return DialogPropsTransformer
