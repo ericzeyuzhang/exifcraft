@@ -42,7 +42,7 @@ function ViewUtils.createSectionHeader(f, mainTitle, subTitle)
     end
 
     return f:column {
-        spacing = UIStyleConstants.UI_STYLE_CONSTANTS.spacing.title_to_subtitle,
+        spacing = UIStyleConstants.UI_STYLE_CONSTANTS.spacing.tight,
         fill_horizontal = 1,
         unpack_fn(children),
     }

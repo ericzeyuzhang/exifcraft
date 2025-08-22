@@ -31,7 +31,6 @@ UIStyleConstants.UI_STYLE_CONSTANTS = {
         color = 'grey',
     },
     spacing = {
-        title_to_subtitle = 2,
         tight = 2,
         compact = 4,
     },
@@ -40,6 +39,7 @@ UIStyleConstants.UI_STYLE_CONSTANTS = {
         label_width_narrow = 60,
         numeric_field_width_chars = 8,
         confirm_dialog = { width = 420, height = 120 },
+        main_dialog = { width = 1000, height = 700, minimum_width = 1000, minimum_height = 700 },
     },
     layout = {
         split_left_ratio = 0.4,

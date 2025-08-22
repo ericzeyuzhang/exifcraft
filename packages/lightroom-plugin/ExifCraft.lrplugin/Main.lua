@@ -22,7 +22,9 @@ do
         _G.ExifCraftLogger:info('require Dkjson succeeded')
     end
 end
-local ConfigManager = require 'ConfigManager'
+local PrefsManager = require 'PrefsManager'
+local DialogPropsTransformer = require 'DialogPropsTransformer'
+local UIStyleConstants = require 'UIStyleConstants'
 local ViewBuilder = require 'ViewBuilder'
 local PhotoProcessor = require 'PhotoProcessor'
 
@@ -41,10 +43,7 @@ local function showUnifiedDialog()
     LrFunctionContext.callWithContext("showUnifiedDialog", function(context)
         local f = LrView.osFactory()
         
-        -- Load unified configuration and adapt it for UI
-        local config = ConfigManager.loadFromPrefs()
-        local adaptedConfig = ConfigManager.transformToDialogProps(config, context)
-        local dialogProps = LrBinding.makePropertyTable(context, adaptedConfig)
+        local dialogProps = DialogPropsTransformer.loadDialogProps(context)
 
         -- Create the main dialog UI
         local ui = ViewBuilder.createMainDialog(f, dialogProps, context)
@@ -54,20 +53,20 @@ local function showUnifiedDialog()
             contents = ui,
             action_verb = 'Process',
             cancel_verb = 'Cancel',
-            width = 1000,
-            height = 700,
-            minimum_width = 1000,
-            minimum_height = 700,
+            width = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.width,
+            height = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.height,
+            minimum_width = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.minimum_width,
+            minimum_height = UIStyleConstants.UI_STYLE_CONSTANTS.dimensions.main_dialog.minimum_height,
             resizable = true,
-            window_style = 'palette',
         }
         
         if result == 'ok' then
-            -- Build and save configuration from dialog properties
-            local config = ConfigManager.buildFromDialogProps(dialogProps)
-            ConfigManager.saveToPrefs(config)
-
-            PhotoProcessor.process(config)
+            -- Save user changes to preferences
+            DialogPropsTransformer.saveDialogProps(dialogProps)
+            
+            -- Reload the saved configuration in correct format for processing
+            local processConfig = PrefsManager.loadConfig()
+            PhotoProcessor.process(processConfig)
         end
     end)
 end

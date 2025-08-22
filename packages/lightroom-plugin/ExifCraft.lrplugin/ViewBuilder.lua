@@ -10,10 +10,11 @@ This module contains all UI creation functions for the configuration dialog.
 local LrView = import 'LrView'
 local LrBinding = import 'LrBinding'
 local LrDialogs = import 'LrDialogs'
+local LrPrefs = import 'LrPrefs'
 local unpack_fn = table.unpack or unpack
 
--- Import Config module
-local ConfigManager = require 'ConfigManager'
+-- Import Config modules
+local DialogPropsTransformer = require 'DialogPropsTransformer'
 local SystemUtils = require 'SystemUtils'
 local ViewUtils = require 'ViewUtils'
 local UIFormatConstants = require 'UIFormatConstants'
@@ -767,20 +768,23 @@ function ViewBuilder.createMainDialog(f, dialogProps, context)
                     if confirmResult == 'cancel' then
                         return
                     end
-                    local newProps = ConfigManager.resetToDefaults(context)
-                    for k, v in pairs(newProps) do
-                        dialogProps[k] = v
+                    
+                    -- Reset to defaults and update dialog props
+                    local newDialogProps = DialogPropsTransformer.resetToDefaults(context)
+                    
+                    -- Update existing dialog props with reset values
+                    for key, value in pairs(newDialogProps) do
+                        dialogProps[key] = value
                     end
-                    logger:info('Settings and tasks reset to defaults via ConfigManager.reset_to_defaults')
+                    
+                    logger:info('Settings and tasks reset to defaults via DialogPropsTransformer.resetToDefaults')
                 end,
             })
 
             table.insert(buttons, f:push_button {
                 title = "Validate & Save Config",
                 action = function()
-                    -- Build, validate and save configuration in one operation
-                    local config = ConfigManager.buildFromDialogProps(dialogProps)
-                    ConfigManager.saveToPrefs(config)
+                    DialogPropsTransformer.saveDialogProps(dialogProps)
                     LrDialogs.showBezel('Configuration saved')
                 end,
             })

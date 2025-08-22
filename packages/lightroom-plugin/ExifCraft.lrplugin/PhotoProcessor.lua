@@ -30,17 +30,17 @@ local function createConfigJsonForCLI(settings, tempDir)
     logger:info('Creating configuration JSON for CLI')
     
     -- Settings is already in unified format, no conversion needed
-    local configPath = LrPathUtils.child(tempDir, 'exifcraft_config.json')
-    local configJson = Dkjson.encode(settings, { indent = true })
+    local config_file_path = LrPathUtils.child(tempDir, 'exifcraft_config.json')
+    local config_json = Dkjson.encode(settings, { indent = true })
     
-    local file = io.open(configPath, 'w')
+    local file = io.open(config_file_path, 'w')
     if file then
-        file:write(configJson)
+        file:write(config_json)
         file:close()
-        logger:info('CLI configuration written to: ' .. configPath)
-        return configPath
+        logger:info('CLI configuration written to: ' .. config_file_path)
+        return config_file_path
     else
-        error('Failed to write config file: ' .. tostring(configPath))
+        error('Failed to write config file: ' .. tostring(config_file_path))
     end
 end
 
@@ -69,7 +69,7 @@ local function parseCliOutput(output)
 end
 
 -- Write metadata to Lightroom photo
-local function writeMetadataToLightroom(photo, metadata, settings)
+local function writeMetadataToLightroom(photo, metadata)
     logger:info('Writing metadata to Lightroom photo: ' .. tostring(photo:get_raw_metadata('file_name')))
     
     local success = true
@@ -227,7 +227,7 @@ local function process(config)
                                     -- Parse output and write to Lightroom
                                     local metadata = parseCliOutput(output)
                                     if metadata and next(metadata) then
-                                        local writeSuccess = writeMetadataToLightroom(photo, metadata, config)
+                                        local writeSuccess = writeMetadataToLightroom(photo, metadata)
                                         if writeSuccess then
                                             logger:info('Metadata successfully written to Lightroom')
                                         else

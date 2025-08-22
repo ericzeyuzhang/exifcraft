@@ -19,8 +19,9 @@ REQUIRED_FILES=(
     "Info.lua"
     "Init.lua"
     "Main.lua"
-    "ConfigManager.lua"
-    "DefaultConfigProvider.lua"
+    "ConfigParser.lua"
+    "PrefsManager.lua"
+    "DialogPropsTransformer.lua"
     "ViewBuilder.lua"
     "PhotoProcessor.lua"
     "default-config.json"
@@ -67,9 +68,6 @@ rm -rf "$DIST_DIR/ExifCraft.lrplugin"
 echo "Copying plugin files..."
 cp -r "$PLUGIN_DIR" "$DIST_DIR/"
 
-# Remove deprecated directories from dist to avoid Lightroom loading old paths
-rm -rf "$DIST_DIR/ExifCraft.lrplugin/utils" || true
-rm -rf "$DIST_DIR/ExifCraft.lrplugin/constants" || true
 
 # Create CLI binary directory
 mkdir -p "$DIST_DIR/ExifCraft.lrplugin/bin"
