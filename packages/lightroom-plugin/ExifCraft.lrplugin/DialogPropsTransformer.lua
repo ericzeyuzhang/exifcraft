@@ -26,9 +26,6 @@ end
 
 local DialogPropsTransformer = {}
 
-
-
-
 -- Load dialog properties directly from preferences (optimized)
 function DialogPropsTransformer.loadFromPrefs(context)
     logger:info('DialogPropsTransformer: Loading dialog props directly from preferences')
@@ -178,13 +175,8 @@ end
 
 -- Reset to default configuration and return dialog properties
 function DialogPropsTransformer.resetToDefaults(context)
-    local success = PrefsManager.resetToDefaults()
-    if success then
-        return DialogPropsTransformer.loadFromPrefs(context)
-    else
-        logger:error('Failed to reset to defaults')
-        return {}
-    end
+    PrefsManager.resetToDefaults()
+    return DialogPropsTransformer.loadFromPrefs(context)
 end
 
 return DialogPropsTransformer

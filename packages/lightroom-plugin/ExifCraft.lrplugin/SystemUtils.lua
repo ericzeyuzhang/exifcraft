@@ -68,7 +68,7 @@ function SystemUtils.createTempDirectory(prefix)
     local temp_name = (prefix or 'ExifCraft') .. '_' .. os.time() .. '_' .. math.random(1000, 9999)
     local temp_dir = LrPathUtils.child(temp_base, temp_name)
 
-    local success = LrFileUtils.create_directory(temp_dir)
+    local success = LrFileUtils.createDirectory(temp_dir)
     if success then
         logger:info('Created temporary directory: ' .. temp_dir)
         return temp_dir
