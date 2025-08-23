@@ -8,3 +8,6 @@ export * from './lib/processor';
 
 // Type definitions
 export * from './models/types';
+
+// Schema exports
+export * from './schema';

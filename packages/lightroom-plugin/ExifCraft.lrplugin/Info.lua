@@ -26,5 +26,5 @@ return {
         { title = "Reset...", file = "ClearPrefs.lua" },
     },
 
-    VERSION = { major = 0, minor = 0, revision = 1, build = 328 },
+    VERSION = { major = 0, minor = 0, revision = 1, build = 330 },
 }

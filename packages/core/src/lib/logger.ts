@@ -10,9 +10,16 @@ export interface ProcessingSummary {
   failedFiles: Array<{fileName: string, error: string}>;
 }
 
+export interface ProgressUpdate {
+  currentIndex: number;
+  total: number;
+  fileName: string;
+}
+
 export class Logger {
   private static instance: Logger;
   private options: LoggingOptions;
+  private progressCallback?: (update: ProgressUpdate) => void;
 
   private constructor(options: LoggingOptions) {
     this.options = options;
@@ -25,6 +32,18 @@ export class Logger {
     return Logger.instance;
   }
   
+  // Set progress callback for GUI consumers
+  setProgressCallback(callback: (update: ProgressUpdate) => void): void {
+    this.progressCallback = callback;
+  }
+
+  // Report progress (used by processor)
+  reportProgress(update: ProgressUpdate): void {
+    if (this.progressCallback) {
+      this.progressCallback(update);
+    }
+  }
+
   // Show processing summary
   showSummary(summary: ProcessingSummary): void {
     console.log(chalk.green('\n✔ Processing completed!'));

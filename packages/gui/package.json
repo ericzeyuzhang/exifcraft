@@ -1,0 +1,37 @@
+{
+  "name": "exifcraft-gui",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "main": "electron/main.ts",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"tsc -p preload -w\" \"tsc -p electron -w\" \"wait-on tcp:5173 && electron dist-electron/main.js\"",
+    "build:renderer": "vite build",
+    "build:preload": "tsc -p preload",
+    "build:electron": "tsc -p electron",
+    "build": "npm run build:renderer && npm run build:preload && npm run build:electron",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.0",
+    "exifcraft-core": "*",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.53.0",
+    "sharp": "^0.33.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.19",
+    "concurrently": "^8.2.2",
+    "electron": "^30.0.9",
+    "tailwindcss": "^3.4.7",
+    "typescript": "^5.3.3",
+    "vite": "^5.2.0",
+    "wait-on": "^7.2.0"
+  }
+}

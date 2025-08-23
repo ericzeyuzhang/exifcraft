@@ -1,0 +1,30 @@
+# Builds
+/dist-electron/
+/dist-preload/
+/dist-renderer/
+
+# TypeScript build info
+/electron/tsconfig.tsbuildinfo
+/preload/tsconfig.tsbuildinfo
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Vite
+.vite/
+.cache/
+
+# macOS
+.DS_Store
+
+# Editor
+*.swp
+.idea/
+.vscode/
+
+# Coverage
+coverage/

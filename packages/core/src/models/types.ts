@@ -40,8 +40,6 @@ export interface ExifCraftConfig {
   dryRun?: boolean;
 }
 
-
-
 // CLI options from commander.js
 export interface CLIOptions {
   directory?: string;

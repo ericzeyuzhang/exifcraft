@@ -10,9 +10,10 @@
     "build": "npm run build --ws",
     "clean": "npm run clean --ws",
     "test": "npm run test --ws",
-    "dev": "npm run dev -w exifcraft-cli",
+    "dev": "npm run dev -w exifcraft-gui",
     "package:cli": "npm run package -w exifcraft-cli",
-    "package:plugin": "bash packages/lightroom-plugin/package-plugin.sh"
+    "package:plugin": "bash packages/lightroom-plugin/package-plugin.sh",
+    "schema:json": "npm run schema:json -w exifcraft-core"
   },
   "keywords": [
     "exif",
