@@ -10,7 +10,7 @@ This project is organized as a monorepo with the following packages:
 - **Purpose**: Contains all the core business logic for image processing, AI integration, and EXIF operations
 - **Exports**: All core functions, types, and utilities
 - **Dependencies**: External libraries for AI, EXIF processing, and image conversion
-- **Usage**: Can be imported by other packages (CLI, GUI, plugins, etc.)
+- **Usage**: Can be imported by other packages (CLI, etc.)
 
 ### `packages/cli` - Command Line Interface
 - **Purpose**: Provides a command-line interface for the core functionality
@@ -74,15 +74,13 @@ cd packages/cli && npm run test
 ## Architecture Benefits
 
 1. **Separation of Concerns**: Core logic is separated from interface code
-2. **Reusability**: Core package can be used by multiple interfaces (CLI, GUI, plugins)
+2. **Reusability**: Core package can be used by multiple interfaces (CLI, etc.)
 3. **Maintainability**: Each package has a clear responsibility
-4. **Scalability**: Easy to add new interfaces (Electron GUI, Lightroom plugin, etc.)
+4. **Scalability**: Easy to add new interfaces as needed
 
 ## Future Extensions
 
 This architecture supports future development of:
-- **Electron Desktop App**: Using the core package with a GUI
-- **Lightroom Plugin**: Integrating with Adobe Lightroom
 - **Web Interface**: Browser-based interface
 - **API Server**: REST API for the core functionality
 
